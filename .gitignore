@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+# Build/testing artifacts
+lib/
+.nyc_output/
+coverage/
+# Temp or junk files
+.DS_Store
+# Proprietary files not to be propagated
+vault/
+scratch/
