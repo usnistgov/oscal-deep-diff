@@ -41,12 +41,12 @@ export class PropertyChanged {
 
 export interface OldArrayItem {
     oldPointer: string;
-    oldElement: string;
+    oldElement: any;
 }
 
 export interface NewArrayItem {
     newPointer: string;
-    newElement: string;
+    newElement: any;
 }
 
 export class ArrayChanged {

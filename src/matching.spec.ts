@@ -1,36 +1,43 @@
 import { expect } from 'chai';
-import { MatchConstraint } from './configuration';
-import { scoreMatchPair, matchWithConstraint } from './matching';
+import { ObjectPropertyMatchConstraint, PrimitiveMatchConstraint } from './matching';
 
 /**
  * Tests for matching.ts
  */
 
-const literalMatchByIdConstraint: MatchConstraint = {
-    parentName: '',
-    matchByProperty: 'id',
-    matchType: 'literal',
-}
+describe('PrimitiveMatchConstraint', () => {
+    const constraint = new PrimitiveMatchConstraint("literal");
 
-describe('scoreMatchPair()', () => {
-    it('same item literal match', () => {
-        expect(scoreMatchPair({id: 1}, {id: 1}, literalMatchByIdConstraint)).equals(1);
-    });
-
-    it('different item literal match', () => {
-        expect(scoreMatchPair({id: 1}, {id: 2}, literalMatchByIdConstraint)).equals(0);
-    });
-});
-
-describe('matchWithConstraint()', () => {
-    it('same list literal match', () => {
-        const oldArray = [{id: 1}, {id: 2}];
-        const newArray = [{id: 1}, {id: 2}];
-        const report = matchWithConstraint(oldArray, newArray, literalMatchByIdConstraint);
+    it('simple list of primitives', () => {
+        const oldArray = [1, 2, 3, 4];
+        const newArray = [1, 2, 3, 4];
+        const report = constraint.matchArrayElements(oldArray, newArray);
         console.log(report);
         expect(report.unmatchedNewIndices).to.eql([], 'no unmatched new indices');
         expect(report.unmatchedOldIndices).to.eql([], 'no unmatched old indices');
         expect(report.matchedIndices.length).equals(oldArray.length, 'all items must be matched');
-        
     });
-})
+
+    it('simple re-ordered list of primitives', () => {
+        const oldArray = [1, 2, 3, 4];
+        const newArray = [1, 3, 2, 4];
+        const report = constraint.matchArrayElements(oldArray, newArray);
+        console.log(report);
+        expect(report.unmatchedNewIndices).to.eql([], 'no unmatched new indices');
+        expect(report.unmatchedOldIndices).to.eql([], 'no unmatched old indices');
+        expect(report.matchedIndices.length).equals(oldArray.length, 'all items must be matched');
+    });
+});
+
+describe('ObjectPropertyMatchConstraint', () => {
+    it('simple list', () => {
+        const constraint = new ObjectPropertyMatchConstraint("string-similarity", "id");
+        const oldArray = [{id: 1}, {id: 2}, {id: 3}];
+        const newArray = [{id: 1}, {id: 2}, {id: 3}];
+        const report = constraint.matchArrayElements(oldArray, newArray);
+        console.log(report);
+        expect(report.unmatchedNewIndices).to.eql([], 'no unmatched new indices');
+        expect(report.unmatchedOldIndices).to.eql([], 'no unmatched old indices');
+        expect(report.matchedIndices.length).equals(oldArray.length, 'all items must be matched');
+    });
+});

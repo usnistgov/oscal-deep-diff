@@ -14,6 +14,7 @@ program
         oldCatalog = oldCat
         newCatalog = newCat
     })
+    .option('-c', '--constraints <filename>', 'specify a constraints file to read from')
     .option('-w', '--write <filename>', 'file to write to')
     .option('-s', '--silent', 'do not print difference output')
     .parse(process.argv);
@@ -29,6 +30,6 @@ if (!program.silent) {
     console.log(changes);
 }
 
-if (program.write == undefined) {
+if (program.write !== undefined && program.write !== "") {
     saveJSON(changes, program.write);
 }
