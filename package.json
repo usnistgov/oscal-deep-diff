@@ -8,7 +8,6 @@
   },
   "scripts": {
     "start": "nodemon src/index.ts",
-    "create": "npm run build && npm run test",
     "build": "tsc -p .",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "refresh": "rm -rf ./node_modules ./package-lock.json && npm install"

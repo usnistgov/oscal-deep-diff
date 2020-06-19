@@ -1,6 +1,8 @@
 {
+    // Mocha plugin for VS Code supports TS tests
+    // Must install `maty.vscode-mocha-sidebar` to enable
     "mocha.files.glob": "src/**/*.spec.ts",
     "mocha.requires": [
         "ts-node/register"
-    ],
+    ]
 }
