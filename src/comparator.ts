@@ -1,6 +1,6 @@
-import { getPropertyUnion, getType, loadJSON, getPropertyIntersection, countSubElements } from "./utils";
+import { getPropertyUnion, getType, loadJSON, getPropertyIntersection, countSubElements, saveJSON } from "./utils";
 import { PropertyAdded, PropertyDeleted, PropertyChanged, ArrayChanged, Comparison, Change } from './comparisons';
-import { ObjectPropertyMatchConstraint, MatchType, PrimitiveMatchConstraint, MatchReport } from "./matching";
+import { ObjectPropertyMatchConstraint, MatchType, PrimitiveMatchConstraint, MatchReport, Constraints } from "./matching";
 
 /**
  * The Comparator class is designed to handle comparing two arbritrary JSON
@@ -8,25 +8,50 @@ import { ObjectPropertyMatchConstraint, MatchType, PrimitiveMatchConstraint, Mat
  * schemas.
  */
 export class Comparator {
-    // private options: ComparatorOptions;
-    // constructor (options?: ComparatorOptions) {
-    //     if (options) {
-    //         this.options = options;
-    //     } else {
-    //         console.warn('Comparator initialized with no options, this will be much slower');
-    //         this.options = {
-    //             matchConstraints: [],
-    //             compareConstraints: [],
-    //         };
-    //     }
-    // }
+    private _verbose: boolean = false;
+
+    public set verbose(verbose: boolean) {
+        this._verbose = verbose;
+    }
+
+    private _comparison: Comparison | undefined;
+
+    public get comparison(): Comparison {
+        if (this._comparison == undefined) {
+            throw new Error("Attempted to get comparison before comparing two documents");
+        }
+        return this._comparison;
+    }
+
+    private _constraints: Constraints;
+
+    constructor(constraints: string | Constraints = new Constraints([])) {
+        if (constraints instanceof Constraints) {
+            this._constraints = constraints;
+        } else {
+            // supplied constraints are a string
+            this._constraints = Constraints.fromFile(constraints);
+        }
+    }
+
+    /**
+     * Save comparison to disk
+     * @param outputPath path to output to
+     */
+    public saveComparison(outputPath: string) {
+        const comparison = this.comparison;
+        if (this._verbose) {
+            console.log(`Saving compared document to ${outputPath}`);
+        }
+        saveJSON(comparison, outputPath);
+    }
 
     /**
      * Load documents onto disk and compare them
      * @param oldDocumentPath Path of old document
      * @param newDocumentPath Path of new document
      */
-    public compareDocumentsOnDisk(oldDocumentPath: string, newDocumentPath: string): Comparison {
+    public newComparisonFromDisk(oldDocumentPath: string, newDocumentPath: string) {
         let oldDocument: object, newDocument: object;
         try {
             oldDocument = loadJSON(oldDocumentPath);
@@ -35,33 +60,35 @@ export class Comparator {
             throw Error("Could not load one of the two documents: " + e.Message);
         }
 
-        return this.compareDocuments(oldDocument, oldDocumentPath, newDocument, newDocumentPath);
+        this.newComparison(oldDocument, oldDocumentPath, newDocument, newDocumentPath);
     }
 
     /**
      * Bootstrap for comparison recursive functions, compares two documents
+     * 
+     * Note that the documents must already be loaded into memory
      * @param oldDocument old document object
      * @param oldDocumentSource source of old document (URL, filepath)
      * @param newDocument new document object
      * @param newDocumentSource source of new document (URL, filepath)
      */
-    public compareDocuments(oldDocument: object, oldDocumentSource: string, newDocument: object, newDocumentSource: string): Comparison {
+    public newComparison(oldDocument: object, oldDocumentSource: string, newDocument: object, newDocumentSource: string) {
         const changes: Change[] = [];
+        if (this._verbose) {
+            console.log(`Starting comparison between ${oldDocumentSource} and ${newDocumentSource}`);
+            console.time('compareDocuments');
+        }
         this.compareElements(oldDocument, "", newDocument, "", changes);
-        
-        return {
+        if (this._verbose) {
+            console.log('Document comparison completed');
+            console.timeEnd('compareDocuments');
+            console.log(changes)
+        }
+        this._comparison = {
             oldDocument: oldDocumentSource,
             newDocument: newDocumentSource,
             changes: changes
         };
-    }
-
-    private tryConstrainedCompare(oldElement: any, oldPointer: string, newElement: any, newPointer: string, currentChanges: Change[]): number {
-        return -1; // unimplemented
-    }
-
-    private tryConstrainedMatch(oldArray: Array<any>, oldPointer: string, newArray: Array<any>, newPointer: string, currentChanges: Change[]): number {
-        return -1; // unimplemented
     }
 
     /**
@@ -102,8 +129,15 @@ export class Comparator {
     }
 
     private compareArrays(oldArray: Array<any>, oldPointer: string, newArray: Array<any>, newPointer: string, currentChanges: Change[]): number {
-        const constrainedMatchScore = this.tryConstrainedMatch(oldArray, oldPointer, newArray, newPointer, currentChanges);
-        if (constrainedMatchScore != -1) return constrainedMatchScore;
+        const constraint = this._constraints.tryGetConstraint(newPointer);
+        if (constraint) {
+            const report = constraint.matchArrayElements(oldArray, newArray);
+            const match = this.tryMatch(oldArray, oldPointer, newArray, newPointer, report);
+            if (match[0].hasChanges()) {
+                currentChanges.push(currentChanges[0]);
+            }
+            return match[1];
+        }
         
         // console.log(`Warning: matching arrays  (old: ${oldPointer}, new: ${newPointer}) without specifying a constraint`);
         if (oldArray.length > 0 && newArray.length > 0) {
@@ -131,6 +165,7 @@ export class Comparator {
                         potentialMatch[0].matchMethod = matchType;
                         if (potentialMatch[1] < optimalMatchChanges) {
                             optimalMatch = potentialMatch[0];
+                            optimalMatchChanges = potentialMatch[1];
                         }
                     }
                 }
@@ -194,17 +229,12 @@ export class Comparator {
      * @param newElement 
      * @param newPointer 
      * @param currentChanges
-     * @throws 
      * @returns a number representing the number of changes
      */
     private compareElements(oldElement: any, oldPointer: string, newElement: any, newPointer: string, currentChanges: Change[]): number {
         // verify that elements are of the same 'type' (no arrays compared to objects)
         const type = getType(oldElement);
         if (type != getType(newElement)) throw new Error('Old and new (sub)document do not have the same type');
-
-        // try to compare element using comparison constraint
-        const constrainedCompareScore = this.tryConstrainedCompare(oldElement, oldPointer, newElement, newPointer, currentChanges);
-        if (constrainedCompareScore != -1) return constrainedCompareScore;
 
         if (type === 'array') {
             // elements are arrays, array objects need to be matched before comparing their children

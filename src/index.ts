@@ -1,7 +1,5 @@
-#!/usr/bin/env node
 import { Command } from 'commander';
 import { Comparator } from './comparator';
-import { saveJSON } from './utils';
 
 interface CLIOptions {
     oldCatalog: string;
@@ -11,8 +9,7 @@ interface CLIOptions {
     verbose: boolean;
 }
 
-const rawOptions = new Command();
-rawOptions
+const rawOptions = new Command()
     .version('0.0.1')
     .description('Deep Differencing of OSCAL catalogs')
     .usage('[options]')
@@ -25,21 +22,10 @@ rawOptions
 // specially cast rawOptions object to CLIOptions interface (force typing)
 const options: CLIOptions = rawOptions as unknown as CLIOptions;
 
-let comparator = new Comparator();
-
-if (options.verbose) {
-    console.log('Starting document comparison...');
-    console.time('compareDocuments');
-}
-
-let changes = comparator.compareDocumentsOnDisk(options.oldCatalog, options.newCatalog);
-
-if (options.verbose) {
-    console.timeEnd('compareDocuments');
-    console.log('Document comparison finished!');
-    console.log(changes);
-}
+const comparator = new Comparator();
+comparator.verbose = options.verbose;
+comparator.newComparisonFromDisk(options.oldCatalog, options.newCatalog);
 
 if (options.write !== '') {
-    saveJSON(changes, options.write)
+    comparator.saveComparison(options.write);
 }
