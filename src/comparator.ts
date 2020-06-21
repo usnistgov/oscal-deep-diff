@@ -1,7 +1,12 @@
 import { getPropertyUnion, getType, loadJSON, getPropertyIntersection, countSubElements } from "./utils";
 import { PropertyAdded, PropertyDeleted, PropertyChanged, ArrayChanged, Comparison, Change } from './comparisons';
-import { MatchReport as PotentialMatchReport, ObjectPropertyMatchConstraint, MatchType, MatchReport, PrimitiveMatchConstraint } from "./matching";
+import { ObjectPropertyMatchConstraint, MatchType, PrimitiveMatchConstraint, MatchReport } from "./matching";
 
+/**
+ * The Comparator class is designed to handle comparing two arbritrary JSON
+ * documents, with support for customizable constraints to fit particular
+ * schemas.
+ */
 export class Comparator {
     // private options: ComparatorOptions;
     // constructor (options?: ComparatorOptions) {
@@ -17,21 +22,38 @@ export class Comparator {
     // }
 
     /**
-     * Bootstrap method for recursive comparison
+     * Load documents onto disk and compare them
      * @param oldDocumentPath Path of old document
      * @param newDocumentPath Path of new document
      */
-    public compareDocuments(oldDocumentPath: string, newDocumentPath: string): Comparison {
-        const changes: Change[] = [];
-        this.compare(loadJSON(oldDocumentPath), "", loadJSON(newDocumentPath), "", changes);
-        
-        const comparison = {
-            oldDocument: oldDocumentPath,
-            newDocument: newDocumentPath,
-            changes: changes
+    public compareDocumentsOnDisk(oldDocumentPath: string, newDocumentPath: string): Comparison {
+        let oldDocument: object, newDocument: object;
+        try {
+            oldDocument = loadJSON(oldDocumentPath);
+            newDocument = loadJSON(newDocumentPath);
+        } catch (e) {
+            throw Error("Could not load one of the two documents: " + e.Message);
         }
 
-        return comparison;
+        return this.compareDocuments(oldDocument, oldDocumentPath, newDocument, newDocumentPath);
+    }
+
+    /**
+     * Bootstrap for comparison recursive functions, compares two documents
+     * @param oldDocument old document object
+     * @param oldDocumentSource source of old document (URL, filepath)
+     * @param newDocument new document object
+     * @param newDocumentSource source of new document (URL, filepath)
+     */
+    public compareDocuments(oldDocument: object, oldDocumentSource: string, newDocument: object, newDocumentSource: string): Comparison {
+        const changes: Change[] = [];
+        this.compareElements(oldDocument, "", newDocument, "", changes);
+        
+        return {
+            oldDocument: oldDocumentSource,
+            newDocument: newDocumentSource,
+            changes: changes
+        };
     }
 
     private tryConstrainedCompare(oldElement: any, oldPointer: string, newElement: any, newPointer: string, currentChanges: Change[]): number {
@@ -44,19 +66,20 @@ export class Comparator {
 
     /**
      * Builds ArrayChange object and calculates total number of changes
+     * @todo add memoization here to drastically speed up comparison
      * @param oldArray 
      * @param oldPointer 
      * @param newArray 
      * @param newPointer 
      * @param report 
      */
-    private simulateMatch(oldArray: Array<any>, oldPointer: string, newArray: Array<any>, newPointer: string, report: PotentialMatchReport): [ArrayChanged, number] {
+    private tryMatch(oldArray: Array<any>, oldPointer: string, newArray: Array<any>, newPointer: string, report: MatchReport): [ArrayChanged, number] {
         let changeCount = 0;
         const change = new ArrayChanged(oldPointer, newPointer, [], [], []);
 
         // then, iterate through all elements that have been matched and compare the sub-elements
         for (const match of report.matchedIndices) {
-            changeCount += this.compare(oldArray[match.oldElementIndex], `${oldPointer}/${match.oldElementIndex}`, newArray[match.newElementIndex], `${newPointer}/${match.newElementIndex}`, change.subChanges);
+            changeCount += this.compareElements(oldArray[match.oldElementIndex], `${oldPointer}/${match.oldElementIndex}`, newArray[match.newElementIndex], `${newPointer}/${match.newElementIndex}`, change.subChanges);
         }
 
         for (const unmatchedOldIndex of report.unmatchedOldIndices) {
@@ -78,7 +101,7 @@ export class Comparator {
         return [change, changeCount];
     }
 
-    private matchArrayElements(oldArray: Array<any>, oldPointer: string, newArray: Array<any>, newPointer: string, currentChanges: Change[]): number {
+    private compareArrays(oldArray: Array<any>, oldPointer: string, newArray: Array<any>, newPointer: string, currentChanges: Change[]): number {
         const constrainedMatchScore = this.tryConstrainedMatch(oldArray, oldPointer, newArray, newPointer, currentChanges);
         if (constrainedMatchScore != -1) return constrainedMatchScore;
         
@@ -103,7 +126,7 @@ export class Comparator {
                         const constraint = new ObjectPropertyMatchConstraint(matchType as MatchType, property);
                         let report = constraint.matchArrayElements(oldArray, newArray);
 
-                        let potentialMatch = this.simulateMatch(oldArray, oldPointer, newArray, newPointer, report)
+                        let potentialMatch = this.tryMatch(oldArray, oldPointer, newArray, newPointer, report)
                         potentialMatch[0].matchProperty = property;
                         potentialMatch[0].matchMethod = matchType;
                         if (potentialMatch[1] < optimalMatchChanges) {
@@ -123,7 +146,7 @@ export class Comparator {
                 const constraint = new PrimitiveMatchConstraint("literal");
                 let report = constraint.matchArrayElements(oldArray, newArray);
 
-                let match = this.simulateMatch(oldArray, oldPointer, newArray, newPointer, report);
+                let match = this.tryMatch(oldArray, oldPointer, newArray, newPointer, report);
                 match[0].matchMethod = "literal";
 
                 currentChanges.push(match[0]);
@@ -132,12 +155,12 @@ export class Comparator {
             }
         }
 
-        const report: PotentialMatchReport = {
+        const report: MatchReport = {
             matchedIndices: [],
             unmatchedOldIndices: [...oldArray.keys()],
             unmatchedNewIndices: [...newArray.keys()]
         };
-        const match = this.simulateMatch(oldArray, oldPointer, newArray, newPointer, report);
+        const match = this.tryMatch(oldArray, oldPointer, newArray, newPointer, report);
 
         if (match[0].hasChanges()) {
             currentChanges.push(match[0]);
@@ -157,22 +180,24 @@ export class Comparator {
                 currentChanges.push(new PropertyDeleted(`${oldPointer}/${property}`, oldElement[property], newPointer));
                 changeCount += countSubElements(oldElement[property]);
             } else { // property exists in both, recurse on sub-document
-                changeCount += this.compare(oldElement[property], `${oldPointer}/${property}`, newElement[property], `${newPointer}/${property}`, currentChanges);
+                changeCount += this.compareElements(oldElement[property], `${oldPointer}/${property}`, newElement[property], `${newPointer}/${property}`, currentChanges);
             }
         }
         return changeCount;
     }
 
     /**
-     * Compare two sub-documents
+     * Determine if the given elements are objects, arrays, or primitives, and
+     * perform a comparison on the elements based on which 'type' they are
      * @param oldElement 
      * @param oldPointer 
      * @param newElement 
      * @param newPointer 
      * @param currentChanges
+     * @throws 
      * @returns a number representing the number of changes
      */
-    compare(oldElement: any, oldPointer: string, newElement: any, newPointer: string, currentChanges: Change[]): number {
+    private compareElements(oldElement: any, oldPointer: string, newElement: any, newPointer: string, currentChanges: Change[]): number {
         // verify that elements are of the same 'type' (no arrays compared to objects)
         const type = getType(oldElement);
         if (type != getType(newElement)) throw new Error('Old and new (sub)document do not have the same type');
@@ -183,7 +208,7 @@ export class Comparator {
 
         if (type === 'array') {
             // elements are arrays, array objects need to be matched before comparing their children
-            return this.matchArrayElements(oldElement, oldPointer, newElement, newPointer, currentChanges);
+            return this.compareArrays(oldElement, oldPointer, newElement, newPointer, currentChanges);
         } else if (type === 'object') {
             // elements are both objects, compare each sub-element in the object
             return this.compareObjects(oldElement, oldPointer, newElement, newPointer, currentChanges);

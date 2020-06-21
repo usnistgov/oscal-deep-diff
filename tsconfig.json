@@ -8,7 +8,7 @@
     "outDir": "lib",
     "rootDir": "src",
     "strict": true,
-    "types": ["node", "mocha", "chai"],
+    "types": ["node", "mocha", "chai", "commander"],
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",

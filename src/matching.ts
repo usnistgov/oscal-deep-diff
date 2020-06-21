@@ -112,11 +112,20 @@ export class ObjectPropertyMatchConstraint extends MatchConstraint {
 export type MatchType = "literal" | "string-similarity"
 
 export class PathCondition {
-    condition: string;
-    constraint: MatchConstraint
+    private condition: string;
+    private constraint: MatchConstraint
 
+    /**
+     * Returns true if the given json pointer matches the condition string
+     * @param docPath 
+     */
     public matches(docPath: string): boolean {
-        return false;
+        const regex = new RegExp(this.condition);
+        return regex.test(docPath);
+    }
+
+    private getConstraint() {
+        return this.constraint;
     }
 
     public constructor(condition: string, constraint: MatchConstraint) {

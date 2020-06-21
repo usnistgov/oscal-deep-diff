@@ -51,5 +51,6 @@ export function loadJSON(documentPath: string): object {
 }
 
 export function saveJSON(obj: any, outputPath: string) {
+    // save pretty printed json
     fs.writeFileSync(outputPath, JSON.stringify(obj, null, 2));
 }

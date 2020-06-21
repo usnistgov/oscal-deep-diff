@@ -18,9 +18,10 @@
   "author": "Nikita Wootten",
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
-    "commander": "^5.0.0"
+    "commander": "^5.1.0"
   },
   "devDependencies": {
+    "@types/commander": "^2.12.2",
     "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.9.1",
