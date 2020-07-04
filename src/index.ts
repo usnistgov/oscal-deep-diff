@@ -21,6 +21,7 @@ const rawOptions = new Command()
     .parse(process.argv);
 // specially cast rawOptions object to CLIOptions interface (force typing)
 const options: CLIOptions = rawOptions as unknown as CLIOptions;
+rawOptions.args
 
 const comparator = new Comparator();
 comparator.verbose = options.verbose;

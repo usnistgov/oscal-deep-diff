@@ -17,7 +17,7 @@ describe('compare documents no constraints', () => {
         const oldDoc = {id: 1, name: 'John'}
         const newDoc = {id: 1, name: 'Jake'}
 
-        let score = comparator['compareElements'](oldDoc, "", newDoc, "", changes);
+        comparator['compareElements'](oldDoc, "", newDoc, "", changes);
 
         expect(changes).to.have.lengthOf(1, "too many changes returned");
         expect(changes[0].change).to.equal("property_changed", "incorrect change type");
@@ -31,7 +31,7 @@ describe('compare documents no constraints', () => {
         const oldDoc = {uuid: "3c9ec6b1-f013-46ec-aec0-8888c7b61b9b", items: [1, 2, 3]}
         const newDoc = {uuid: "3c9ec6b1-f013-46ec-aec0-8888c7b61b9b", items: [1, 2, 3, 4]}
 
-        let score = comparator['compareElements'](oldDoc, "", newDoc, "", changes);
+        comparator['compareElements'](oldDoc, "", newDoc, "", changes);
 
         console.log(changes);
 
@@ -46,10 +46,10 @@ describe('compare documents no constraints', () => {
     it('object with object array', () => {
         const changes: Change[] = [];
 
-        const oldDoc = {items: [{id: 1}, {id: 2}, {id: 3}]}
-        const newDoc = {items: [{id: 1}, {id: 2}, {id: 3}, {id: 4}]}
+        const oldDoc = {items: [{id: 1}, {id: 2}, {id: 3}]};
+        const newDoc = {items: [{id: 1}, {id: 2}, {id: 3}, {id: 4}]};
 
-        let score = comparator['compareElements'](oldDoc, "", newDoc, "", changes);
+        comparator['compareElements'](oldDoc, "", newDoc, "", changes);
 
         console.log(changes);
 
@@ -61,4 +61,15 @@ describe('compare documents no constraints', () => {
         expect(change.subChanges).to.have.lengthOf(0, "there were no sub-changes");
         expect(change.addedItems[0].newElement.id).to.equal(4);
     });
-})
+
+    // it('object array with matching sub-elements', () => {
+    //     const changes: Change[] = [];
+
+    //     const oldDoc = [{id: 'ac-1', sub: {val: "hard matched first element"}, }, {id: 'ac-2', sub: {val: "hard matched second element"}}];
+    //     const newDoc = [''];
+
+    //     comparator['compareElements'](oldDoc, '', newDoc, '', changes);
+
+    //     console.log(changes);
+    // });
+});

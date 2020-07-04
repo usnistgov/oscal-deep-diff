@@ -49,6 +49,12 @@ export interface NewArrayItem {
     newElement: any;
 }
 
+export interface ArraySubElement {
+    oldPointer: string;
+    newPointer: string;
+    changes: Change[];
+}
+
 export class ArrayChanged {
     change = "array_changed";
     oldPointer: string;
@@ -57,7 +63,7 @@ export class ArrayChanged {
     addedItems: NewArrayItem[];
     removedItems: OldArrayItem[];
 
-    subChanges: Change[];
+    subChanges: ArraySubElement[];
 
     matchProperty?: string;
     matchMethod?: string;
@@ -66,7 +72,7 @@ export class ArrayChanged {
         return (this.addedItems.length > 0) || (this.removedItems.length > 0) || (this.subChanges.length > 0);
     }
 
-    constructor(oldPointer: string, newPointer: string, addedItems: NewArrayItem[], removedItems: OldArrayItem[], subChanges: Change[], matchProperty?: string, matchMethod?: string) {
+    constructor(oldPointer: string, newPointer: string, addedItems: NewArrayItem[], removedItems: OldArrayItem[], subChanges: ArraySubElement[], matchProperty?: string, matchMethod?: string) {
         this.oldPointer = oldPointer;
         this.newPointer = newPointer;
         this.addedItems = addedItems;

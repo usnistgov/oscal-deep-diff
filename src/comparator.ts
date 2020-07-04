@@ -1,6 +1,7 @@
 import { getPropertyUnion, getType, loadJSON, getPropertyIntersection, countSubElements, saveJSON } from "./utils";
-import { PropertyAdded, PropertyDeleted, PropertyChanged, ArrayChanged, Comparison, Change } from './comparisons';
+import { PropertyAdded, PropertyDeleted, PropertyChanged, ArrayChanged, Comparison, Change, ArraySubElement } from './comparisons';
 import { ObjectPropertyMatchConstraint, MatchType, PrimitiveMatchConstraint, MatchReport, Constraints } from "./matching";
+import { MemoizationCache } from "./cache";
 
 /**
  * The Comparator class is designed to handle comparing two arbritrary JSON
@@ -24,6 +25,8 @@ export class Comparator {
     }
 
     private _constraints: Constraints;
+
+    private cache = new MemoizationCache();
 
     constructor(constraints: string | Constraints = new Constraints([])) {
         if (constraints instanceof Constraints) {
@@ -100,13 +103,23 @@ export class Comparator {
      * @param newPointer 
      * @param report 
      */
-    private tryMatch(oldArray: Array<any>, oldPointer: string, newArray: Array<any>, newPointer: string, report: MatchReport): [ArrayChanged, number] {
+    private tryMatch(oldArray: any[], oldPointer: string, newArray: any[], newPointer: string, report: MatchReport): [ArrayChanged, number] {
         let changeCount = 0;
         const change = new ArrayChanged(oldPointer, newPointer, [], [], []);
 
         // then, iterate through all elements that have been matched and compare the sub-elements
         for (const match of report.matchedIndices) {
-            changeCount += this.compareElements(oldArray[match.oldElementIndex], `${oldPointer}/${match.oldElementIndex}`, newArray[match.newElementIndex], `${newPointer}/${match.newElementIndex}`, change.subChanges);
+            const oldSubElement = `${oldPointer}/${match.oldElementIndex}`;
+            const newSubElement = `${newPointer}/${match.newElementIndex}`;
+            const subChanges: ArraySubElement = {
+                oldPointer: oldSubElement,
+                newPointer: newSubElement,
+                changes: [],
+            }
+            changeCount += this.compareElements(oldArray[match.oldElementIndex], oldSubElement, newArray[match.newElementIndex], newSubElement, subChanges.changes);
+            if (subChanges.changes.length > 0) {
+                change.subChanges.push(subChanges);
+            }
         }
 
         for (const unmatchedOldIndex of report.unmatchedOldIndices) {
@@ -128,17 +141,25 @@ export class Comparator {
         return [change, changeCount];
     }
 
-    private compareArrays(oldArray: Array<any>, oldPointer: string, newArray: Array<any>, newPointer: string, currentChanges: Change[]): number {
+    private compareArrays(oldArray: any[], oldPointer: string, newArray: any[], newPointer: string, currentChanges: Change[]): number {
         const constraint = this._constraints.tryGetConstraint(newPointer);
         if (constraint) {
             const report = constraint.matchArrayElements(oldArray, newArray);
             const match = this.tryMatch(oldArray, oldPointer, newArray, newPointer, report);
             if (match[0].hasChanges()) {
-                currentChanges.push(currentChanges[0]);
+                currentChanges.push(match[0]);
             }
             return match[1];
         }
         
+        const cached = this.cache.get(oldPointer, newPointer);
+        if (cached) {
+            if (cached[0].hasChanges()) {
+                currentChanges.push(cached[0]);
+            }
+            return cached[1];
+        }
+
         // console.log(`Warning: matching arrays  (old: ${oldPointer}, new: ${newPointer}) without specifying a constraint`);
         if (oldArray.length > 0 && newArray.length > 0) {
             // assumes that all the relevant matching info can be gathered from the first object
@@ -171,6 +192,8 @@ export class Comparator {
                 }
                 
                 if (optimalMatch) {
+                    this.cache.set(oldPointer, newPointer, [optimalMatch, optimalMatchChanges])
+
                     if (optimalMatch.hasChanges()) {
                         currentChanges.push(optimalMatch);
                     }
@@ -182,9 +205,10 @@ export class Comparator {
                 let report = constraint.matchArrayElements(oldArray, newArray);
 
                 let match = this.tryMatch(oldArray, oldPointer, newArray, newPointer, report);
-                match[0].matchMethod = "literal";
-
-                currentChanges.push(match[0]);
+                if (match[0].hasChanges()) {
+                    match[0].matchMethod = "literal";
+                    currentChanges.push(match[0]);    
+                }
 
                 return match[1];
             }
