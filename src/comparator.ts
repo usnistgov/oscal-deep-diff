@@ -15,6 +15,16 @@ export class Comparator {
         this._verbose = verbose;
     }
 
+    private _memoizationEnabled: boolean = true;
+
+    public set memoizationEnabled(memoizationEnabled: boolean) {
+        this._memoizationEnabled = memoizationEnabled;
+    }
+
+    private cache = new MemoizationCache();
+
+    private _constraints: Constraints;
+
     private _comparison: Comparison | undefined;
 
     public get comparison(): Comparison {
@@ -23,10 +33,6 @@ export class Comparator {
         }
         return this._comparison;
     }
-
-    private _constraints: Constraints;
-
-    private cache = new MemoizationCache();
 
     constructor(constraints: string | Constraints = new Constraints([])) {
         if (constraints instanceof Constraints) {
@@ -152,12 +158,14 @@ export class Comparator {
             return match[1];
         }
         
-        const cached = this.cache.get(oldPointer, newPointer);
-        if (cached) {
-            if (cached[0].hasChanges()) {
-                currentChanges.push(cached[0]);
-            }
-            return cached[1];
+        if (this._memoizationEnabled) {
+            const cached = this.cache.get(oldPointer, newPointer);
+            if (cached) {
+                if (cached[0].hasChanges()) {
+                    currentChanges.push(cached[0]);
+                }
+                return cached[1];
+            }    
         }
 
         // console.log(`Warning: matching arrays  (old: ${oldPointer}, new: ${newPointer}) without specifying a constraint`);
@@ -192,8 +200,10 @@ export class Comparator {
                 }
                 
                 if (optimalMatch) {
-                    this.cache.set(oldPointer, newPointer, [optimalMatch, optimalMatchChanges])
-
+                    if (this._memoizationEnabled) {
+                        this.cache.set(oldPointer, newPointer, [optimalMatch, optimalMatchChanges])
+                    }
+                    
                     if (optimalMatch.hasChanges()) {
                         currentChanges.push(optimalMatch);
                     }

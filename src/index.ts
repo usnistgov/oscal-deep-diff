@@ -6,6 +6,7 @@ interface CLIOptions {
     newCatalog: string;
     constraints: string;
     write: string;
+    disableMemoization: boolean;
     verbose: boolean;
 }
 
@@ -17,6 +18,7 @@ const rawOptions = new Command()
     .requiredOption('-n, --newCatalog <filename>', 'New document to compare (in JSON representation)', '')
     .option('-c, --constraints <filename>', 'Specify a constraints file to read from', '')
     .option('-w, --write <filename>', 'File to output difference document to', '')
+    .option('--disableMemoization', 'Disable the caching of array object (only use in low-memory scenarios)', false)
     .option('-v, --verbose', 'Print more output', false)
     .parse(process.argv);
 // specially cast rawOptions object to CLIOptions interface (force typing)
@@ -25,6 +27,7 @@ rawOptions.args
 
 const comparator = new Comparator();
 comparator.verbose = options.verbose;
+comparator.memoizationEnabled = !options.disableMemoization;
 comparator.newComparisonFromDisk(options.oldCatalog, options.newCatalog);
 
 if (options.write !== '') {
