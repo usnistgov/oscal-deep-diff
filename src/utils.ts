@@ -58,6 +58,58 @@ export function resolvePointer(obj: any, pointer: string) {
     return obj; 
 }
 
+export type Condition = string;
+export type Pointer = string;
+
+/**
+ * Tests if a pointer matches a certain condition
+ * 
+ * Notes:
+ * * Starting with a / denotes that you want to search from the root
+ * * # and * denote numbers and wildcard tokens
+ * * The first non-/ token must not be a # or a *
+ * 
+ * Examples:
+ * * calling testPointerCondition('/catalog/groups/0/id', '/catalog/groups/#/id') returns true
+ * @param pointer 
+ * @param condition 
+ */
+export function testPointerCondition(pointer: Pointer, condition: Condition): boolean {
+    if (!pointer.startsWith('/')) {
+        throw new Error(`Invalid path '${pointer}', must start with a '/'`);
+    }
+
+    let subConditions = condition.split('/');
+    if (subConditions[0] == '') { // condition begins with a /
+        pointer = pointer.slice(1);
+    } else {
+        const index = pointer.indexOf(subConditions[0]);
+        if (index == -1) {
+            return false; // first token does not exist
+        }
+
+        // remove everything before found first element and the proceeding /
+        pointer = pointer.slice(index + subConditions[0].length + 1);
+    }
+    subConditions = subConditions.splice(1); // first condition has been handled
+    let subPointers = pointer.split('/');
+
+    for (const subCondition of subConditions) {
+        if (subPointers.length == 0) {
+            return false;
+        } else if (subCondition == '#') {
+            if (!Number.isInteger(Number(subPointers[0]))) {
+                return false;
+            }
+        } else if (subCondition != '*' && (subCondition != subPointers[0])) {
+            return false;
+        }
+        subPointers = subPointers.slice(1);
+    }
+
+    return subPointers.length == 0 || subPointers[0] == ''; // only true if nothing is left
+}
+
 export function countSubElements(element: any): number {
     let count = 0;
     switch (getType(element)) {

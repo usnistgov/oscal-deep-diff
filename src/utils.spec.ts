@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { getPropertyUnion, getPropertyIntersection, getType, resolvePointer } from "./utils";
+import { getPropertyUnion, getPropertyIntersection, getType, resolvePointer, testPointerCondition } from "./utils";
 import { resolve } from 'path';
 
 /*
@@ -91,5 +91,12 @@ describe('resolvePointer()', () => {
         expect(() => resolvePointer([], '0')).to.throw(/is out of bounds/);
         expect(() => resolvePointer([], '0.5')).to.throw(/is not a valid index/);
         expect(() => resolvePointer(1, 'subprop')).to.throw(/of primitive/);
+    });
+});
+
+describe('testPointerCondition()', ()=> {
+    it('simple cases', () => {
+        expect(testPointerCondition('/catalog/groups/0/id', '/catalog/groups/#/id')).to.be.true;
+        expect(testPointerCondition('/metadata/id', 'id')).to.be.true;
     });
 });
