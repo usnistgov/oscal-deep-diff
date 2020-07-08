@@ -40,4 +40,17 @@ describe('ObjectPropertyMatchConstraint', () => {
         expect(report.unmatchedOldIndices).to.eql([], 'no unmatched old indices');
         expect(report.matchedIndices.length).equals(oldArray.length, 'all items must be matched');
     });
+
+    it('sub-property match', () => {
+        // The user should be able to manually specify a sub-object's property
+        // as the guide for how an array of objects are matched
+        const constraint = new ObjectPropertyMatchConstraint("literal", "subobj/id");
+        const oldArray = [{subobj: {id: 1}}, {subobj: {id: 1}}];
+        const newArray = [{subobj: {id: 1}}, {subobj: {id: 1}}];
+        const report = constraint.matchArrayElements(oldArray, newArray);
+        console.log(report);
+        expect(report.unmatchedNewIndices).to.eql([], 'no unmatched new indices');
+        expect(report.unmatchedOldIndices).to.eql([], 'no unmatched old indices');
+        expect(report.matchedIndices.length).equals(oldArray.length, 'all items must be matched');
+    });
 });

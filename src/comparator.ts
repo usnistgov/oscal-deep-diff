@@ -148,16 +148,6 @@ export class Comparator {
     }
 
     private compareArrays(oldArray: any[], oldPointer: string, newArray: any[], newPointer: string, currentChanges: Change[]): number {
-        const constraint = this._constraints.tryGetConstraint(newPointer);
-        if (constraint) {
-            const report = constraint.matchArrayElements(oldArray, newArray);
-            const match = this.tryMatch(oldArray, oldPointer, newArray, newPointer, report);
-            if (match[0].hasChanges()) {
-                currentChanges.push(match[0]);
-            }
-            return match[1];
-        }
-        
         if (this._memoizationEnabled) {
             const cached = this.cache.get(oldPointer, newPointer);
             if (cached) {
@@ -166,6 +156,16 @@ export class Comparator {
                 }
                 return cached[1];
             }    
+        }
+
+        const constraint = this._constraints.tryGetConstraint(newPointer);
+        if (constraint) {
+            const report = constraint.matchArrayElements(oldArray, newArray);
+            const match = this.tryMatch(oldArray, oldPointer, newArray, newPointer, report);
+            if (match[0].hasChanges()) {
+                currentChanges.push(match[0]);
+            }
+            return match[1];
         }
 
         // console.log(`Warning: matching arrays  (old: ${oldPointer}, new: ${newPointer}) without specifying a constraint`);
@@ -203,7 +203,7 @@ export class Comparator {
                     if (this._memoizationEnabled) {
                         this.cache.set(oldPointer, newPointer, [optimalMatch, optimalMatchChanges])
                     }
-                    
+
                     if (optimalMatch.hasChanges()) {
                         currentChanges.push(optimalMatch);
                     }

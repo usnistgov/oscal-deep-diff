@@ -1,5 +1,5 @@
 import { jaroWrinkerSimilarity } from "./string-similarity";
-import { loadJSON } from "./utils";
+import { loadJSON, resolvePointer } from "./utils";
 
 export interface PotentialMatch {
     oldElementIndex: number;
@@ -151,12 +151,19 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
             }
         }
 
-        if (this.matchType == 'literal') {
-            return oldElement[this.propertyName] == newElement[this.propertyName] ? 1 : 0;
-        } else if (this.matchType == 'string-similarity') {
-            return jaroWrinkerSimilarity(oldElement[this.propertyName], newElement[this.propertyName]);
-        } else {
-            throw new Error("unknown comparison type");
+        try {
+            let oldSubProperty = resolvePointer(oldElement, this.propertyName);
+            let newSubProperty = resolvePointer(newElement, this.propertyName);
+
+            if (this.matchType == 'literal') {
+                return oldSubProperty == newSubProperty ? 1 : 0;
+            } else if (this.matchType == 'string-similarity') {
+                return jaroWrinkerSimilarity(oldSubProperty, newSubProperty);
+            } else {
+                throw new Error("unknown comparison type");
+            }
+        } catch (error) {
+            return 0;
         }
     }
 
