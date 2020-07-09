@@ -1,4 +1,4 @@
-import { getPropertyUnion, getType, loadJSON, getPropertyIntersection, countSubElements, saveJSON } from "./utils";
+import { getPropertyUnion, getType, loadJSON, getPropertyIntersection, countSubElements, saveJSON, Condition, testPointerCondition } from "./utils";
 import { PropertyAdded, PropertyDeleted, PropertyChanged, ArrayChanged, Comparison, Change, ArraySubElement } from './comparisons';
 import { ObjectPropertyMatchConstraint, MatchType, PrimitiveMatchConstraint, MatchReport, Constraints } from "./matching";
 import { MemoizationCache } from "./cache";
@@ -24,6 +24,12 @@ export class Comparator {
     private cache = new MemoizationCache();
 
     private _constraints: Constraints;
+
+    private _ignoreConditions: Condition[] = [];
+
+    public set ignoreConditions(ignoreConditions: Condition[]) {
+        this._ignoreConditions = ignoreConditions;
+    }
 
     private _comparison: Comparison | undefined;
 
@@ -269,6 +275,13 @@ export class Comparator {
         // verify that elements are of the same 'type' (no arrays compared to objects)
         const type = getType(oldElement);
         if (type != getType(newElement)) throw new Error('Old and new (sub)document do not have the same type');
+
+        // check if elements have been marked as ignored
+        for (let ignoreCondition of this._ignoreConditions) {
+            if (testPointerCondition(oldPointer, ignoreCondition)) {
+                return 0;
+            }
+        }
 
         if (type === 'array') {
             // elements are arrays, array objects need to be matched before comparing their children

@@ -28,6 +28,7 @@ rawOptions.args
 const comparator = new Comparator();
 comparator.verbose = options.verbose;
 comparator.memoizationEnabled = !options.disableMemoization;
+comparator.ignoreConditions = ['id', 'uuid', '/catalog/back-matter/resources']
 comparator.newComparisonFromDisk(options.oldCatalog, options.newCatalog);
 
 if (options.write !== '') {

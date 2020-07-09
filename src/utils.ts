@@ -74,8 +74,8 @@ export type Pointer = string;
  * @param pointer 
  * @param condition 
  */
-export function testPointerCondition(pointer: Pointer, condition: Condition): boolean {
-    if (!pointer.startsWith('/')) {
+export function testPointerCondition(pointer: string, condition: Condition): boolean {
+    if (!pointer.startsWith('/') && pointer != '') {
         throw new Error(`Invalid path '${pointer}', must start with a '/'`);
     }
 
