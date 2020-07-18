@@ -2,15 +2,15 @@ import { jaroWrinkerSimilarity } from "./string-similarity";
 import { loadJSON, resolvePointer } from "./utils";
 
 export interface PotentialMatch {
-    oldElementIndex: number;
-    newElementIndex: number;
+    leftElementIndex: number;
+    rightElementIndex: number;
     confidence?: number; // only used in similarity functions
 }
 
 export interface MatchReport {
     matchedIndices: PotentialMatch[];
-    unmatchedOldIndices: number[];
-    unmatchedNewIndices: number[];
+    unmatchedLeftIndices: number[];
+    unmatchedRightIndices: number[];
 }
 
 export type MatchType = "literal" | "string-similarity"
@@ -66,41 +66,41 @@ function MatchConstraintFromJson(obj: any): AbstractMatchConstraint {
 }
 
 export abstract class AbstractMatchConstraint {
-    abstract scoreElementPair(oldElement: any, newElement: any): number;
+    abstract scoreElementPair(leftElement: any, rightElement: any): number;
 
-    public matchArrayElements(oldArray: any[], newArray: any[]): MatchReport {
+    public matchArrayElements(leftArray: any[], rightArray: any[]): MatchReport {
         let report: MatchReport = {
             matchedIndices: [],
-            unmatchedOldIndices: [],
-            unmatchedNewIndices: []
+            unmatchedLeftIndices: [],
+            unmatchedRightIndices: []
         }
 
-        let newArrayIndices = [...newArray.keys()];
-        for (let oldElementIndex = 0; oldElementIndex < oldArray.length; oldElementIndex++) {
-            const oldElement = oldArray[oldElementIndex];
+        let rightArrayIndices = [...rightArray.keys()];
+        for (let leftElementIndex = 0; leftElementIndex < leftArray.length; leftElementIndex++) {
+            const leftElement = leftArray[leftElementIndex];
             let topScore = 0, topScoreIndex = -1;
-            for (const newElementIndex of newArrayIndices) {
-                const newElement = newArray[newElementIndex];
-                const score = this.scoreElementPair(oldElement, newElement);
+            for (const rightElementIndex of rightArrayIndices) {
+                const rightElement = rightArray[rightElementIndex];
+                const score = this.scoreElementPair(leftElement, rightElement);
                 if (score > topScore) {
                     topScore = score;
-                    topScoreIndex = newElementIndex;
+                    topScoreIndex = rightElementIndex;
                     if (score == 1) break;
                 }
             }
             if (topScoreIndex == -1) {
-                report.unmatchedOldIndices.push(oldElementIndex)
+                report.unmatchedLeftIndices.push(leftElementIndex)
             } else {
-                const deleteIndex = newArrayIndices.indexOf(topScoreIndex)
-                newArrayIndices.splice(deleteIndex, 1);
+                const deleteIndex = rightArrayIndices.indexOf(topScoreIndex)
+                rightArrayIndices.splice(deleteIndex, 1);
                 report.matchedIndices.push({
-                    oldElementIndex: oldElementIndex,
-                    newElementIndex: topScoreIndex
+                    leftElementIndex: leftElementIndex,
+                    rightElementIndex: topScoreIndex
                 });
             }
         }
 
-        report.unmatchedNewIndices = newArrayIndices;
+        report.unmatchedRightIndices = rightArrayIndices;
 
         return report;
     }
@@ -113,11 +113,11 @@ export abstract class AbstractMatchConstraint {
 export class PrimitiveMatchConstraint extends AbstractMatchConstraint {
     matchType: MatchType;
 
-    scoreElementPair(oldElement: any, newElement: any): number {
+    scoreElementPair(leftElement: any, rightElement: any): number {
         if (this.matchType == 'literal') {
-            return oldElement === newElement ? 1 : 0;
+            return leftElement === rightElement ? 1 : 0;
         } else if (this.matchType == 'string-similarity') {
-            return jaroWrinkerSimilarity(oldElement, newElement);
+            return jaroWrinkerSimilarity(leftElement, rightElement);
         } else {
             throw new Error("unknown comparison type");
         }
@@ -142,23 +142,23 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
     propertyName: string;
     secondaryProperties?: string;
     
-    scoreElementPair(oldElement: any, newElement: any): number {
+    scoreElementPair(leftElement: any, rightElement: any): number {
         if (this.secondaryProperties) {
             for (const secondaryProperty of this.secondaryProperties) {
-                if (oldElement[secondaryProperty] !== newElement[secondaryProperty]) {
+                if (leftElement[secondaryProperty] !== rightElement[secondaryProperty]) {
                     return 0;
                 }
             }
         }
 
         try {
-            let oldSubProperty = resolvePointer(oldElement, this.propertyName);
-            let newSubProperty = resolvePointer(newElement, this.propertyName);
+            let leftSubProperty = resolvePointer(leftElement, this.propertyName);
+            let rightSubProperty = resolvePointer(rightElement, this.propertyName);
 
             if (this.matchType == 'literal') {
-                return oldSubProperty == newSubProperty ? 1 : 0;
+                return leftSubProperty == rightSubProperty ? 1 : 0;
             } else if (this.matchType == 'string-similarity') {
-                return jaroWrinkerSimilarity(oldSubProperty, newSubProperty);
+                return jaroWrinkerSimilarity(leftSubProperty, rightSubProperty);
             } else {
                 throw new Error("unknown comparison type");
             }

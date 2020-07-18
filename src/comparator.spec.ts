@@ -14,10 +14,10 @@ describe('compare documents no constraints', () => {
     it('simple object', () => {
         const changes: Change[] = [];
 
-        const oldDoc = {id: 1, name: 'John'}
-        const newDoc = {id: 1, name: 'Jake'}
+        const leftDoc = {id: 1, name: 'John'}
+        const rightDoc = {id: 1, name: 'Jake'}
 
-        comparator['compareElements'](oldDoc, "", newDoc, "", changes);
+        comparator['compareElements'](leftDoc, "", rightDoc, "", changes);
 
         expect(changes).to.have.lengthOf(1, "too many changes returned");
         expect(changes[0].change).to.equal("property_changed", "incorrect change type");
@@ -28,10 +28,10 @@ describe('compare documents no constraints', () => {
     it('simple object with primitive array', () => {
         const changes: Change[] = [];
 
-        const oldDoc = {uuid: "3c9ec6b1-f013-46ec-aec0-8888c7b61b9b", items: [1, 2, 3]}
-        const newDoc = {uuid: "3c9ec6b1-f013-46ec-aec0-8888c7b61b9b", items: [1, 2, 3, 4]}
+        const leftDoc = {uuid: "3c9ec6b1-f013-46ec-aec0-8888c7b61b9b", items: [1, 2, 3]}
+        const rightDoc = {uuid: "3c9ec6b1-f013-46ec-aec0-8888c7b61b9b", items: [1, 2, 3, 4]}
 
-        comparator['compareElements'](oldDoc, "", newDoc, "", changes);
+        comparator['compareElements'](leftDoc, "", rightDoc, "", changes);
 
         console.log(changes);
 
@@ -46,10 +46,10 @@ describe('compare documents no constraints', () => {
     it('object with object array', () => {
         const changes: Change[] = [];
 
-        const oldDoc = {items: [{id: 1}, {id: 2}, {id: 3}]};
-        const newDoc = {items: [{id: 1}, {id: 2}, {id: 3}, {id: 4}]};
+        const leftDoc = {items: [{id: 1}, {id: 2}, {id: 3}]};
+        const rightDoc = {items: [{id: 1}, {id: 2}, {id: 3}, {id: 4}]};
 
-        comparator['compareElements'](oldDoc, "", newDoc, "", changes);
+        comparator['compareElements'](leftDoc, "", rightDoc, "", changes);
 
         console.log(changes);
 
@@ -59,7 +59,7 @@ describe('compare documents no constraints', () => {
         expect(change.addedItems).to.have.lengthOf(1, "only '{id: 4}' item was added");
         expect(change.removedItems).to.have.lengthOf(0, "no items were deleted");
         expect(change.subChanges).to.have.lengthOf(0, "there were no sub-changes");
-        expect(change.addedItems[0].newElement.id).to.equal(4);
+        expect(change.addedItems[0].rightElement.id).to.equal(4);
     });
 
     // it('object array with matching sub-elements', () => {

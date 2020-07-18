@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import { getPropertyUnion, getPropertyIntersection, getType, resolvePointer, testPointerCondition } from "./utils";
-import { resolve } from 'path';
 
 /*
  * Tests for util.ts

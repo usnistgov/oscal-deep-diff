@@ -3,18 +3,18 @@ import * as fs from 'fs';
 /**
  * Returns the union of properties for both documents
  */
-export function getPropertyUnion(oldDocument: object, newDocument: object): string[] {
-    return [...new Set([...Object.getOwnPropertyNames(oldDocument), ...Object.getOwnPropertyNames(newDocument)])]
+export function getPropertyUnion(leftDocument: object, rightDocument: object): string[] {
+    return [...new Set([...Object.getOwnPropertyNames(leftDocument), ...Object.getOwnPropertyNames(rightDocument)])]
 }
 
 /**
  * Returns the intersection of properties for both documents
  */
-export function getPropertyIntersection(oldDocument: any, newDocument: any): string[] {
-    const oldDocProps = Object.getOwnPropertyNames(oldDocument);
-    const newDocProps = Object.getOwnPropertyNames(newDocument);
+export function getPropertyIntersection(leftDocument: any, rightDocument: any): string[] {
+    const leftDocProps = Object.getOwnPropertyNames(leftDocument);
+    const rightDocProps = Object.getOwnPropertyNames(rightDocument);
 
-    return oldDocProps.filter(value => newDocProps.includes(value));
+    return leftDocProps.filter(value => rightDocProps.includes(value));
 }
 
 /**
