@@ -23,7 +23,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Build Project",
+            "name": "Run on NIST_SP-800-53",
             "program": "${workspaceFolder}\\src\\index.ts",
             "preLaunchTask": "npm: build",
             "sourceMaps": true,
@@ -31,6 +31,16 @@
             "internalConsoleOptions": "openOnSessionStart",
             "outFiles": [
                 "${workspaceFolder}/lib/**/*.js"
+            ],
+            // Note that this requires NIST-SP-800-53 Revisions 4 and 5 in the vault/ directory
+            "args": [
+                "--leftCatalog",
+                "vault/NIST_SP-800-53_rev4_catalog.json",
+                "--rightCatalog",
+                "vault/NIST_SP-800-53_rev5-FPD_catalog.json",
+                "--write",
+                "vault/NIST_SP-800-53_rev4_rev5_comparison.json",
+                "--verbose"
             ]
         }
     ]

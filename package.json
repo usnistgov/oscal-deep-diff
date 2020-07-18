@@ -8,7 +8,6 @@
   },
   "scripts": {
     "start": "nodemon src/index.ts",
-    "create": "npm run build && npm run test",
     "build": "tsc -p .",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "refresh": "rm -rf ./node_modules ./package-lock.json && npm install"
@@ -19,7 +18,7 @@
   "author": "Nikita Wootten",
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
-    "commander": "^5.0.0"
+    "commander": "^5.1.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",
@@ -28,14 +27,13 @@
     "chai": "^4.2.0",
     "mocha": "^7.1.1",
     "nodemon": "^2.0.2",
-    "nyc": "^15.0.0",
     "ts-node": "^8.6.2",
     "typescript": "^3.8.3"
   },
   "nodemonConfig": {
     "watch": "src/**/*.ts",
     "execMap": {
-        "ts": "ts-node"
+      "ts": "ts-node"
     }
   }
 }

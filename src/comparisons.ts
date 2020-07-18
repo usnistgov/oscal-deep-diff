@@ -1,63 +1,69 @@
 export class PropertyAdded {
     change = "property_added";
-    oldParentPointer: string;
-    newPointer: string;
+    leftParentPointer: string;
+    rightPointer: string;
     addedElement: any;
 
-    constructor(oldParentPointer: string, newPointer: string, addedElement: any) {
-        this.oldParentPointer = oldParentPointer;
-        this.newPointer = newPointer;
+    constructor(leftParentPointer: string, rightPointer: string, addedElement: any) {
+        this.leftParentPointer = leftParentPointer;
+        this.rightPointer = rightPointer;
         this.addedElement = addedElement;
     }
 }
 
 export class PropertyDeleted {
     change = "property_deleted";
-    oldPointer: string;
+    leftPointer: string;
     deletedElement: any;
-    newParentPointer: string;
+    rightParentPointer: string;
 
-    constructor(oldPointer: string, deletedElement: any, newParentPointer: string) {
-        this.oldPointer = oldPointer;
+    constructor(leftPointer: string, deletedElement: any, rightParentPointer: string) {
+        this.leftPointer = leftPointer;
         this.deletedElement = deletedElement;
-        this.newParentPointer = newParentPointer;
+        this.rightParentPointer = rightParentPointer;
     }
 }
 
 export class PropertyChanged {
     change = "property_changed";
-    oldPointer: string;
-    oldElement: any;
-    newPointer: string;
-    newElement: any;
+    leftPointer: string;
+    leftElement: any;
+    rightPointer: string;
+    rightElement: any;
 
-    constructor(oldElement: any, oldPointer: string, newElement: any, newPointer: string) {
-        this.oldPointer = oldPointer;
-        this.oldElement = oldElement;
-        this.newPointer = newPointer;
-        this.newElement = newElement;
+    constructor(leftElement: any, leftPointer: string, rightElement: any, rightPointer: string) {
+        this.leftPointer = leftPointer;
+        this.leftElement = leftElement;
+        this.rightPointer = rightPointer;
+        this.rightElement = rightElement;
     }
 }
 
-export interface OldArrayItem {
-    oldPointer: string;
-    oldElement: string;
+export interface LeftArrayItem {
+    leftPointer: string;
+    leftElement: any;
 }
 
-export interface NewArrayItem {
-    newPointer: string;
-    newElement: string;
+export interface RightArrayItem {
+    rightPointer: string;
+    rightElement: any;
+}
+
+export interface ArraySubElement {
+    leftPointer: string;
+    rightPointer: string;
+    changes: Change[];
 }
 
 export class ArrayChanged {
     change = "array_changed";
-    oldPointer: string;
-    newPointer: string;
+    leftPointer: string;
+    rightPointer: string;
 
-    addedItems: NewArrayItem[];
-    removedItems: OldArrayItem[];
+    addedItems: RightArrayItem[];
+    removedItems: LeftArrayItem[];
 
-    subChanges: Change[];
+    subChanges: ArraySubElement[];
 
     matchProperty?: string;
     matchMethod?: string;
@@ -66,9 +72,9 @@ export class ArrayChanged {
         return (this.addedItems.length > 0) || (this.removedItems.length > 0) || (this.subChanges.length > 0);
     }
 
-    constructor(oldPointer: string, newPointer: string, addedItems: NewArrayItem[], removedItems: OldArrayItem[], subChanges: Change[], matchProperty?: string, matchMethod?: string) {
-        this.oldPointer = oldPointer;
-        this.newPointer = newPointer;
+    constructor(leftPointer: string, rightPointer: string, addedItems: RightArrayItem[], removedItems: LeftArrayItem[], subChanges: ArraySubElement[], matchProperty?: string, matchMethod?: string) {
+        this.leftPointer = leftPointer;
+        this.rightPointer = rightPointer;
         this.addedItems = addedItems;
         this.removedItems = removedItems;
         this.subChanges = subChanges;
@@ -81,7 +87,7 @@ export class ArrayChanged {
 export type Change = PropertyAdded | PropertyDeleted | PropertyChanged | ArrayChanged;
 
 export interface Comparison {
-    oldDocument: string;
-    newDocument: string;
+    leftDocument: string;
+    rightDocument: string;
     changes: Change[];
 }

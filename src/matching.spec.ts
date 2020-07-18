@@ -1,36 +1,56 @@
 import { expect } from 'chai';
-import { MatchConstraint } from './configuration';
-import { scoreMatchPair, matchWithConstraint } from './matching';
+import { ObjectPropertyMatchConstraint, PrimitiveMatchConstraint } from './matching';
 
 /**
  * Tests for matching.ts
  */
 
-const literalMatchByIdConstraint: MatchConstraint = {
-    parentName: '',
-    matchByProperty: 'id',
-    matchType: 'literal',
-}
+describe('PrimitiveMatchConstraint', () => {
+    const constraint = new PrimitiveMatchConstraint("literal");
 
-describe('scoreMatchPair()', () => {
-    it('same item literal match', () => {
-        expect(scoreMatchPair({id: 1}, {id: 1}, literalMatchByIdConstraint)).equals(1);
+    it('simple list of primitives', () => {
+        const leftArray = [1, 2, 3, 4];
+        const rightArray = [1, 2, 3, 4];
+        const report = constraint.matchArrayElements(leftArray, rightArray);
+        console.log(report);
+        expect(report.unmatchedLeftIndices).to.eql([], 'no unmatched left indices');
+        expect(report.unmatchedRightIndices).to.eql([], 'no unmatched right indices');
+        expect(report.matchedIndices.length).equals(leftArray.length, 'all items must be matched');
     });
 
-    it('different item literal match', () => {
-        expect(scoreMatchPair({id: 1}, {id: 2}, literalMatchByIdConstraint)).equals(0);
+    it('simple re-ordered list of primitives', () => {
+        const leftArray = [1, 2, 3, 4];
+        const rightArray = [1, 3, 2, 4];
+        const report = constraint.matchArrayElements(leftArray, rightArray);
+        console.log(report);
+        expect(report.unmatchedLeftIndices).to.eql([], 'no unmatched left indices');
+        expect(report.unmatchedRightIndices).to.eql([], 'no unmatched right indices');
+        expect(report.matchedIndices.length).equals(leftArray.length, 'all items must be matched');
     });
 });
 
-describe('matchWithConstraint()', () => {
-    it('same list literal match', () => {
-        const oldArray = [{id: 1}, {id: 2}];
-        const newArray = [{id: 1}, {id: 2}];
-        const report = matchWithConstraint(oldArray, newArray, literalMatchByIdConstraint);
+describe('ObjectPropertyMatchConstraint', () => {
+    it('simple list', () => {
+        const constraint = new ObjectPropertyMatchConstraint("string-similarity", "id");
+        const leftArray = [{id: 1}, {id: 2}, {id: 3}];
+        const rightArray = [{id: 1}, {id: 2}, {id: 3}];
+        const report = constraint.matchArrayElements(leftArray, rightArray);
         console.log(report);
-        expect(report.unmatchedNewIndices).to.eql([], 'no unmatched new indices');
-        expect(report.unmatchedOldIndices).to.eql([], 'no unmatched old indices');
-        expect(report.matchedIndices.length).equals(oldArray.length, 'all items must be matched');
-        
+        expect(report.unmatchedLeftIndices).to.eql([], 'no unmatched left indices');
+        expect(report.unmatchedRightIndices).to.eql([], 'no unmatched right indices');
+        expect(report.matchedIndices.length).equals(leftArray.length, 'all items must be matched');
     });
-})
+
+    it('sub-property match', () => {
+        // The user should be able to manually specify a sub-object's property
+        // as the guide for how an array of objects are matched
+        const constraint = new ObjectPropertyMatchConstraint("literal", "subobj/id");
+        const leftArray = [{subobj: {id: 1}}, {subobj: {id: 1}}];
+        const rightArray = [{subobj: {id: 1}}, {subobj: {id: 1}}];
+        const report = constraint.matchArrayElements(leftArray, rightArray);
+        console.log(report);
+        expect(report.unmatchedLeftIndices).to.eql([], 'no unmatched left indices');
+        expect(report.unmatchedRightIndices).to.eql([], 'no unmatched right indices');
+        expect(report.matchedIndices.length).equals(leftArray.length, 'all items must be matched');
+    });
+});
