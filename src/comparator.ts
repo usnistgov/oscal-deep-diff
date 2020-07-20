@@ -1,6 +1,6 @@
 import { getPropertyUnion, getType, loadJSON, getPropertyIntersection, countSubElements, saveJSON, Condition, testPointerCondition } from "./utils";
 import { PropertyAdded, PropertyDeleted, PropertyChanged, ArrayChanged, Comparison, Change, ArraySubElement } from './comparisons';
-import { ObjectPropertyMatchConstraint, MatchType, PrimitiveMatchConstraint, MatchReport, Constraints } from "./matching";
+import { ObjectPropertyMatchConstraint, MatchType, PrimitiveMatchConstraint, MatchReport, MatchConstraintsContainer } from "./matching";
 import { MemoizationCache } from "./cache";
 
 /**
@@ -23,7 +23,7 @@ export class Comparator {
 
     private cache = new MemoizationCache();
 
-    private _constraints: Constraints;
+    private _constraints: MatchConstraintsContainer;
 
     private _ignoreConditions: Condition[] = [];
 
@@ -40,13 +40,17 @@ export class Comparator {
         return this._comparison;
     }
 
-    constructor(constraints: string | Constraints = new Constraints([])) {
-        if (constraints instanceof Constraints) {
+    constructor(constraints: string | MatchConstraintsContainer = new MatchConstraintsContainer([]) , ignoreConditions: Condition[] = []) {
+        if (constraints instanceof MatchConstraintsContainer) {
             this._constraints = constraints;
-        } else {
+        } else if(constraints != null && constraints != '') {
             // supplied constraints are a string
-            this._constraints = Constraints.fromFile(constraints);
+            this._constraints = MatchConstraintsContainer.fromFile(constraints);
+        } else {
+            this._constraints = new MatchConstraintsContainer([]);
         }
+
+        this._ignoreConditions = ignoreConditions;
     }
 
     /**

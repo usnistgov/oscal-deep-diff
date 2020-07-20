@@ -1,5 +1,5 @@
 import { jaroWrinkerSimilarity } from "./string-similarity";
-import { loadJSON, resolvePointer } from "./utils";
+import { loadJSON, resolvePointer, Condition, testPointerCondition } from "./utils";
 
 export interface PotentialMatch {
     leftElementIndex: number;
@@ -15,36 +15,46 @@ export interface MatchReport {
 
 export type MatchType = "literal" | "string-similarity"
 
-export class Constraints {
-    private _constraintConditions: PathCondition[];
+type ConstraintConditionTuple = [Condition, AbstractMatchConstraint]
 
-    public get constraintConditions() {
-        return this._constraintConditions;
-    }
+/**
+ * This object houses match constraints and provides the ability to search
+ * through all the match constraints.
+ */
+export class MatchConstraintsContainer {
+    private constraints: ConstraintConditionTuple[];
 
-    public tryGetConstraint(path: string) {
-        for (let condition of this._constraintConditions) {
-            if (condition.matches(path)) {
-                return condition.constraint;
+    public tryGetConstraint(pointer: string) {
+        for (let constraint of this.constraints) {
+            if (testPointerCondition(pointer, constraint[0])) {
+                return constraint[1];
             }
         }
         return null;
     }
 
-    constructor(constraintConditions: PathCondition[]) {
-        this._constraintConditions = constraintConditions;
+    constructor(constraints: ConstraintConditionTuple[]) {
+        this.constraints = constraints;
     }
 
-    public static fromJson(obj: any): Constraints {
-        let conditions: PathCondition[] = [];
+    public static fromJson(obj: any): MatchConstraintsContainer {
+        let constraints: ConstraintConditionTuple[] = [];
         for (const subobj of obj) {
-             let condition = PathCondition.fromJson(subobj);
-             conditions.push(condition);
+            if (!subobj.hasOwnProperty('condition') || !subobj.hasOwnProperty('constraint')) {
+                throw new Error(`Error decoding object ${subobj} into PathCondition`);
+            }
+
+            let condition = subobj['condition'] as Condition;
+            let constraint = MatchConstraintFromJson(subobj['constraint']);
+
+            let constraintTuple = [condition, constraint] as ConstraintConditionTuple;
+
+            constraints.push(constraintTuple);
         }
-        return new Constraints(conditions);
+        return new MatchConstraintsContainer(constraints);
     }
 
-    public static fromFile(path: string): Constraints {
+    public static fromFile(path: string): MatchConstraintsContainer {
         const rawObj = loadJSON(path);
         return this.fromJson(rawObj);
     }
@@ -180,48 +190,5 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
         }
 
         return new ObjectPropertyMatchConstraint(obj['matchType'] as MatchType, obj['propertyName'], obj['secondaryProperties']);
-    }
-}
-
-export class PathCondition {
-    private _condition!: RegExp;
-    private _constraint: AbstractMatchConstraint
-
-    public get constraint() {
-        return this._constraint;
-    }
-
-    public get condition(): string {
-        return this._condition.source;
-    }
-
-    public set condition(condition: string) {
-        // TODO validate condition
-        this._condition = new RegExp(condition);
-    }
-
-    /**
-     * Returns true if the given json pointer matches the condition string
-     * @param docPath 
-     */
-    public matches(docPath: string): boolean {
-        const regex = new RegExp(this._condition);
-        return regex.test(docPath);
-    }
-
-    public constructor(condition: string, constraint: AbstractMatchConstraint) {
-        this.condition = condition;
-        this._constraint = constraint;
-    }
-
-    public static fromJson(obj: any): PathCondition {
-        if (!obj.hasOwnProperty('condition') || !obj.hasOwnProperty('constraint')) {
-            throw new Error(`Error decoding object ${obj} into PathCondition`);
-        }
-
-        const condition: string = obj['condition'];
-        const constraint: AbstractMatchConstraint = MatchConstraintFromJson(obj['constraint']);
-        
-        return new PathCondition(condition, constraint);
     }
 }
