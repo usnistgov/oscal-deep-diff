@@ -4,7 +4,7 @@
   "description": "A deep diff tool",
   "main": "./lib/index.js",
   "bin": {
-    "oscal-deep-diff": "./lib/index.js"
+    "oscal-deep-diff": "./bin/oscal-deep-diff"
   },
   "scripts": {
     "start": "nodemon src/index.ts",
@@ -12,7 +12,10 @@
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "refresh": "rm -rf ./node_modules ./package-lock.json && npm install",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "tslint -p tsconfig.json"
+    "lint": "tslint -p tsconfig.json",
+    "prepare" : "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint"
   },
   "keywords": [
     "oscal"
