@@ -1,7 +1,30 @@
-import { getPropertyUnion, getType, loadJSON, getPropertyIntersection, countSubElements, saveJSON, Condition, testPointerCondition } from "./utils";
-import { PropertyAdded, PropertyDeleted, PropertyChanged, ArrayChanged, Comparison, Change, ArraySubElement } from './comparisons';
-import { ObjectPropertyMatchConstraint, MatchType, PrimitiveMatchConstraint, MatchReport, MatchConstraintsContainer } from "./matching";
-import { MemoizationCache } from "./cache";
+import {
+    getPropertyUnion,
+    getType,
+    loadJSON,
+    getPropertyIntersection,
+    countSubElements,
+    saveJSON,
+    Condition,
+    testPointerCondition,
+} from './utils';
+import {
+    PropertyAdded,
+    PropertyDeleted,
+    PropertyChanged,
+    ArrayChanged,
+    Comparison,
+    Change,
+    ArraySubElement,
+} from './comparisons';
+import {
+    ObjectPropertyMatchConstraint,
+    MatchType,
+    PrimitiveMatchConstraint,
+    MatchReport,
+    MatchConstraintsContainer,
+} from './matching';
+import { MemoizationCache } from './cache';
 
 /**
  * The Comparator class is designed to handle comparing two arbritrary JSON
@@ -34,16 +57,19 @@ export class Comparator {
     private _comparison: Comparison | undefined;
 
     public get comparison(): Comparison {
-        if (this._comparison == undefined) {
-            throw new Error("Attempted to get comparison before comparing two documents");
+        if (this._comparison === undefined) {
+            throw new Error('Attempted to get comparison before comparing two documents');
         }
         return this._comparison;
     }
 
-    constructor(constraints: string | MatchConstraintsContainer = new MatchConstraintsContainer([]) , ignoreConditions: Condition[] = []) {
+    constructor(
+        constraints: string | MatchConstraintsContainer = new MatchConstraintsContainer([]),
+        ignoreConditions: Condition[] = [],
+    ) {
         if (constraints instanceof MatchConstraintsContainer) {
             this._constraints = constraints;
-        } else if(constraints != null && constraints != '') {
+        } else if (constraints != null && constraints !== '') {
             // supplied constraints are a string
             this._constraints = MatchConstraintsContainer.fromFile(constraints);
         } else {
@@ -71,12 +97,13 @@ export class Comparator {
      * @param rightDocumentPath Path of right document
      */
     public newComparisonFromDisk(leftDocumentPath: string, rightDocumentPath: string) {
-        let leftDocument: object, rightDocument: object;
+        let leftDocument: object;
+        let rightDocument: object;
         try {
             leftDocument = loadJSON(leftDocumentPath);
             rightDocument = loadJSON(rightDocumentPath);
         } catch (e) {
-            throw Error("Could not load one of the two documents: " + e.Message);
+            throw Error('Could not load one of the two documents: ' + e.Message);
         }
 
         this.newComparison(leftDocument, leftDocumentPath, rightDocument, rightDocumentPath);
@@ -84,42 +111,53 @@ export class Comparator {
 
     /**
      * Bootstrap for comparison recursive functions, compares two documents
-     * 
+     *
      * Note that the documents must already be loaded into memory
      * @param leftDocument left document object
      * @param leftDocumentSource source of right document (URL, filepath)
      * @param rightDocument right document object
      * @param rightDocumentSource source of right document (URL, filepath)
      */
-    public newComparison(leftDocument: object, leftDocumentSource: string, rightDocument: object, rightDocumentSource: string) {
+    public newComparison(
+        leftDocument: object,
+        leftDocumentSource: string,
+        rightDocument: object,
+        rightDocumentSource: string,
+    ) {
         const changes: Change[] = [];
         if (this._verbose) {
             console.log(`Starting comparison between ${leftDocumentSource} and ${rightDocumentSource}`);
             console.time('compareDocuments');
         }
-        this.compareElements(leftDocument, "", rightDocument, "", changes);
+        this.compareElements(leftDocument, '', rightDocument, '', changes);
         if (this._verbose) {
             console.log('Document comparison completed');
             console.timeEnd('compareDocuments');
-            console.log(changes)
+            console.log(changes);
         }
         this._comparison = {
             leftDocument: leftDocumentSource,
             rightDocument: rightDocumentSource,
-            changes: changes
+            changes,
         };
     }
 
     /**
      * Builds ArrayChange object and calculates total number of changes
      * @todo add memoization here to drastically speed up comparison
-     * @param leftArray 
-     * @param leftPointer 
-     * @param rightArray 
-     * @param rightPointer 
-     * @param report 
+     * @param leftArray
+     * @param leftPointer
+     * @param rightArray
+     * @param rightPointer
+     * @param report
      */
-    private tryMatch(leftArray: any[], leftPointer: string, rightArray: any[], rightPointer: string, report: MatchReport): [ArrayChanged, number] {
+    private tryMatch(
+        leftArray: any[],
+        leftPointer: string,
+        rightArray: any[],
+        rightPointer: string,
+        report: MatchReport,
+    ): [ArrayChanged, number] {
         let changeCount = 0;
         const change = new ArrayChanged(leftPointer, rightPointer, [], [], []);
 
@@ -131,8 +169,14 @@ export class Comparator {
                 leftPointer: oldSubElement,
                 rightPointer: newSubElement,
                 changes: [],
-            }
-            changeCount += this.compareElements(leftArray[match.leftElementIndex], oldSubElement, rightArray[match.rightElementIndex], newSubElement, subChanges.changes);
+            };
+            changeCount += this.compareElements(
+                leftArray[match.leftElementIndex],
+                oldSubElement,
+                rightArray[match.rightElementIndex],
+                newSubElement,
+                subChanges.changes,
+            );
             if (subChanges.changes.length > 0) {
                 change.subChanges.push(subChanges);
             }
@@ -141,7 +185,7 @@ export class Comparator {
         for (const unmatchedOldIndex of report.unmatchedLeftIndices) {
             change.removedItems.push({
                 leftPointer: `${leftPointer}/${unmatchedOldIndex}`,
-                leftElement: leftArray[unmatchedOldIndex]
+                leftElement: leftArray[unmatchedOldIndex],
             });
             changeCount += countSubElements(leftArray[unmatchedOldIndex]);
         }
@@ -157,7 +201,13 @@ export class Comparator {
         return [change, changeCount];
     }
 
-    private compareArrays(leftArray: any[], leftPointer: string, rightArray: any[], rightPointer: string, currentChanges: Change[]): number {
+    private compareArrays(
+        leftArray: any[],
+        leftPointer: string,
+        rightArray: any[],
+        rightPointer: string,
+        currentChanges: Change[],
+    ): number {
         if (this._memoizationEnabled) {
             const cached = this.cache.get(leftPointer, rightPointer);
             if (cached) {
@@ -165,13 +215,15 @@ export class Comparator {
                     currentChanges.push(cached[0]);
                 }
                 return cached[1];
-            }    
+            }
         }
 
-        const constraint = this._constraints.tryGetConstraint(rightPointer);
+        let match;
+        let report: MatchReport;
+        let constraint = this._constraints.tryGetConstraint(rightPointer);
         if (constraint) {
-            const report = constraint.matchArrayElements(leftArray, rightArray);
-            const match = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
+            report = constraint.matchArrayElements(leftArray, rightArray);
+            match = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
             if (match[0].hasChanges()) {
                 currentChanges.push(match[0]);
             }
@@ -185,21 +237,21 @@ export class Comparator {
             const newSample = rightArray[0];
 
             const type = getType(oldSample);
-            if (type != getType(newSample)) throw new Error('Old and new arrays cannot mix and match type');
-            
+            if (type !== getType(newSample)) throw new Error('Old and new arrays cannot mix and match type');
+
             if (type === 'array') {
                 // TODO: array of arrays comparison
             } else if (type === 'object') {
                 let optimalMatch: ArrayChanged | undefined;
                 let optimalMatchChanges = Infinity;
-                
+
                 // try all combinations & minimize projected changes
                 for (const property of getPropertyIntersection(oldSample, newSample)) {
                     for (const matchType of ['literal', 'string-similarity']) {
-                        const constraint = new ObjectPropertyMatchConstraint(matchType as MatchType, property);
-                        let report = constraint.matchArrayElements(leftArray, rightArray);
+                        constraint = new ObjectPropertyMatchConstraint(matchType as MatchType, property);
+                        report = constraint.matchArrayElements(leftArray, rightArray);
 
-                        let potentialMatch = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report)
+                        const potentialMatch = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
                         potentialMatch[0].matchProperty = property;
                         potentialMatch[0].matchMethod = matchType;
                         if (potentialMatch[1] < optimalMatchChanges) {
@@ -208,38 +260,38 @@ export class Comparator {
                         }
                     }
                 }
-                
+
                 if (optimalMatch) {
                     if (this._memoizationEnabled) {
-                        this.cache.set(leftPointer, rightPointer, [optimalMatch, optimalMatchChanges])
+                        this.cache.set(leftPointer, rightPointer, [optimalMatch, optimalMatchChanges]);
                     }
 
                     if (optimalMatch.hasChanges()) {
                         currentChanges.push(optimalMatch);
                     }
                     return optimalMatchChanges;
-                }    
+                }
             } else {
                 // array of primitives
-                const constraint = new PrimitiveMatchConstraint("literal");
-                let report = constraint.matchArrayElements(leftArray, rightArray);
+                constraint = new PrimitiveMatchConstraint('literal');
+                report = constraint.matchArrayElements(leftArray, rightArray);
 
-                let match = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
+                match = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
                 if (match[0].hasChanges()) {
-                    match[0].matchMethod = "literal";
-                    currentChanges.push(match[0]);    
+                    match[0].matchMethod = 'literal';
+                    currentChanges.push(match[0]);
                 }
 
                 return match[1];
             }
         }
 
-        const report: MatchReport = {
+        report = {
             matchedIndices: [],
             unmatchedLeftIndices: [...leftArray.keys()],
-            unmatchedRightIndices: [...rightArray.keys()]
+            unmatchedRightIndices: [...rightArray.keys()],
         };
-        const match = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
+        match = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
 
         if (match[0].hasChanges()) {
             currentChanges.push(match[0]);
@@ -247,19 +299,39 @@ export class Comparator {
         return match[1];
     }
 
-    private compareObjects(leftElement: any, leftPointer: string, rightElement: any, rightPointer: string, currentChanges: Change[]): number {
+    private compareObjects(
+        leftElement: any,
+        leftPointer: string,
+        rightElement: any,
+        rightPointer: string,
+        currentChanges: Change[],
+    ): number {
         // elements are both objects, compare each sub-element in the object
         let changeCount = 0;
         const propertyUnion = getPropertyUnion(leftElement, rightElement);
-        for (const property of propertyUnion) { // for each property in both subdocuments, recurse and compare results
-            if (!(property in leftElement)) { // property added in new document
-                currentChanges.push(new PropertyAdded(leftPointer, `${rightPointer}/${property}`, rightElement[property]));
+        for (const property of propertyUnion) {
+            // for each property in both subdocuments, recurse and compare results
+            if (!(property in leftElement)) {
+                // property added in new document
+                currentChanges.push(
+                    new PropertyAdded(leftPointer, `${rightPointer}/${property}`, rightElement[property]),
+                );
                 changeCount += countSubElements(rightElement[property]);
-            } else if (!(property in rightElement)) { // property deleted from old document
-                currentChanges.push(new PropertyDeleted(`${leftPointer}/${property}`, leftElement[property], rightPointer));
+            } else if (!(property in rightElement)) {
+                // property deleted from old document
+                currentChanges.push(
+                    new PropertyDeleted(`${leftPointer}/${property}`, leftElement[property], rightPointer),
+                );
                 changeCount += countSubElements(leftElement[property]);
-            } else { // property exists in both, recurse on sub-document
-                changeCount += this.compareElements(leftElement[property], `${leftPointer}/${property}`, rightElement[property], `${rightPointer}/${property}`, currentChanges);
+            } else {
+                // property exists in both, recurse on sub-document
+                changeCount += this.compareElements(
+                    leftElement[property],
+                    `${leftPointer}/${property}`,
+                    rightElement[property],
+                    `${rightPointer}/${property}`,
+                    currentChanges,
+                );
             }
         }
         return changeCount;
@@ -268,20 +340,26 @@ export class Comparator {
     /**
      * Determine if the given elements are objects, arrays, or primitives, and
      * perform a comparison on the elements based on which 'type' they are
-     * @param oldElement 
-     * @param oldPointer 
-     * @param newElement 
-     * @param newPointer 
+     * @param oldElement
+     * @param oldPointer
+     * @param newElement
+     * @param newPointer
      * @param currentChanges
      * @returns a number representing the number of changes
      */
-    private compareElements(oldElement: any, oldPointer: string, newElement: any, newPointer: string, currentChanges: Change[]): number {
+    private compareElements(
+        oldElement: any,
+        oldPointer: string,
+        newElement: any,
+        newPointer: string,
+        currentChanges: Change[],
+    ): number {
         // verify that elements are of the same 'type' (no arrays compared to objects)
         const type = getType(oldElement);
-        if (type != getType(newElement)) throw new Error('Old and new (sub)document do not have the same type');
+        if (type !== getType(newElement)) throw new Error('Old and new (sub)document do not have the same type');
 
         // check if elements have been marked as ignored
-        for (let ignoreCondition of this._ignoreConditions) {
+        for (const ignoreCondition of this._ignoreConditions) {
             if (testPointerCondition(oldPointer, ignoreCondition)) {
                 return 0;
             }
@@ -295,11 +373,12 @@ export class Comparator {
             return this.compareObjects(oldElement, oldPointer, newElement, newPointer, currentChanges);
         } else {
             // elements can be considered a primitive type
-            if (oldElement != newElement) { // directly compare primitives
+            if (oldElement !== newElement) {
+                // directly compare primitives
                 currentChanges.push(new PropertyChanged(oldElement, oldPointer, newElement, newPointer));
                 return 1;
             }
             return 0;
-        }    
+        }
     }
 }

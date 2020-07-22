@@ -1,5 +1,5 @@
-import { jaroWrinkerSimilarity } from "./string-similarity";
-import { loadJSON, resolvePointer, Condition, testPointerCondition } from "./utils";
+import { jaroWrinkerSimilarity } from './string-similarity';
+import { loadJSON, resolvePointer, Condition, testPointerCondition } from './utils';
 
 export interface PotentialMatch {
     leftElementIndex: number;
@@ -13,9 +13,9 @@ export interface MatchReport {
     unmatchedRightIndices: number[];
 }
 
-export type MatchType = "literal" | "string-similarity"
+export type MatchType = 'literal' | 'string-similarity';
 
-type ConstraintConditionTuple = [Condition, AbstractMatchConstraint]
+type ConstraintConditionTuple = [Condition, AbstractMatchConstraint];
 
 /**
  * This object houses match constraints and provides the ability to search
@@ -25,7 +25,7 @@ export class MatchConstraintsContainer {
     private constraints: ConstraintConditionTuple[];
 
     public tryGetConstraint(pointer: string) {
-        for (let constraint of this.constraints) {
+        for (const constraint of this.constraints) {
             if (testPointerCondition(pointer, constraint[0])) {
                 return constraint[1];
             }
@@ -38,16 +38,16 @@ export class MatchConstraintsContainer {
     }
 
     public static fromJson(obj: any): MatchConstraintsContainer {
-        let constraints: ConstraintConditionTuple[] = [];
+        const constraints: ConstraintConditionTuple[] = [];
         for (const subobj of obj) {
             if (!subobj.hasOwnProperty('condition') || !subobj.hasOwnProperty('constraint')) {
                 throw new Error(`Error decoding object ${subobj} into PathCondition`);
             }
 
-            let condition = subobj['condition'] as Condition;
-            let constraint = MatchConstraintFromJson(subobj['constraint']);
+            const condition = subobj['condition'] as Condition;
+            const constraint = MatchConstraintFromJson(subobj['constraint']);
 
-            let constraintTuple = [condition, constraint] as ConstraintConditionTuple;
+            const constraintTuple = [condition, constraint] as ConstraintConditionTuple;
 
             constraints.push(constraintTuple);
         }
@@ -79,33 +79,34 @@ export abstract class AbstractMatchConstraint {
     abstract scoreElementPair(leftElement: any, rightElement: any): number;
 
     public matchArrayElements(leftArray: any[], rightArray: any[]): MatchReport {
-        let report: MatchReport = {
+        const report: MatchReport = {
             matchedIndices: [],
             unmatchedLeftIndices: [],
-            unmatchedRightIndices: []
-        }
+            unmatchedRightIndices: [],
+        };
 
-        let rightArrayIndices = [...rightArray.keys()];
+        const rightArrayIndices = [...rightArray.keys()];
         for (let leftElementIndex = 0; leftElementIndex < leftArray.length; leftElementIndex++) {
             const leftElement = leftArray[leftElementIndex];
-            let topScore = 0, topScoreIndex = -1;
+            let topScore = 0;
+            let topScoreIndex = -1;
             for (const rightElementIndex of rightArrayIndices) {
                 const rightElement = rightArray[rightElementIndex];
                 const score = this.scoreElementPair(leftElement, rightElement);
                 if (score > topScore) {
                     topScore = score;
                     topScoreIndex = rightElementIndex;
-                    if (score == 1) break;
+                    if (score === 1) break;
                 }
             }
-            if (topScoreIndex == -1) {
-                report.unmatchedLeftIndices.push(leftElementIndex)
+            if (topScoreIndex === -1) {
+                report.unmatchedLeftIndices.push(leftElementIndex);
             } else {
-                const deleteIndex = rightArrayIndices.indexOf(topScoreIndex)
+                const deleteIndex = rightArrayIndices.indexOf(topScoreIndex);
                 rightArrayIndices.splice(deleteIndex, 1);
                 report.matchedIndices.push({
-                    leftElementIndex: leftElementIndex,
-                    rightElementIndex: topScoreIndex
+                    leftElementIndex,
+                    rightElementIndex: topScoreIndex,
                 });
             }
         }
@@ -116,7 +117,7 @@ export abstract class AbstractMatchConstraint {
     }
 
     public static fromJson(_: any): AbstractMatchConstraint {
-        throw new Error("Not implemented");
+        throw new Error('Not implemented');
     }
 }
 
@@ -124,12 +125,12 @@ export class PrimitiveMatchConstraint extends AbstractMatchConstraint {
     matchType: MatchType;
 
     scoreElementPair(leftElement: any, rightElement: any): number {
-        if (this.matchType == 'literal') {
+        if (this.matchType === 'literal') {
             return leftElement === rightElement ? 1 : 0;
-        } else if (this.matchType == 'string-similarity') {
+        } else if (this.matchType === 'string-similarity') {
             return jaroWrinkerSimilarity(leftElement, rightElement);
         } else {
-            throw new Error("unknown comparison type");
+            throw new Error('unknown comparison type');
         }
     }
 
@@ -151,7 +152,7 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
     matchType: MatchType;
     propertyName: string;
     secondaryProperties?: string;
-    
+
     scoreElementPair(leftElement: any, rightElement: any): number {
         if (this.secondaryProperties) {
             for (const secondaryProperty of this.secondaryProperties) {
@@ -162,15 +163,15 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
         }
 
         try {
-            let leftSubProperty = resolvePointer(leftElement, this.propertyName);
-            let rightSubProperty = resolvePointer(rightElement, this.propertyName);
+            const leftSubProperty = resolvePointer(leftElement, this.propertyName);
+            const rightSubProperty = resolvePointer(rightElement, this.propertyName);
 
-            if (this.matchType == 'literal') {
-                return leftSubProperty == rightSubProperty ? 1 : 0;
-            } else if (this.matchType == 'string-similarity') {
+            if (this.matchType === 'literal') {
+                return leftSubProperty === rightSubProperty ? 1 : 0;
+            } else if (this.matchType === 'string-similarity') {
                 return jaroWrinkerSimilarity(leftSubProperty, rightSubProperty);
             } else {
-                throw new Error("unknown comparison type");
+                throw new Error('unknown comparison type');
             }
         } catch (error) {
             return 0;
@@ -189,6 +190,10 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
             throw new Error(`Error decoding object ${obj} into ${ObjectPropertyMatchConstraint.name}`);
         }
 
-        return new ObjectPropertyMatchConstraint(obj['matchType'] as MatchType, obj['propertyName'], obj['secondaryProperties']);
+        return new ObjectPropertyMatchConstraint(
+            obj['matchType'] as MatchType,
+            obj['propertyName'],
+            obj['secondaryProperties'],
+        );
     }
 }

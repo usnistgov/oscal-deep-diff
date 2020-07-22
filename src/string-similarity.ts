@@ -1,7 +1,7 @@
 // Via https://medium.com/@sumn2u/string-similarity-comparision-in-js-with-examples-4bae35f13968
 
 export function jaroWrinkerSimilarity(s1: string, s2: string): number {
-    var m = 0;
+    let m = 0;
 
     // Exit early if either are empty.
     if (!s1 || !s2) {
@@ -13,13 +13,13 @@ export function jaroWrinkerSimilarity(s1: string, s2: string): number {
         return 1;
     }
 
-    var range = (Math.floor(Math.max(s1.length, s2.length) / 2)) - 1,
-        s1Matches = new Array(s1.length),
-        s2Matches = new Array(s2.length);
+    const range = Math.floor(Math.max(s1.length, s2.length) / 2) - 1;
+    const s1Matches = new Array(s1.length);
+    const s2Matches = new Array(s2.length);
 
     for (let i = 0; i < s1.length; i++) {
-        var low  = (i >= range) ? i - range : 0,
-            high = (i + range <= s2.length) ? (i + range) : (s2.length - 1);
+        const low = i >= range ? i - range : 0;
+        const high = i + range <= s2.length ? i + range : s2.length - 1;
 
         for (let j = low; j <= high; j++) {
             if (s1Matches[i] !== true && s2Matches[j] !== true && s1[i] === s2[j]) {
@@ -36,7 +36,8 @@ export function jaroWrinkerSimilarity(s1: string, s2: string): number {
     }
 
     // Count the transpositions.
-    var k = 0, n_trans = 0;
+    let k = 0;
+    let numTranspositions = 0;
 
     for (let i = 0; i < s1.length; i++) {
         if (s1Matches[i] === true) {
@@ -45,20 +46,20 @@ export function jaroWrinkerSimilarity(s1: string, s2: string): number {
                     k = j + 1;
                     break;
                 }
-            
+
                 if (s1[i] !== s2[j]) {
-                    ++n_trans;
+                    ++numTranspositions;
                 }
             }
         }
     }
 
-    var weight = (m / s1.length + m / s2.length + (m - (n_trans / 2)) / m) / 3,
-        l      = 0,
-        p      = 0.1;
+    let weight = (m / s1.length + m / s2.length + (m - numTranspositions / 2) / m) / 3;
+    let l = 0;
+    const p = 0.1;
 
     if (weight > 0.7) {
-        while ( s1[l] === s2[l] && l < 4 ) {
+        while (s1[l] === s2[l] && l < 4) {
             ++l;
         }
 

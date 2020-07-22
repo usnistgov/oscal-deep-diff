@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "experimentalDecorators": true,
     "target": "es6",
     "module": "commonjs",
     "lib": ["es6", "es2015", "dom"],
@@ -13,5 +12,8 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "sourceMap": true,
-  }
+    "allowJs": false
+  },
+  "include": ["./src"],
+  "exclude": ["**/*.spec.*", "./lib/**/*"],
 }

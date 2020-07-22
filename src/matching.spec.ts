@@ -6,7 +6,7 @@ import { ObjectPropertyMatchConstraint, PrimitiveMatchConstraint } from './match
  */
 
 describe('PrimitiveMatchConstraint', () => {
-    const constraint = new PrimitiveMatchConstraint("literal");
+    const constraint = new PrimitiveMatchConstraint('literal');
 
     it('simple list of primitives', () => {
         const leftArray = [1, 2, 3, 4];
@@ -31,9 +31,9 @@ describe('PrimitiveMatchConstraint', () => {
 
 describe('ObjectPropertyMatchConstraint', () => {
     it('simple list', () => {
-        const constraint = new ObjectPropertyMatchConstraint("string-similarity", "id");
-        const leftArray = [{id: 1}, {id: 2}, {id: 3}];
-        const rightArray = [{id: 1}, {id: 2}, {id: 3}];
+        const constraint = new ObjectPropertyMatchConstraint('string-similarity', 'id');
+        const leftArray = [{ id: 1 }, { id: 2 }, { id: 3 }];
+        const rightArray = [{ id: 1 }, { id: 2 }, { id: 3 }];
         const report = constraint.matchArrayElements(leftArray, rightArray);
         console.log(report);
         expect(report.unmatchedLeftIndices).to.eql([], 'no unmatched left indices');
@@ -44,9 +44,9 @@ describe('ObjectPropertyMatchConstraint', () => {
     it('sub-property match', () => {
         // The user should be able to manually specify a sub-object's property
         // as the guide for how an array of objects are matched
-        const constraint = new ObjectPropertyMatchConstraint("literal", "subobj/id");
-        const leftArray = [{subobj: {id: 1}}, {subobj: {id: 1}}];
-        const rightArray = [{subobj: {id: 1}}, {subobj: {id: 1}}];
+        const constraint = new ObjectPropertyMatchConstraint('literal', 'subobj/id');
+        const leftArray = [{ subobj: { id: 1 } }, { subobj: { id: 1 } }];
+        const rightArray = [{ subobj: { id: 1 } }, { subobj: { id: 1 } }];
         const report = constraint.matchArrayElements(leftArray, rightArray);
         console.log(report);
         expect(report.unmatchedLeftIndices).to.eql([], 'no unmatched left indices');
