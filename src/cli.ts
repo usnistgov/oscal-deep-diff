@@ -1,6 +1,8 @@
 import { Command } from 'commander';
 import { Comparator } from './comparator';
 import { Condition } from './utils';
+import { MatchConstraintsContainer } from './matching';
+import * as fs from 'fs';
 
 interface CLIOptions {
     leftCatalog: string;
@@ -10,6 +12,17 @@ interface CLIOptions {
     write: string;
     disableMemoization: boolean;
     verbose: boolean;
+}
+
+export function loadJSON(documentPath: string): object {
+    // TODO: support URL paths?
+    const rawDocument = fs.readFileSync(documentPath);
+    return JSON.parse(rawDocument.toString());
+}
+
+export function saveJSON(obj: any, outputPath: string) {
+    // save pretty printed json
+    fs.writeFileSync(outputPath, JSON.stringify(obj, null, 2));
 }
 
 const rawOptions = new Command()
@@ -31,7 +44,10 @@ const rawOptions = new Command()
 // specially cast rawOptions object to CLIOptions interface (force typing)
 const options: CLIOptions = (rawOptions as unknown) as CLIOptions;
 
-const comparator = new Comparator(options.constraints);
+const constraintsJSON = loadJSON(options.constraints);
+const constraints = MatchConstraintsContainer.fromJson(constraintsJSON);
+
+const comparator = new Comparator(constraints);
 comparator.verbose = options.verbose;
 comparator.memoizationEnabled = !options.disableMemoization;
 
@@ -41,8 +57,14 @@ if (options.ignore !== '') {
     comparator.ignoreConditions = ignoreConditions;
 }
 
-comparator.newComparisonFromDisk(options.leftCatalog, options.rightCatalog);
+const leftDoc = loadJSON(options.leftCatalog);
+const rightDoc = loadJSON(options.rightCatalog);
+
+comparator.newComparison(leftDoc, options.leftCatalog, rightDoc, options.rightCatalog);
 
 if (options.write !== '') {
-    comparator.saveComparison(options.write);
+    if (options.verbose) {
+        console.log(`Saving compared document to ${options.write}`);
+    }
+    saveJSON(comparator.comparison, options.write);
 }

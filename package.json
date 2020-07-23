@@ -13,7 +13,7 @@
     "refresh": "rm -rf ./node_modules ./package-lock.json && npm install",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
-    "prepare" : "npm run build",
+    "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint"
   },

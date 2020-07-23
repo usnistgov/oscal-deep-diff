@@ -1,5 +1,5 @@
 import { jaroWrinkerSimilarity } from './string-similarity';
-import { loadJSON, resolvePointer, Condition, testPointerCondition } from './utils';
+import { resolvePointer, Condition, testPointerCondition } from './utils';
 
 export interface PotentialMatch {
     leftElementIndex: number;
@@ -52,11 +52,6 @@ export class MatchConstraintsContainer {
             constraints.push(constraintTuple);
         }
         return new MatchConstraintsContainer(constraints);
-    }
-
-    public static fromFile(path: string): MatchConstraintsContainer {
-        const rawObj = loadJSON(path);
-        return this.fromJson(rawObj);
     }
 }
 

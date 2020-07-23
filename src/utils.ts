@@ -1,5 +1,3 @@
-import * as fs from 'fs';
-
 /**
  * Returns the union of properties for both documents
  */
@@ -138,15 +136,4 @@ export function countSubElements(element: any): number {
             return 1;
     }
     return count;
-}
-
-export function loadJSON(documentPath: string): object {
-    // TODO: support URL paths?
-    const rawDocument = fs.readFileSync(documentPath);
-    return JSON.parse(rawDocument.toString());
-}
-
-export function saveJSON(obj: any, outputPath: string) {
-    // save pretty printed json
-    fs.writeFileSync(outputPath, JSON.stringify(obj, null, 2));
 }

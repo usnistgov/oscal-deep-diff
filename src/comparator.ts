@@ -1,10 +1,8 @@
 import {
     getPropertyUnion,
     getType,
-    loadJSON,
     getPropertyIntersection,
     countSubElements,
-    saveJSON,
     Condition,
     testPointerCondition,
 } from './utils';
@@ -64,49 +62,11 @@ export class Comparator {
     }
 
     constructor(
-        constraints: string | MatchConstraintsContainer = new MatchConstraintsContainer([]),
+        constraints: MatchConstraintsContainer = new MatchConstraintsContainer([]),
         ignoreConditions: Condition[] = [],
     ) {
-        if (constraints instanceof MatchConstraintsContainer) {
-            this._constraints = constraints;
-        } else if (constraints != null && constraints !== '') {
-            // supplied constraints are a string
-            this._constraints = MatchConstraintsContainer.fromFile(constraints);
-        } else {
-            this._constraints = new MatchConstraintsContainer([]);
-        }
-
+        this._constraints = constraints;
         this._ignoreConditions = ignoreConditions;
-    }
-
-    /**
-     * Save comparison to disk
-     * @param outputPath path to output to
-     */
-    public saveComparison(outputPath: string) {
-        const comparison = this.comparison;
-        if (this._verbose) {
-            console.log(`Saving compared document to ${outputPath}`);
-        }
-        saveJSON(comparison, outputPath);
-    }
-
-    /**
-     * Load documents onto disk and compare them
-     * @param leftDocumentPath Path of left document
-     * @param rightDocumentPath Path of right document
-     */
-    public newComparisonFromDisk(leftDocumentPath: string, rightDocumentPath: string) {
-        let leftDocument: object;
-        let rightDocument: object;
-        try {
-            leftDocument = loadJSON(leftDocumentPath);
-            rightDocument = loadJSON(rightDocumentPath);
-        } catch (e) {
-            throw Error('Could not load one of the two documents: ' + e.Message);
-        }
-
-        this.newComparison(leftDocument, leftDocumentPath, rightDocument, rightDocumentPath);
     }
 
     /**
