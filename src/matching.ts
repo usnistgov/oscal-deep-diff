@@ -181,7 +181,7 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
     }
 
     public static fromJson(obj: any): AbstractMatchConstraint {
-        if (!obj.hasOwnProperty('matchType') || !obj.hasOwnProperty('propertyName')) {
+        if (!obj.hasOwnProperty('matchType') || !obj.hasOwnProperty('propertyName') || !obj.hasOwnProperty('secondaryProperties')) {
             throw new Error(`Error decoding object ${obj} into ${ObjectPropertyMatchConstraint.name}`);
         }
 

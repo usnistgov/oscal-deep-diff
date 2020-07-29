@@ -44,10 +44,9 @@ const rawOptions = new Command()
 // specially cast rawOptions object to CLIOptions interface (force typing)
 const options: CLIOptions = (rawOptions as unknown) as CLIOptions;
 
-const constraintsJSON = loadJSON(options.constraints);
-const constraints = MatchConstraintsContainer.fromJson(constraintsJSON);
 
-const comparator = new Comparator(constraints);
+const comparator = new Comparator();
+
 comparator.verbose = options.verbose;
 comparator.memoizationEnabled = !options.disableMemoization;
 
@@ -55,6 +54,13 @@ if (options.ignore !== '') {
     // parse ignore constraints (commander veriadic options leads to unstable results)
     const ignoreConditions: Condition[] = options.ignore.split(',');
     comparator.ignoreConditions = ignoreConditions;
+}
+
+if (options.constraints !== '') {
+    // load constraints file and parse
+    const constraintsJSON = loadJSON(options.constraints);
+    const constraints = MatchConstraintsContainer.fromJson(constraintsJSON);
+    comparator.constraints = constraints;
 }
 
 const leftDoc = loadJSON(options.leftCatalog);
@@ -67,4 +73,7 @@ if (options.write !== '') {
         console.log(`Saving compared document to ${options.write}`);
     }
     saveJSON(comparator.comparison, options.write);
+} else {
+    // print full output to stdout
+    console.log(JSON.stringify(comparator.comparison, null, 4));
 }

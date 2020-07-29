@@ -46,6 +46,10 @@ export class Comparator {
 
     private _constraints: MatchConstraintsContainer;
 
+    public set constraints(constraints: MatchConstraintsContainer) {
+        this._constraints = constraints;
+    }
+
     private _ignoreConditions: Condition[] = [];
 
     public set ignoreConditions(ignoreConditions: Condition[]) {
@@ -93,7 +97,6 @@ export class Comparator {
         if (this._verbose) {
             console.log('Document comparison completed');
             console.timeEnd('compareDocuments');
-            console.log(changes);
         }
         this._comparison = {
             leftDocument: leftDocumentSource,
