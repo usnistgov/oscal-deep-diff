@@ -1,5 +1,5 @@
 {
-  "name": "oscal-deep-diff",
+  "name": "@oscal/oscal-deep-diff",
   "version": "0.0.1",
   "description": "A deep diff tool",
   "main": "./lib/index.js",
@@ -17,6 +17,14 @@
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usnistgov/oscal-deep-diff.git"
+  },
+  "bugs": {
+    "url": "https://github.com/usnistgov/oscal-deep-diff/issues"
+  },
+  "homepage": "https://github.com/usnistgov/oscal-deep-diff",
   "keywords": [
     "oscal"
   ],

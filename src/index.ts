@@ -1,3 +1,3 @@
 export { Comparator } from './comparator';
-export * from './matching';
+export { MatchReport, MatchType, MatchConstraintsContainer, PrimitiveMatchConstraint, ObjectPropertyMatchConstraint } from './matching';
 export { resolvePointer } from './utils';
