@@ -28,9 +28,8 @@ workflows:
         - publish:
             requires:
               - build-and-test
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      
+            filters:
+              tags:
+                only: /.*/
+              branches:
+                ignore: /.*/  
