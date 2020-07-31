@@ -1,4 +1,6 @@
 # OSCAL Deep Diff
+[![oscal](https://circleci.com/gh/usnistgov/oscal-deep-diff.svg?style=svg)](https://github.com/usnistgov/oscal-deep-diff/tree/master/.circleci)
+
 A CLI tool and library to compare JSON OSCAL documents
 
 **NOTE: That this project is a Work in Progress (WIP)**
