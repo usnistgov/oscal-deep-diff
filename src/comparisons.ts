@@ -99,3 +99,26 @@ export interface Comparison {
     rightDocument: string;
     changes: Change[];
 }
+
+/**
+ * To be used with `Json.stringify() in order to transform the default
+ * comparator output object to a more compressed format that excludes all
+ * content from either document.
+ * @param key 
+ * @param value 
+ */
+export function excludeContentReplacer(key: string, value: any) {
+    switch(key) {
+        case "leftElement":
+        case "rightElement":
+        case "deletedElement":
+        case "addedElement":
+            return undefined;
+        case "addedItems":
+            return value.map((x: any) => x["rightPointer"]);
+        case "removedItems":
+            return value.map((x: any) => x["leftPointer"]);
+        default:
+            return value;
+    }
+}
