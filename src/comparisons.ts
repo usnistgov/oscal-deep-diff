@@ -1,4 +1,10 @@
-export class PropertyAdded {
+import { GreenFG, ResetConsole, RedFG } from "./utils";
+
+abstract class Printable {
+    abstract printChange(): void;
+}
+
+export class PropertyAdded implements Printable {
     change = 'property_added';
     leftParentPointer: string;
     rightPointer: string;
@@ -9,9 +15,16 @@ export class PropertyAdded {
         this.rightPointer = rightPointer;
         this.addedElement = addedElement;
     }
+
+    printChange(): void {
+        console.log(`Change type:   ${this.change}`);
+        console.log(`Right pointer: ${this.rightPointer}`);
+        console.log(`Left parent pointer: ${this.leftParentPointer}`);
+        console.log(`Added element: ${GreenFG}`, this.addedElement, ResetConsole);
+    }
 }
 
-export class PropertyDeleted {
+export class PropertyDeleted implements Printable {
     change = 'property_deleted';
     leftPointer: string;
     deletedElement: any;
@@ -22,9 +35,16 @@ export class PropertyDeleted {
         this.deletedElement = deletedElement;
         this.rightParentPointer = rightParentPointer;
     }
+
+    printChange(): void {
+        console.log(`Change type:  ${this.change}`);
+        console.log(`Left pointer: ${this.leftPointer}`);
+        console.log(`Right parent pointer: ${this.rightParentPointer}`);
+        console.log(`Deleted element: ${RedFG}`, this.deletedElement, ResetConsole);
+    }
 }
 
-export class PropertyChanged {
+export class PropertyChanged implements Printable {
     change = 'property_changed';
     leftPointer: string;
     leftElement: any;
@@ -36,6 +56,14 @@ export class PropertyChanged {
         this.leftElement = leftElement;
         this.rightPointer = rightPointer;
         this.rightElement = rightElement;
+    }
+
+    printChange(): void {
+        console.log(`Change type:   ${this.change}`);
+        console.log(`Right pointer: ${this.rightPointer}`);
+        console.log(`Left pointer:  ${this.leftPointer}`);
+        console.log(`Left element:  ${RedFG}`, this.leftElement, ResetConsole);
+        console.log(`Right element: ${GreenFG}`, this.rightElement, ResetConsole);
     }
 }
 
@@ -55,7 +83,7 @@ export interface ArraySubElement {
     changes: Change[];
 }
 
-export class ArrayChanged {
+export class ArrayChanged implements Printable {
     change = 'array_changed';
     leftPointer: string;
     rightPointer: string;
@@ -89,6 +117,12 @@ export class ArrayChanged {
 
         this.matchProperty = matchProperty;
         this.matchMethod = matchMethod;
+    }
+
+    printChange(): void {
+        console.log(`Change type:   ${this.change}`);
+        console.log(`Right pointer: ${this.rightPointer}`);
+        console.log(`Left pointer:  ${this.leftPointer}`);
     }
 }
 

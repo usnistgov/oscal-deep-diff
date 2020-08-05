@@ -1,5 +1,7 @@
 import * as fs from 'fs';
 import { Command } from 'commander';
+import { Comparison } from './comparisons';
+import { RedFG, ResetConsole, GreenFG, YellowFG } from './utils';
 
 export function loadJSON(documentPath: string): object {
     // TODO: support URL paths?
@@ -39,4 +41,16 @@ export function parseOptions(): CLIOptions {
         .parse(process.argv);
     // specially cast rawOptions object to CLIOptions interface (force typing)
     return (rawOptions as unknown) as CLIOptions;
+}
+
+
+
+export function printComparison(comparison: Comparison) {
+    console.log(`Comparison between ${RedFG}${comparison.leftDocument}${ResetConsole} and ${GreenFG}${comparison.rightDocument}${ResetConsole}:`);
+    for (const change of comparison.changes) {
+        console.log(`${YellowFG}---${ResetConsole}`);
+        change.printChange();
+    }
+    console.log(`${YellowFG}---${ResetConsole}`);
+    console.log(`Top level changes: ${comparison.changes.length}`);
 }
