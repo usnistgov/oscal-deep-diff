@@ -18,6 +18,7 @@ Options:
   -i, --ignore [patterns]        Specify patterns of pointers that should be ignored (ex. 'id' or '**/back-matter' (default: "")
   -w, --write <filename>         File to output difference document to (default: "")
   --disableMemoization           Disable the caching of array object (only use in low-memory scenarios) (default: false)
+  --excludeContent               Exclude "leftElement" and "rightElement" objects, reducing comparison size (default: false)
   -v, --verbose                  Print more output (default: false)
   -h, --help                     display help for command
 ```
@@ -47,3 +48,4 @@ To constrain a comparison, you can specify patterns of properties that should be
 
 * `--verbose`: When specified, the system will print additional debug information, such as the time it took to complete the comparison.
 * `--disableMemoization`: When specified, the comparator will not cache the results of sub-comparisons, significantly sacrificing runtime in order to decrease memory usage. See issue #4 for more details.
+* `--excludeContent`: when specified, the output document will not include any content from the left or right documents, only displaying the JSON pointers of changed elements. See #13 for more details.

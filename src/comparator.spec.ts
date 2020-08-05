@@ -9,7 +9,7 @@ import { Change, ArrayChanged } from './comparisons';
 // In typescript private members can be accessed using array access (see https://stackoverflow.com/a/35991491)
 
 describe('compare documents no constraints', () => {
-    let comparator = new Comparator();
+    const comparator = new Comparator();
 
     it('simple object', () => {
         const changes: Change[] = [];
@@ -43,7 +43,7 @@ describe('compare documents no constraints', () => {
 
         expect(changes).to.have.lengthOf(1, 'too many changes returned');
         expect(changes[0].change).to.equal('array_changed', 'incorrect change type');
-        let change = changes[0] as ArrayChanged;
+        const change = changes[0] as ArrayChanged;
         expect(change.addedItems).to.have.lengthOf(1, "only '4' item was added");
         expect(change.removedItems).to.have.lengthOf(0, 'no items were deleted');
         expect(change.subChanges).to.have.lengthOf(0, 'there were no sub-changes');
@@ -61,7 +61,7 @@ describe('compare documents no constraints', () => {
 
         expect(changes).to.have.lengthOf(1, 'too many changes returned');
         expect(changes[0].change).to.equal('array_changed', 'incorrect change type');
-        let change = changes[0] as ArrayChanged;
+        const change = changes[0] as ArrayChanged;
         expect(change.addedItems).to.have.lengthOf(1, "only '{id: 4}' item was added");
         expect(change.removedItems).to.have.lengthOf(0, 'no items were deleted');
         expect(change.subChanges).to.have.lengthOf(0, 'there were no sub-changes');
