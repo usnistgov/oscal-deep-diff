@@ -1,4 +1,4 @@
-import { GreenFG, ResetConsole, RedFG } from "./utils";
+import { GreenFG, ResetConsole, RedFG, YellowFG } from "./utils";
 
 abstract class Printable {
     abstract printChange(): void;
@@ -16,11 +16,11 @@ export class PropertyAdded implements Printable {
         this.addedElement = addedElement;
     }
 
-    printChange(): void {
-        console.log(`Change type:   ${this.change}`);
-        console.log(`Right pointer: ${this.rightPointer}`);
-        console.log(`Left parent pointer: ${this.leftParentPointer}`);
-        console.log(`Added element: ${GreenFG}`, this.addedElement, ResetConsole);
+    printChange(prefix=''): void {
+        console.log(`${prefix}Change type:   ${this.change}`);
+        console.log(`${prefix}Right pointer: ${this.rightPointer}`);
+        console.log(`${prefix}Left parent pointer: ${this.leftParentPointer}`);
+        console.log(`${prefix}Added element: ${GreenFG}`, this.addedElement, ResetConsole);
     }
 }
 
@@ -36,11 +36,11 @@ export class PropertyDeleted implements Printable {
         this.rightParentPointer = rightParentPointer;
     }
 
-    printChange(): void {
-        console.log(`Change type:  ${this.change}`);
-        console.log(`Left pointer: ${this.leftPointer}`);
-        console.log(`Right parent pointer: ${this.rightParentPointer}`);
-        console.log(`Deleted element: ${RedFG}`, this.deletedElement, ResetConsole);
+    printChange(prefix=''): void {
+        console.log(`${prefix}Change type:  ${this.change}`);
+        console.log(`${prefix}Left pointer: ${this.leftPointer}`);
+        console.log(`${prefix}Right parent pointer: ${this.rightParentPointer}`);
+        console.log(`${prefix}Deleted element: ${RedFG}`, this.deletedElement, ResetConsole);
     }
 }
 
@@ -58,12 +58,12 @@ export class PropertyChanged implements Printable {
         this.rightElement = rightElement;
     }
 
-    printChange(): void {
-        console.log(`Change type:   ${this.change}`);
-        console.log(`Right pointer: ${this.rightPointer}`);
-        console.log(`Left pointer:  ${this.leftPointer}`);
-        console.log(`Left element:  ${RedFG}`, this.leftElement, ResetConsole);
-        console.log(`Right element: ${GreenFG}`, this.rightElement, ResetConsole);
+    printChange(prefix=''): void {
+        console.log(`${prefix}Change type:   ${this.change}`);
+        console.log(`${prefix}Right pointer: ${this.rightPointer}`);
+        console.log(`${prefix}Left pointer:  ${this.leftPointer}`);
+        console.log(`${prefix}Left element:  ${RedFG}`, this.leftElement, ResetConsole);
+        console.log(`${prefix}Right element: ${GreenFG}`, this.rightElement, ResetConsole);
     }
 }
 
@@ -119,10 +119,23 @@ export class ArrayChanged implements Printable {
         this.matchMethod = matchMethod;
     }
 
-    printChange(): void {
-        console.log(`Change type:   ${this.change}`);
-        console.log(`Right pointer: ${this.rightPointer}`);
-        console.log(`Left pointer:  ${this.leftPointer}`);
+    printChange(prefix=''): void {
+        console.log(`${prefix}Change type:   ${this.change}`);
+        console.log(`${prefix}Left pointer:  ${RedFG}${this.leftPointer}${ResetConsole}`);
+        console.log(`${prefix}Right pointer: ${GreenFG}${this.rightPointer}${ResetConsole}`);
+        console.log(`${prefix}Sub-changes:`)
+        const newPrefix = prefix + '  ';
+        for (const elementPair of this.subChanges) {
+            console.log(`${newPrefix}${YellowFG}---${ResetConsole}`);
+            console.log(`${newPrefix}Left Element:  ${RedFG}`, elementPair.leftPointer, ResetConsole);
+            console.log(`${newPrefix}Right Element: ${GreenFG}`, elementPair.leftPointer, ResetConsole);
+            console.log(`${newPrefix}Changes:`)
+            for (const change of elementPair.changes) {
+                console.log(`${newPrefix + '  '}${YellowFG}---${ResetConsole}`);
+                change.printChange(newPrefix + '  ');
+            }
+            console.log(`${newPrefix + '  '}${YellowFG}---${ResetConsole}`);
+        }
     }
 }
 

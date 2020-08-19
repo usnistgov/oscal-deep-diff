@@ -18,6 +18,7 @@ interface CLIOptions {
     write: string;
     disableMemoization: boolean;
     excludeContent: boolean;
+    ignoreCase: boolean;
     verbose: boolean;
 }
 
@@ -37,6 +38,7 @@ export function parseOptions(): CLIOptions {
         .option('-w, --write <filename>', 'File to output difference document to', '')
         .option('--disableMemoization', 'Disable the caching of array object (only use in low-memory scenarios)', false)
         .option('--excludeContent', 'Exclude "leftElement" and "rightElement" objects, reducing comparison size', false)
+        .option('--ignoreCase', 'Ignore string comparisons with different cases (e.g. "Action" vs "action")')
         .option('-v, --verbose', 'Print more output', false)
         .parse(process.argv);
     // specially cast rawOptions object to CLIOptions interface (force typing)

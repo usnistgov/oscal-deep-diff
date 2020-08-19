@@ -11,6 +11,7 @@ const comparator = new Comparator();
 
 comparator.verbose = options.verbose;
 comparator.memoizationEnabled = !options.disableMemoization;
+comparator.ignoreCase = options.ignoreCase;
 
 if (options.ignore !== '') {
     // parse ignore constraints (commander veriadic options leads to unstable results)

@@ -42,6 +42,12 @@ export class Comparator {
         this._memoizationEnabled = memoizationEnabled;
     }
 
+    private _ignoreCase: boolean = false;
+
+    public set ignoreCase(ignoreCase: boolean) {
+        this._ignoreCase = ignoreCase;
+    }
+
     private cache = new MemoizationCache();
 
     private _constraints: MatchConstraintsContainer;
@@ -334,6 +340,11 @@ export class Comparator {
         } else if (type === 'object') {
             // elements are both objects, compare each sub-element in the object
             return this.compareObjects(oldElement, oldPointer, newElement, newPointer, currentChanges);
+        } else if (type === 'string' && this._ignoreCase) {
+            if ((oldElement as string).toLowerCase() !== (newElement as string).toLowerCase()) {
+                currentChanges.push(new PropertyChanged(oldElement, oldPointer, newElement, newPointer));
+            }
+            return 0;
         } else {
             // elements can be considered a primitive type
             if (oldElement !== newElement) {
