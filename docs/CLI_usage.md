@@ -26,7 +26,7 @@ Options:
 
 ## Basic Comparison
 
-To do a basic comparison, only the `--leftCatalog` and `--rightCatalog` options are required. Note that this will print a potentially huge object to your console's output, so you may want to pipe the output through a pager such as `less`.
+To do a basic comparison, only the `--leftCatalog` and `--rightCatalog` options are required. Note that this will print a lot to your console's output, so you may want to pipe the output through a pager such as `less`.
 ```
 $ oscal-deep-diff --leftCatalog "NIST_SP-800-53_rev4_catalog.json" --rightCatalog "NIST_SP-800-53_rev5-FPD_catalog.json"
 (output trimmed)
@@ -36,6 +36,8 @@ To save this output to a file, you can use the provided `--write` flag to output
 $ oscal-deep-diff --leftCatalog "NIST_SP-800-53_rev4_catalog.json" --rightCatalog "NIST_SP-800-53_rev5-FPD_catalog.json" --write "output.json"
 Saving compared document to output.json
 ```
+
+This tool is designed to fit a wide array of circumstances. Because of this, the default unconstrained comparison may not suit your needs. The comparison behavior can be modified using the above flags.
 
 ## Constraints
 
