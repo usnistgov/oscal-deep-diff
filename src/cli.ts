@@ -1,7 +1,7 @@
 import { Comparator } from './comparator';
 import { Condition } from './utils';
 import { MatchConstraintsContainer } from './matching';
-import { loadJSON, parseOptions } from './cli-utils';
+import { loadJSON, parseOptions, printComparison } from './cli-utils';
 import * as fs from 'fs';
 import { excludeContentReplacer } from './comparisons';
 
@@ -11,6 +11,7 @@ const comparator = new Comparator();
 
 comparator.verbose = options.verbose;
 comparator.memoizationEnabled = !options.disableMemoization;
+comparator.ignoreCase = options.ignoreCase;
 
 if (options.ignore !== '') {
     // parse ignore constraints (commander veriadic options leads to unstable results)
@@ -43,6 +44,5 @@ if (options.write !== '') {
     }
     fs.writeFileSync(options.write, outputStringified);
 } else {
-    // print full output to stdout
-    console.log(outputStringified);
+    printComparison(comparator.comparison);
 }

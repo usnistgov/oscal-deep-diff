@@ -1,5 +1,7 @@
 import * as fs from 'fs';
 import { Command } from 'commander';
+import { Comparison } from './comparisons';
+import { RedFG, ResetConsole, GreenFG, YellowFG } from './utils';
 
 export function loadJSON(documentPath: string): object {
     // TODO: support URL paths?
@@ -16,6 +18,7 @@ interface CLIOptions {
     write: string;
     disableMemoization: boolean;
     excludeContent: boolean;
+    ignoreCase: boolean;
     verbose: boolean;
 }
 
@@ -35,8 +38,21 @@ export function parseOptions(): CLIOptions {
         .option('-w, --write <filename>', 'File to output difference document to', '')
         .option('--disableMemoization', 'Disable the caching of array object (only use in low-memory scenarios)', false)
         .option('--excludeContent', 'Exclude "leftElement" and "rightElement" objects, reducing comparison size', false)
+        .option('--ignoreCase', 'Ignore string comparisons with different cases (e.g. "Action" vs "action")')
         .option('-v, --verbose', 'Print more output', false)
         .parse(process.argv);
     // specially cast rawOptions object to CLIOptions interface (force typing)
     return (rawOptions as unknown) as CLIOptions;
+}
+
+
+
+export function printComparison(comparison: Comparison) {
+    console.log(`Comparison between ${RedFG}${comparison.leftDocument}${ResetConsole} and ${GreenFG}${comparison.rightDocument}${ResetConsole}:`);
+    for (const change of comparison.changes) {
+        console.log(`${YellowFG}---${ResetConsole}`);
+        change.printChange();
+    }
+    console.log(`${YellowFG}---${ResetConsole}`);
+    console.log(`Top level changes: ${comparison.changes.length}`);
 }
