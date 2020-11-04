@@ -55,17 +55,17 @@ export class MatchConstraintsContainer {
 }
 
 function MatchConstraintfromDict(obj: any): AbstractMatchConstraint {
-    if (!obj.hasOwnProperty('constraint_name')) {
+    if (!obj.hasOwnProperty('type')) {
         throw new Error(`Error decoding object ${obj} into MatchConstraint`);
     }
 
-    switch (obj['constraint_name'] as string) {
+    switch (obj['type'] as string) {
         case PrimitiveMatchConstraint.name:
             return PrimitiveMatchConstraint.fromDict(obj);
         case ObjectPropertyMatchConstraint.name:
             return ObjectPropertyMatchConstraint.fromDict(obj);
         default:
-            throw new Error(`Unkown match constraint: ${obj['constraint_name']}`);
+            throw new Error(`Unkown match constraint: ${obj['type']}`);
     }
 }
 

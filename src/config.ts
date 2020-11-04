@@ -19,10 +19,10 @@ export class Config {
     }
 
     public static fromDict(obj: any): Config {
-        // const version = obj['version'];
-        const {ignore, ignoreCase, constraintsSubObj, extraOptions} = obj;
+        const {ignore, ignoreCase, constraints: constraintsSubObj, minimumConfidenceThreshold, disableMemoization, excludeContent} = obj;
         const constraints = MatchConstraintsContainer.fromDict(constraintsSubObj);
-        return new Config(ignore, ignoreCase, constraints, ...extraOptions);
+        
+        return new Config(ignore, ignoreCase, constraints, minimumConfidenceThreshold, disableMemoization, excludeContent);
     }
 }
 

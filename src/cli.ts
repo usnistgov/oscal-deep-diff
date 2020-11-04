@@ -10,6 +10,7 @@ let config = defaultConfig;
 if (options.config !== '') {
     const configDict = YAML.parse(fs.readFileSync(options.config).toString())
     config = Config.fromDict(configDict);
+    console.log(config);
 }
 
 const comparator = new Comparator(config);
