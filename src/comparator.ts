@@ -126,12 +126,19 @@ export class Comparator {
         rightArray: any[],
         rightPointer: string,
         report: MatchReport,
+        minConfidenceThreshold: number = .8
     ): [ArrayChanged, number] {
         let changeCount = 0;
         const change = new ArrayChanged(leftPointer, rightPointer, [], [], []);
 
         // then, iterate through all elements that have been matched and compare the sub-elements
         for (const match of report.matchedIndices) {
+            if (match.confidence && match.confidence >= minConfidenceThreshold) {
+                report.unmatchedLeftIndices.push(match.leftElementIndex);
+                report.unmatchedRightIndices.push(match.rightElementIndex);
+                continue;
+            }
+
             const oldSubElement = `${leftPointer}/${match.leftElementIndex}`;
             const newSubElement = `${rightPointer}/${match.rightElementIndex}`;
             const subChanges: ArraySubElement = {
