@@ -37,18 +37,17 @@ export class MatchConstraintsContainer {
         this.constraints = constraints;
     }
 
+    /**
+     * Create constraints container from dictionary.
+     * This object should be a map from the `condition` to the `constraint`,
+     * where each condition is a string and each `constraint` is an object.
+     * @param obj Dictionary (parsed JSON/YAML) object
+     */
     public static fromDict(obj: any): MatchConstraintsContainer {
         const constraints: ConstraintConditionTuple[] = [];
-        for (const subobj of obj) {
-            if (!subobj.hasOwnProperty('condition') || !subobj.hasOwnProperty('constraint')) {
-                throw new Error(`Error decoding object ${subobj} into PathCondition`);
-            }
-
-            const condition = subobj['condition'] as Condition;
-            const constraint = MatchConstraintfromDict(subobj['constraint']);
-
+        for (const condition of Object.getOwnPropertyNames(obj)) {
+            const constraint = MatchConstraintfromDict(obj['constraint']);
             const constraintTuple = [condition, constraint] as ConstraintConditionTuple;
-
             constraints.push(constraintTuple);
         }
         return new MatchConstraintsContainer(constraints);

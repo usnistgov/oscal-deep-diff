@@ -5,7 +5,7 @@ import { ArrayChanged } from './comparisons';
  * in Comparator.compareArrays().
  */
 export class MemoizationCache {
-    // Keys are stored internally as oldPointer:newPointer, and must be split
+    // Keys are stored internally as leftPointer:rightPointer, and must be split
     // manually. When adding to the cache, sub-items (children) must be removed
     // to improve memory consumption.
     private cache: { [key: string]: [ArrayChanged, number] } = {};

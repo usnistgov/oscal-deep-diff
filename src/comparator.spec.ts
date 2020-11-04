@@ -67,15 +67,4 @@ describe('compare documents no constraints', () => {
         expect(change.subChanges).to.have.lengthOf(0, 'there were no sub-changes');
         expect(change.addedItems[0].rightElement.id).to.equal(4);
     });
-
-    // it('object array with matching sub-elements', () => {
-    //     const changes: Change[] = [];
-
-    //     const oldDoc = [{id: 'ac-1', sub: {val: "hard matched first element"}, }, {id: 'ac-2', sub: {val: "hard matched second element"}}];
-    //     const newDoc = [''];
-
-    //     comparator['compareElements'](oldDoc, '', newDoc, '', changes);
-
-    //     console.log(changes);
-    // });
 });

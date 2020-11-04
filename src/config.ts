@@ -1,8 +1,5 @@
 import { MatchConstraintsContainer } from "./matching";
 
-/**
- * 
- */
 export class Config {
     public ignore: string[];
     public ignoreCase: boolean;

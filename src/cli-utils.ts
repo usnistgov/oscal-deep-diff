@@ -1,13 +1,6 @@
-import * as fs from 'fs';
 import { Command } from 'commander';
 import { Comparison } from './comparisons';
 import { RedFG, ResetConsole, GreenFG, YellowFG } from './utils';
-
-export function loadJSON(documentPath: string): object {
-    // TODO: support URL paths?
-    const rawDocument = fs.readFileSync(documentPath);
-    return JSON.parse(rawDocument.toString());
-}
 
 // object that rawOptions is marshalled into
 interface CLIOptions {
