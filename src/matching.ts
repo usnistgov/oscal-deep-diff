@@ -37,7 +37,7 @@ export class MatchConstraintsContainer {
         this.constraints = constraints;
     }
 
-    public static fromJson(obj: any): MatchConstraintsContainer {
+    public static fromDict(obj: any): MatchConstraintsContainer {
         const constraints: ConstraintConditionTuple[] = [];
         for (const subobj of obj) {
             if (!subobj.hasOwnProperty('condition') || !subobj.hasOwnProperty('constraint')) {
@@ -45,7 +45,7 @@ export class MatchConstraintsContainer {
             }
 
             const condition = subobj['condition'] as Condition;
-            const constraint = MatchConstraintFromJson(subobj['constraint']);
+            const constraint = MatchConstraintfromDict(subobj['constraint']);
 
             const constraintTuple = [condition, constraint] as ConstraintConditionTuple;
 
@@ -55,16 +55,16 @@ export class MatchConstraintsContainer {
     }
 }
 
-function MatchConstraintFromJson(obj: any): AbstractMatchConstraint {
+function MatchConstraintfromDict(obj: any): AbstractMatchConstraint {
     if (!obj.hasOwnProperty('constraint_name')) {
         throw new Error(`Error decoding object ${obj} into MatchConstraint`);
     }
 
     switch (obj['constraint_name'] as string) {
         case PrimitiveMatchConstraint.name:
-            return PrimitiveMatchConstraint.fromJson(obj);
+            return PrimitiveMatchConstraint.fromDict(obj);
         case ObjectPropertyMatchConstraint.name:
-            return ObjectPropertyMatchConstraint.fromJson(obj);
+            return ObjectPropertyMatchConstraint.fromDict(obj);
         default:
             throw new Error(`Unkown match constraint: ${obj['constraint_name']}`);
     }
@@ -111,7 +111,7 @@ export abstract class AbstractMatchConstraint {
         return report;
     }
 
-    public static fromJson(_: any): AbstractMatchConstraint {
+    public static fromDict(_: any): AbstractMatchConstraint {
         throw new Error('Not implemented');
     }
 }
@@ -134,7 +134,7 @@ export class PrimitiveMatchConstraint extends AbstractMatchConstraint {
         this.matchType = matchType;
     }
 
-    public static fromJson(obj: any): AbstractMatchConstraint {
+    public static fromDict(obj: any): AbstractMatchConstraint {
         if (!obj.hasOwnProperty('matchType')) {
             throw new Error(`Error decoding object ${obj} into ${ObjectPropertyMatchConstraint.name}`);
         }
@@ -180,7 +180,7 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
         this.secondaryProperties = secondaryProperties;
     }
 
-    public static fromJson(obj: any): AbstractMatchConstraint {
+    public static fromDict(obj: any): AbstractMatchConstraint {
         if (!obj.hasOwnProperty('matchType') || !obj.hasOwnProperty('propertyName') || !obj.hasOwnProperty('secondaryProperties')) {
             throw new Error(`Error decoding object ${obj} into ${ObjectPropertyMatchConstraint.name}`);
         }

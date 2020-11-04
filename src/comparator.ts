@@ -3,7 +3,6 @@ import {
     getType,
     getPropertyIntersection,
     countSubElements,
-    Condition,
     testPointerCondition,
 } from './utils';
 import {
@@ -14,15 +13,16 @@ import {
     Comparison,
     Change,
     ArraySubElement,
+    excludeContentReplacer,
 } from './comparisons';
 import {
     ObjectPropertyMatchConstraint,
     MatchType,
     PrimitiveMatchConstraint,
     MatchReport,
-    MatchConstraintsContainer,
 } from './matching';
 import { MemoizationCache } from './cache';
+import { Config } from './config';
 
 /**
  * The Comparator class is designed to handle comparing two arbritrary JSON
@@ -30,37 +30,7 @@ import { MemoizationCache } from './cache';
  * schemas.
  */
 export class Comparator {
-    private _verbose: boolean = false;
-
-    public set verbose(verbose: boolean) {
-        this._verbose = verbose;
-    }
-
-    private _memoizationEnabled: boolean = true;
-
-    public set memoizationEnabled(memoizationEnabled: boolean) {
-        this._memoizationEnabled = memoizationEnabled;
-    }
-
-    private _ignoreCase: boolean = false;
-
-    public set ignoreCase(ignoreCase: boolean) {
-        this._ignoreCase = ignoreCase;
-    }
-
     private cache = new MemoizationCache();
-
-    private _constraints: MatchConstraintsContainer;
-
-    public set constraints(constraints: MatchConstraintsContainer) {
-        this._constraints = constraints;
-    }
-
-    private _ignoreConditions: Condition[] = [];
-
-    public set ignoreConditions(ignoreConditions: Condition[]) {
-        this._ignoreConditions = ignoreConditions;
-    }
 
     private _comparison: Comparison | undefined;
 
@@ -71,12 +41,19 @@ export class Comparator {
         return this._comparison;
     }
 
-    constructor(
-        constraints: MatchConstraintsContainer = new MatchConstraintsContainer([]),
-        ignoreConditions: Condition[] = [],
-    ) {
-        this._constraints = constraints;
-        this._ignoreConditions = ignoreConditions;
+    public comparisonToJson(): string {
+        const comparison = this.comparison;
+        if (this.config.excludeContent) {
+            return JSON.stringify(comparison, excludeContentReplacer, 2);
+        } else {
+            return JSON.stringify(comparison, null, 2);
+        }
+    }
+
+    private config: Config;
+
+    constructor(config: Config) {
+        this.config = config;
     }
 
     /**
@@ -95,15 +72,15 @@ export class Comparator {
         rightDocumentSource: string,
     ) {
         const changes: Change[] = [];
-        if (this._verbose) {
-            console.log(`Starting comparison between ${leftDocumentSource} and ${rightDocumentSource}`);
-            console.time('compareDocuments');
-        }
+        
+        console.log(`Starting comparison between ${leftDocumentSource} and ${rightDocumentSource}`);
+        console.time('compareDocuments');
+    
         this.compareElements(leftDocument, '', rightDocument, '', changes);
-        if (this._verbose) {
-            console.log('Document comparison completed');
-            console.timeEnd('compareDocuments');
-        }
+
+        console.log('Document comparison completed');
+        console.timeEnd('compareDocuments');
+
         this._comparison = {
             leftDocument: leftDocumentSource,
             rightDocument: rightDocumentSource,
@@ -184,7 +161,7 @@ export class Comparator {
         rightPointer: string,
         currentChanges: Change[],
     ): number {
-        if (this._memoizationEnabled) {
+        if (!this.config.disableMemoization) {
             const cached = this.cache.get(leftPointer, rightPointer);
             if (cached) {
                 if (cached[0].hasChanges()) {
@@ -196,7 +173,7 @@ export class Comparator {
 
         let match;
         let report: MatchReport;
-        let constraint = this._constraints.tryGetConstraint(rightPointer);
+        let constraint = this.config.constraints.tryGetConstraint(rightPointer);
         if (constraint) {
             report = constraint.matchArrayElements(leftArray, rightArray);
             match = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
@@ -238,7 +215,7 @@ export class Comparator {
                 }
 
                 if (optimalMatch) {
-                    if (this._memoizationEnabled) {
+                    if (!this.config.disableMemoization) {
                         this.cache.set(leftPointer, rightPointer, [optimalMatch, optimalMatchChanges]);
                     }
 
@@ -335,7 +312,7 @@ export class Comparator {
         if (type !== getType(newElement)) throw new Error('Old and new (sub)document do not have the same type');
 
         // check if elements have been marked as ignored
-        for (const ignoreCondition of this._ignoreConditions) {
+        for (const ignoreCondition of this.config.ignore) {
             if (testPointerCondition(oldPointer, ignoreCondition)) {
                 return 0;
             }
@@ -347,7 +324,7 @@ export class Comparator {
         } else if (type === 'object') {
             // elements are both objects, compare each sub-element in the object
             return this.compareObjects(oldElement, oldPointer, newElement, newPointer, currentChanges);
-        } else if (type === 'string' && this._ignoreCase) {
+        } else if (type === 'string' && this.config.ignoreCase) {
             if ((oldElement as string).toLowerCase() !== (newElement as string).toLowerCase()) {
                 currentChanges.push(new PropertyChanged(oldElement, oldPointer, newElement, newPointer));
             }

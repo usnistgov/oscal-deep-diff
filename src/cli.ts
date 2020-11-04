@@ -1,48 +1,27 @@
-import { Comparator } from './comparator';
-import { Condition } from './utils';
-import { MatchConstraintsContainer } from './matching';
-import { loadJSON, parseOptions, printComparison } from './cli-utils';
 import * as fs from 'fs';
-import { excludeContentReplacer } from './comparisons';
+import YAML from 'yaml';
+import { parseOptions, printComparison } from './cli-utils';
+import { Comparator } from './comparator';
+import { Config, defaultConfig } from './config';
 
 const options = parseOptions();
 
-const comparator = new Comparator();
-
-comparator.verbose = options.verbose;
-comparator.memoizationEnabled = !options.disableMemoization;
-comparator.ignoreCase = options.ignoreCase;
-
-if (options.ignore !== '') {
-    // parse ignore constraints (commander veriadic options leads to unstable results)
-    const ignoreConditions: Condition[] = options.ignore.split(',');
-    comparator.ignoreConditions = ignoreConditions;
+let config = defaultConfig;
+if (options.config !== '') {
+    const configDict = YAML.parse(fs.readFileSync(options.config).toString())
+    config = Config.fromDict(configDict);
 }
 
-if (options.constraints !== '') {
-    // load constraints file and parse
-    const constraintsJSON = loadJSON(options.constraints);
-    const constraints = MatchConstraintsContainer.fromJson(constraintsJSON);
-    comparator.constraints = constraints;
-}
+const comparator = new Comparator(config);
 
-const leftDoc = loadJSON(options.leftCatalog);
-const rightDoc = loadJSON(options.rightCatalog);
+const leftDoc = JSON.parse(fs.readFileSync(options.leftDoc).toString());
+const rightDoc = JSON.parse(fs.readFileSync(options.rightDoc).toString());
 
-comparator.newComparison(leftDoc, options.leftCatalog, rightDoc, options.rightCatalog);
-
-let outputStringified;
-if (options.excludeContent) {
-    outputStringified = JSON.stringify(comparator.comparison, excludeContentReplacer, 2);
-} else {
-    outputStringified = JSON.stringify(comparator.comparison, null, 2);
-}
+comparator.newComparison(leftDoc, options.leftDoc, rightDoc, options.rightDoc);
 
 if (options.write !== '') {
-    if (options.verbose) {
-        console.log(`Saving compared document to ${options.write}`);
-    }
-    fs.writeFileSync(options.write, outputStringified);
+    console.log(`Saving compared document to ${options.write}`);
+    fs.writeFileSync(options.write, comparator.comparisonToJson());
 } else {
     printComparison(comparator.comparison);
 }

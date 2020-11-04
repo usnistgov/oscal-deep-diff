@@ -74,7 +74,7 @@ export type Pointer = string;
  *
  * Notes:
  * * Starting with a / denotes that you want to search from the root
- * * # and * denote numbers and wildcard tokens
+ * * \# and * denote numbers and wildcard tokens
  * * The first non-/ token must not be a # or a *
  *
  * Examples:
@@ -82,7 +82,7 @@ export type Pointer = string;
  * @param pointer
  * @param condition
  */
-export function testPointerCondition(pointer: string, condition: Condition): boolean {
+export function testPointerCondition(pointer: string, condition: string): boolean {
     if (!pointer.startsWith('/') && pointer !== '') {
         throw new Error(`Invalid path '${pointer}', must start with a '/'`);
     }

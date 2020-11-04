@@ -31,7 +31,8 @@
   "author": "Nikita Wootten",
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
-    "commander": "^5.1.0"
+    "commander": "^5.1.0",
+    "yaml": "^1.10.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",
