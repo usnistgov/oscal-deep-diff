@@ -1,7 +1,6 @@
 import {
     getPropertyUnion,
     getType,
-    getPropertyIntersection,
     countSubElements,
     testPointerCondition,
 } from './utils';
@@ -16,10 +15,8 @@ import {
     excludeContentReplacer,
 } from './comparisons';
 import {
-    ObjectPropertyMatchConstraint,
-    MatchType,
-    PrimitiveMatchConstraint,
-    MatchReport,
+    MatchInstructions,
+    generatePotentialMatches,
 } from './matching';
 import { MemoizationCache } from './cache';
 import { Config } from './config';
@@ -89,30 +86,30 @@ export class Comparator {
     }
 
     /**
-     * Builds ArrayChange object and calculates total number of changes
-     * @todo add memoization here to drastically speed up comparison
+     * Match array pairs together based on instructions, building an ArrayChanged
+     * object and returning the total number of changed sub-elements.
      * @param leftArray
      * @param leftPointer
      * @param rightArray
      * @param rightPointer
-     * @param report
+     * @param instructions
      */
-    private tryMatch(
+    private matchArrays(
         leftArray: any[],
         leftPointer: string,
         rightArray: any[],
         rightPointer: string,
-        report: MatchReport,
+        instructions: MatchInstructions,
         minConfidenceThreshold: number = .8
     ): [ArrayChanged, number] {
         let changeCount = 0;
         const change = new ArrayChanged(leftPointer, rightPointer, [], [], []);
 
-        // then, iterate through all elements that have been matched and compare the sub-elements
-        for (const match of report.matchedIndices) {
+        // iterate through all elements that have been matched and compare their sub-elements
+        for (const match of instructions.matchedIndices) {
             if (match.confidence && match.confidence >= minConfidenceThreshold) {
-                report.unmatchedLeftIndices.push(match.leftElementIndex);
-                report.unmatchedRightIndices.push(match.rightElementIndex);
+                instructions.unmatchedLeftIndices.push(match.leftElementIndex);
+                instructions.unmatchedRightIndices.push(match.rightElementIndex);
                 continue;
             }
 
@@ -135,7 +132,7 @@ export class Comparator {
             }
         }
 
-        for (const unmatchedLeftIndex of report.unmatchedLeftIndices) {
+        for (const unmatchedLeftIndex of instructions.unmatchedLeftIndices) {
             change.removedItems.push({
                 leftPointer: `${leftPointer}/${unmatchedLeftIndex}`,
                 leftElement: leftArray[unmatchedLeftIndex],
@@ -143,7 +140,7 @@ export class Comparator {
             changeCount += countSubElements(leftArray[unmatchedLeftIndex]);
         }
 
-        for (const unmatchedRightIndex of report.unmatchedRightIndices) {
+        for (const unmatchedRightIndex of instructions.unmatchedRightIndices) {
             change.addedItems.push({
                 rightPointer: `${rightPointer}/${unmatchedRightIndex}`,
                 rightElement: rightArray[unmatchedRightIndex],
@@ -164,92 +161,45 @@ export class Comparator {
         if (!this.config.disableMemoization) {
             const cached = this.cache.get(leftPointer, rightPointer);
             if (cached) {
-                if (cached[0].hasChanges()) {
-                    currentChanges.push(cached[0]);
+                const [cachedChanges, cachedScore] = cached
+                if (cachedChanges.hasChanges()) {
+                    currentChanges.push(cachedChanges);
                 }
-                return cached[1];
+                return cachedScore;
             }
         }
 
-        let match;
-        let report: MatchReport;
-        let constraint = this.config.constraints.tryGetConstraint(rightPointer);
+        let potentialMatches: MatchInstructions[];
+
+        const constraint = this.config.constraints.tryGetConstraint(rightPointer);
         if (constraint) {
-            report = constraint.matchArrayElements(leftArray, rightArray);
-            match = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
-            if (match[0].hasChanges()) {
-                currentChanges.push(match[0]);
-            }
-            return match[1];
+            potentialMatches = [constraint.matchArrayElements(leftArray, rightArray)];
+        } else {
+            potentialMatches = generatePotentialMatches(leftArray, rightArray);
         }
 
-        // console.log(`Warning: matching arrays  (left: ${leftPointer}, right: ${rightPointer}) without specifying a constraint`);
-        if (leftArray.length > 0 && rightArray.length > 0) {
-            // assumes that all the relevant matching info can be gathered from the first object
-            const leftSample = leftArray[0];
-            const rightSample = rightArray[0];
+        let optimalMatchScore = Infinity;
+        let optimalMatchChanges: ArrayChanged | undefined;
 
-            const type = getType(leftSample);
-            if (type !== getType(rightSample)) throw new Error('Left and right arrays cannot mix and match type');
+        for (const potentialMatch of potentialMatches) {
+            const [potentialMatchChanges, potentialMatchScore] = this.matchArrays(leftArray, leftPointer, rightArray, rightPointer, potentialMatch);
 
-            if (type === 'array') {
-                // TODO: array of arrays comparison
-            } else if (type === 'object') {
-                let optimalMatch: ArrayChanged | undefined;
-                let optimalMatchChanges = Infinity;
-
-                // try all combinations & minimize projected changes
-                for (const property of getPropertyIntersection(leftSample, rightSample)) {
-                    for (const matchType of ['literal', 'string-similarity']) {
-                        constraint = new ObjectPropertyMatchConstraint(matchType as MatchType, property);
-                        report = constraint.matchArrayElements(leftArray, rightArray);
-
-                        const potentialMatch = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
-                        potentialMatch[0].matchProperty = property;
-                        potentialMatch[0].matchMethod = matchType;
-                        if (potentialMatch[1] < optimalMatchChanges) {
-                            optimalMatch = potentialMatch[0];
-                            optimalMatchChanges = potentialMatch[1];
-                        }
-                    }
-                }
-
-                if (optimalMatch) {
-                    if (!this.config.disableMemoization) {
-                        this.cache.set(leftPointer, rightPointer, [optimalMatch, optimalMatchChanges]);
-                    }
-
-                    if (optimalMatch.hasChanges()) {
-                        currentChanges.push(optimalMatch);
-                    }
-                    return optimalMatchChanges;
-                }
-            } else {
-                // array of primitives
-                constraint = new PrimitiveMatchConstraint('literal');
-                report = constraint.matchArrayElements(leftArray, rightArray);
-
-                match = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
-                if (match[0].hasChanges()) {
-                    match[0].matchMethod = 'literal';
-                    currentChanges.push(match[0]);
-                }
-
-                return match[1];
+            if (potentialMatchScore < optimalMatchScore) {
+                optimalMatchScore = potentialMatchScore;
+                optimalMatchChanges = potentialMatchChanges;
             }
         }
 
-        report = {
-            matchedIndices: [],
-            unmatchedLeftIndices: [...leftArray.keys()],
-            unmatchedRightIndices: [...rightArray.keys()],
-        };
-        match = this.tryMatch(leftArray, leftPointer, rightArray, rightPointer, report);
-
-        if (match[0].hasChanges()) {
-            currentChanges.push(match[0]);
+        if (optimalMatchChanges) {
+            if (!this.config.disableMemoization) {
+                this.cache.set(leftPointer, rightPointer, [optimalMatchChanges, optimalMatchScore]);
+            }
+            if(optimalMatchChanges.hasChanges()) {
+                currentChanges.push(optimalMatchChanges);
+                return optimalMatchScore;
+            }
         }
-        return match[1];
+        return 0; // no changes
     }
 
     private compareObjects(
@@ -327,16 +277,16 @@ export class Comparator {
         } else if (type === 'string' && this.config.ignoreCase) {
             if ((leftElement as string).toLowerCase() !== (rightElement as string).toLowerCase()) {
                 currentChanges.push(new PropertyChanged(leftElement, leftPointer, rightElement, rightPointer));
-            }
-            return 0;
-        } else {
-            // elements can be considered a primitive type
-            if (leftElement !== rightElement) {
-                // directly compare primitives
-                currentChanges.push(new PropertyChanged(leftElement, leftPointer, rightElement, rightPointer));
                 return 1;
             }
             return 0;
         }
+        // elements can be considered a primitive type
+        if (leftElement !== rightElement) {
+            // directly compare primitives
+            currentChanges.push(new PropertyChanged(leftElement, leftPointer, rightElement, rightPointer));
+            return 1;
+        }
+        return 0;
     }
 }

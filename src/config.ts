@@ -19,9 +19,11 @@ export class Config {
     }
 
     public static fromDict(obj: any): Config {
-        const {ignore, ignoreCase, constraints: constraintsSubObj, minimumConfidenceThreshold, disableMemoization, excludeContent} = obj;
+        const {ignore, ignoreCase, constraints: constraintsSubObj, minimumConfidenceThreshold, disableMemoization, excludeContent, ...unknownOptions} = obj;
         const constraints = MatchConstraintsContainer.fromDict(constraintsSubObj);
         
+        console.log('WARNING: Unknown options in YAML config:', unknownOptions);
+
         return new Config(ignore, ignoreCase, constraints, minimumConfidenceThreshold, disableMemoization, excludeContent);
     }
 }
