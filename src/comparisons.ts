@@ -93,6 +93,8 @@ export class ArrayChanged implements Printable {
 
     subChanges: ArraySubElement[];
 
+    outOfTreeChanges?: ArraySubElement[];
+
     matchProperty?: string;
     matchMethod?: string;
 
@@ -140,6 +142,8 @@ export class ArrayChanged implements Printable {
 }
 
 export type Change = PropertyAdded | PropertyDeleted | PropertyChanged | ArrayChanged;
+
+export type ComparisonResult = [Change[], number];
 
 export interface Comparison {
     leftDocument: string;

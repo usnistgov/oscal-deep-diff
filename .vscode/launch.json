@@ -40,6 +40,8 @@
                 "vault/NIST_SP-800-53_rev5-FPD_catalog.json",
                 "--write",
                 "vault/NIST_SP-800-53_rev4_rev5_comparison-minthresh.json",
+                "--config",
+                "vault/config.yaml"
             ]
         },
         {

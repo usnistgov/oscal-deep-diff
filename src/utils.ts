@@ -29,6 +29,15 @@ export function getType(element: any): string {
         : typeof element;
 }
 
+export function convertPointerToCondition(pointer: string): string {
+    return pointer.split('/').map(property => {
+        if (Number.isInteger(Number(property)) && property !== '') {
+            return '#'
+        }
+        return property
+    }).join('/');
+}
+
 /**
  * Returns the resolved object if it exists, or throws an error otherwise
  *

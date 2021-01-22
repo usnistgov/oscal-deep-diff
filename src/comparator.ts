@@ -1,8 +1,7 @@
 import {
     getPropertyUnion,
-    getType,
     countSubElements,
-    testPointerCondition,
+    convertPointerToCondition,
 } from './utils';
 import {
     PropertyAdded,
@@ -13,6 +12,9 @@ import {
     Change,
     ArraySubElement,
     excludeContentReplacer,
+    RightArrayItem,
+    LeftArrayItem,
+    ComparisonResult,
 } from './comparisons';
 import {
     MatchInstructions,
@@ -20,10 +22,10 @@ import {
 } from './matching';
 import { MemoizationCache } from './cache';
 import { Config } from './config';
+import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject } from './tracked';
 
 // Tuple of array changes and number of subchanges
-type ComparisonResults = [Change[], number];
-const NO_CHANGES: ComparisonResults = [[], 0]
+const NO_CHANGES: ComparisonResult = [[], 0]
 
 /**
  * The Comparator class is designed to handle comparing two arbritrary JSON
@@ -70,7 +72,7 @@ export class Comparator {
         console.log(`Starting comparison between ${leftDocumentSource} and ${rightDocumentSource}`);
         console.time('compareDocuments');
     
-        const [changes, changeCount] = this.compareElements(leftDocument, '', rightDocument, '');
+        const [changes, changeCount] = this.compareElements(trackRawObject('', leftDocument), trackRawObject('', rightDocument));
 
         console.log(`Document comparison completed, ${changeCount} changes`);
         console.timeEnd('compareDocuments');
@@ -91,36 +93,31 @@ export class Comparator {
      * @param rightPointer
      * @returns a number representing the number of changes
      */
-    private compareElements(leftElement: any, leftPointer: string, rightElement: any, rightPointer: string): ComparisonResults {
-        // verify that elements are of the same 'type' (no arrays compared to objects)
-        const type = getType(leftElement);
-        if (type !== getType(rightElement)) {
-            throw new Error('Left and right (sub)document do not have the same type');
-        }
-
+    private compareElements(left: TrackedElement, right: TrackedElement): ComparisonResult {
         // check if elements have been marked as ignored
         for (const ignoreCondition of this.config.ignore) {
-            if (testPointerCondition(leftPointer, ignoreCondition)) {
+            if (left.testPointerCondition(ignoreCondition)) {
                 return NO_CHANGES;
             }
         }
 
-        if (type === 'array') {
-            // elements are arrays, array objects need to be matched before comparing their children
-            return this.compareArrays(leftElement, leftPointer, rightElement, rightPointer);
-        } else if (type === 'object') {
+        if (left instanceof TrackedArray && right instanceof TrackedArray) {
+            return this.compareArrays(left, right);
+        } else if (left instanceof TrackedObject && right instanceof TrackedObject) {
             // elements are both objects, compare each sub-element in the object
-            return this.compareObjects(leftElement, leftPointer, rightElement, rightPointer);
-        } else if (type === 'string' && this.config.ignoreCase) {
-            if ((leftElement as string).toLowerCase() !== (rightElement as string).toLowerCase()) {
-                return [[new PropertyChanged(leftElement, leftPointer, rightElement, rightPointer)], 1];
+            return this.compareObjects(left, right);
+        } else if (left instanceof TrackedPrimitive && right instanceof TrackedPrimitive) {
+            if (left.raw instanceof String && right.raw instanceof String && this.config.ignoreCase) {
+                if ((left.raw as string).toLowerCase() !== (right.raw as string).toLowerCase()) {
+                    return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 1];
+                }
+            } else if (left.raw !== right.raw) { // directly compare primitives
+                return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 1];
             }
-            return NO_CHANGES;
+        } else {
+            throw new Error('Left and right (sub)document do not have the same type');
         }
-        // elements can be considered a primitive type
-        if (leftElement !== rightElement) { // directly compare primitives
-            return [[new PropertyChanged(leftElement, leftPointer, rightElement, rightPointer)], 1];
-        }
+
         return NO_CHANGES;
     }
 
@@ -131,30 +128,30 @@ export class Comparator {
      * @param rightElement 
      * @param rightPointer 
      */
-    private compareObjects(leftElement: any, leftPointer: string, rightElement: any, rightPointer: string): ComparisonResults {
+    private compareObjects(left: TrackedObject, right: TrackedObject): ComparisonResult {
         // elements are both objects, compare each sub-element in the object
         let changeCount = 0;
         const changes: Change[] = [];
 
-        const propertyUnion = getPropertyUnion(leftElement, rightElement);
+        const propertyUnion = getPropertyUnion(left.raw, right.raw);
 
         for (const property of propertyUnion) {
             // for each property in both subdocuments, recurse and compare results
-            if (!(property in leftElement)) {
+            if (!(property in left.raw)) {
                 // property added in right document
                 changes.push(
-                    new PropertyAdded(leftPointer, `${rightPointer}/${property}`, rightElement[property]),
+                    new PropertyAdded(left.pointer, `${right.pointer}/${property}`, right.raw[property]),
                 );
-                changeCount += countSubElements(rightElement[property]);
-            } else if (!(property in rightElement)) {
+                changeCount += countSubElements(right.raw[property]);
+            } else if (!(property in right.raw)) {
                 // property deleted from left document
                 changes.push(
-                    new PropertyDeleted(`${leftPointer}/${property}`, leftElement[property], rightPointer),
+                    new PropertyDeleted(`${left.pointer}/${property}`, left.raw[property], right.pointer),
                 );
-                changeCount += countSubElements(leftElement[property]);
+                changeCount += countSubElements(left.raw[property]);
             } else {
                 // property exists in both, recurse on sub-document
-                const [subChanges, subChangeCount] = this.compareElements(leftElement[property], `${leftPointer}/${property}`, rightElement[property], `${rightPointer}/${property}`);
+                const [subChanges, subChangeCount] = this.compareElements(left.resolve(property), right.resolve(property));
 
                 changeCount += subChangeCount;
                 changes.push(...subChanges);
@@ -175,9 +172,9 @@ export class Comparator {
      * @param rightArray 
      * @param rightPointer 
      */
-    private compareArrays(leftArray: any[], leftPointer: string, rightArray: any[], rightPointer: string): ComparisonResults {
+    private compareArrays(left: TrackedArray, right: TrackedArray): ComparisonResult {
         if (!this.config.disableMemoization) {
-            const cached = this.cache.get(leftPointer, rightPointer);
+            const cached = this.cache.get(left.pointer, right.pointer);
             if (cached) {
                 const [cachedChanges, cachedScore] = cached
                 if (cachedChanges.hasChanges()) {
@@ -189,18 +186,20 @@ export class Comparator {
 
         let potentialMatches: MatchInstructions[];
 
-        const constraint = this.config.constraints.tryGetConstraint(rightPointer);
+        const constraint = this.config.constraints.tryGetConstraint(left.pointer);
         if (constraint) {
-            potentialMatches = [constraint.matchArrayElements(leftArray, rightArray)];
+            potentialMatches = [constraint.matchArrayElements(left.raw, right.raw)];
         } else {
-            potentialMatches = generatePotentialMatches(leftArray, rightArray);
+            potentialMatches = generatePotentialMatches(left.raw, right.raw);
         }
+
+        // todo: add the ability to cache chosen constraints for consistent comparison of arrays with the same pointer location
 
         let optimalMatchScore = Infinity;
         let optimalMatchChanges: ArrayChanged | undefined;
 
         for (const potentialMatch of potentialMatches) {
-            const [potentialMatchChanges, potentialMatchScore] = this.matchArrays(leftArray, leftPointer, rightArray, rightPointer, potentialMatch);
+            const [potentialMatchChanges, potentialMatchScore] = this.matchArrays(left, right, potentialMatch);
 
             if (potentialMatchScore < optimalMatchScore) {
                 optimalMatchScore = potentialMatchScore;
@@ -210,13 +209,69 @@ export class Comparator {
 
         if (optimalMatchChanges) {
             if (!this.config.disableMemoization) {
-                this.cache.set(leftPointer, rightPointer, [optimalMatchChanges, optimalMatchScore]);
+                this.cache.set(left.pointer, right.pointer, [optimalMatchChanges, optimalMatchScore]);
             }
             if(optimalMatchChanges.hasChanges()) {
                 return [[optimalMatchChanges], optimalMatchScore];
             }
         }
-        return NO_CHANGES; // no changes
+        return NO_CHANGES;
+    }
+
+    /**
+     * Within an array's list of sub-changes (matched up properties changes), find array changes and match their unmatched properties.
+     * @param leftPointer 
+     * @param rightPointer 
+     * @param subChanges 
+     */
+    private matchOutOfTree(subChanges: ArraySubElement[]): ArraySubElement[] {
+        const rightPotentialMatches = new Map<string, RightArrayItem[]>();
+        const leftPotentialMatches = new Map<string, LeftArrayItem[]>();
+
+        const matches: ArraySubElement[] = [];
+
+        for (const subChange of subChanges) {
+            for (const subChangeChanges of subChange.changes) {
+                if (subChangeChanges instanceof ArrayChanged) {
+                    for (const potentialLeftMatches of subChangeChanges.removedItems) {
+                        const condition = convertPointerToCondition(potentialLeftMatches.leftPointer);
+                        const potentialMatches = leftPotentialMatches.get(condition);
+                        if (potentialMatches) {
+                            potentialMatches.push(potentialLeftMatches);
+                        } else {
+                            leftPotentialMatches.set(condition, [potentialLeftMatches]);
+                        }
+                    }
+
+                    for (const potentialRightMatches of subChangeChanges.addedItems) {
+                        const condition = convertPointerToCondition(potentialRightMatches.rightPointer);
+                        const potentialMatches = rightPotentialMatches.get(condition);
+                        if (potentialMatches) {
+                            potentialMatches.push(potentialRightMatches);
+                        } else {
+                            rightPotentialMatches.set(condition, [potentialRightMatches]);
+                        }
+                    }
+                }
+            }
+        }
+
+        for (const [condition, leftArrayItems] of leftPotentialMatches) {
+            const rightArrayItems = rightPotentialMatches.get(condition);
+            if (leftArrayItems && rightArrayItems) {
+                // TODO: compare arrays needs to be changed to use tracked items instead of assuming common parent
+                // THIS IS INCORRECT! AND PRODUCES THE broken json outputs everywhere
+                const leftArray = new TrackedArray(condition, leftArrayItems.map(item => item.leftElement));
+                const rightArray = new TrackedArray(condition, rightArrayItems.map(item => item.rightElement));
+                const [changes] = this.compareArrays(leftArray, rightArray);
+                if (changes[0] && changes[0] instanceof ArrayChanged) {
+                    const arraySubChange: ArrayChanged = changes[0];
+                    matches.push(...arraySubChange.subChanges);
+                }
+            }
+        }
+
+        return matches;
     }
 
     /**
@@ -229,9 +284,9 @@ export class Comparator {
      * @param rightPointer
      * @param instructions Object defining which element pairs should be matched
      */
-    private matchArrays(leftArray: any[], leftPointer: string, rightArray: any[], rightPointer: string, instructions: MatchInstructions): [ArrayChanged, number] {
+    private matchArrays(left: TrackedArray, right: TrackedArray, instructions: MatchInstructions): [ArrayChanged, number] {
         let changeCount = 0;
-        const change = new ArrayChanged(leftPointer, rightPointer, [], [], []);
+        const change = new ArrayChanged(left.pointer, right.pointer, [], [], []);
 
         // iterate through all elements that have been matched and compare their sub-elements
         for (const match of instructions.matchedIndices) {
@@ -242,16 +297,16 @@ export class Comparator {
                 continue;
             }
 
-            const leftSubElement = `${leftPointer}/${match.leftElementIndex}`;
-            const rightSubElement = `${rightPointer}/${match.rightElementIndex}`;
+            const leftSubElement = left.getIndex(match.leftElementIndex);
+            const rightSubElement = right.getIndex(match.rightElementIndex);
             const subChanges: ArraySubElement = {
-                leftPointer: leftSubElement,
-                rightPointer: rightSubElement,
+                leftPointer: leftSubElement.pointer,
+                rightPointer: rightSubElement.pointer,
                 changes: [],
             };
             let subChangeCount;
 
-            [subChanges.changes, subChangeCount] = this.compareElements(leftArray[match.leftElementIndex], leftSubElement, rightArray[match.rightElementIndex], rightSubElement);
+            [subChanges.changes, subChangeCount] = this.compareElements(left, right);
 
             if (subChanges.changes.length > 0) {
                 change.subChanges.push(subChanges);
@@ -261,18 +316,26 @@ export class Comparator {
 
         for (const unmatchedLeftIndex of instructions.unmatchedLeftIndices) {
             change.removedItems.push({
-                leftPointer: `${leftPointer}/${unmatchedLeftIndex}`,
-                leftElement: leftArray[unmatchedLeftIndex],
+                leftPointer: `${left.pointer}/${unmatchedLeftIndex}`,
+                leftElement: left.raw[unmatchedLeftIndex],
             });
-            changeCount += countSubElements(leftArray[unmatchedLeftIndex]);
+            changeCount += countSubElements(left.raw[unmatchedLeftIndex]);
         }
 
         for (const unmatchedRightIndex of instructions.unmatchedRightIndices) {
             change.addedItems.push({
-                rightPointer: `${rightPointer}/${unmatchedRightIndex}`,
-                rightElement: rightArray[unmatchedRightIndex],
+                rightPointer: `${right.pointer}/${unmatchedRightIndex}`,
+                rightElement: right.raw[unmatchedRightIndex],
             });
-            changeCount += countSubElements(rightArray[unmatchedRightIndex]);
+            changeCount += countSubElements(right.raw[unmatchedRightIndex]);
+        }
+
+        // match indices that could be out of tree
+        if (this.config.outOfTreeMatching) {
+            const outOfTreeMatches = this.matchOutOfTree(change.subChanges);
+            if (outOfTreeMatches) {
+                change.outOfTreeChanges = outOfTreeMatches;
+            }
         }
 
         return [change, changeCount];
