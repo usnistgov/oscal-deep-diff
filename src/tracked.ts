@@ -14,6 +14,7 @@ export function trackRawObject(pointer: string, raw: any): TrackedElement {
 
 export abstract class TrackedElement {
     pointer: string;
+    raw: any;
 
     constructor(pointer: string) {
         this.pointer = pointer;
@@ -32,7 +33,6 @@ export abstract class TrackedElement {
 }
 
 export class TrackedPrimitive extends TrackedElement {
-    raw: any;
 
     constructor(pointer: string, raw: any) {
         super(pointer);
@@ -68,6 +68,9 @@ export class TrackedArray extends TrackedElement {
         }
         const trackedSubElement = trackRawObject(`${this.pointer}/${property}`, rawSubElement);
 
+        if (remaining.length === 0) {
+            return trackedSubElement;
+        }
         return trackedSubElement.resolveImpl(remaining);
     }
 
@@ -83,7 +86,6 @@ export class TrackedArray extends TrackedElement {
 }
 
 export class TrackedObject extends TrackedElement {
-    raw: any;
 
     constructor(pointer: string, raw: any) {
         super(pointer);
@@ -97,7 +99,11 @@ export class TrackedObject extends TrackedElement {
         }
         const trackedSubElement = trackRawObject(`${this.pointer}/${property}`, rawSubElement);
 
+        if (remaining.length === 0) {
+            return trackedSubElement; // base case, no remaining items left
+        }
         return trackedSubElement.resolveImpl(remaining);
+
     }
 
     // public properties(depth=1) {

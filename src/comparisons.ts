@@ -93,7 +93,7 @@ export class ArrayChanged implements Printable {
 
     subChanges: ArraySubElement[];
 
-    outOfTreeChanges?: ArraySubElement[];
+    outOfTreeChanges: ArraySubElement[];
 
     matchProperty?: string;
     matchMethod?: string;
@@ -108,6 +108,7 @@ export class ArrayChanged implements Printable {
         addedItems: RightArrayItem[],
         removedItems: LeftArrayItem[],
         subChanges: ArraySubElement[],
+        outOfTreeChanges: ArraySubElement[],
         matchProperty?: string,
         matchMethod?: string,
     ) {
@@ -117,6 +118,8 @@ export class ArrayChanged implements Printable {
         this.removedItems = removedItems;
         this.subChanges = subChanges;
 
+        this.outOfTreeChanges = outOfTreeChanges;
+
         this.matchProperty = matchProperty;
         this.matchMethod = matchMethod;
     }
@@ -125,9 +128,21 @@ export class ArrayChanged implements Printable {
         console.log(`${prefix}Change type:   ${this.change}`);
         console.log(`${prefix}Left pointer:  ${RedFG}${this.leftPointer}${ResetConsole}`);
         console.log(`${prefix}Right pointer: ${GreenFG}${this.rightPointer}${ResetConsole}`);
-        console.log(`${prefix}Sub-changes:`)
+        console.log(`${prefix}Sub-changes:`);
         const newPrefix = prefix + '  ';
         for (const elementPair of this.subChanges) {
+            console.log(`${newPrefix}${YellowFG}---${ResetConsole}`);
+            console.log(`${newPrefix}Left Element:  ${RedFG}`, elementPair.leftPointer, ResetConsole);
+            console.log(`${newPrefix}Right Element: ${GreenFG}`, elementPair.leftPointer, ResetConsole);
+            console.log(`${newPrefix}Changes:`)
+            for (const change of elementPair.changes) {
+                console.log(`${newPrefix + '  '}${YellowFG}---${ResetConsole}`);
+                change.printChange(newPrefix + '  ');
+            }
+            console.log(`${newPrefix + '  '}${YellowFG}---${ResetConsole}`);
+        }
+        console.log(`${prefix}Out-of-tree changes:`);
+        for (const elementPair of this.outOfTreeChanges) {
             console.log(`${newPrefix}${YellowFG}---${ResetConsole}`);
             console.log(`${newPrefix}Left Element:  ${RedFG}`, elementPair.leftPointer, ResetConsole);
             console.log(`${newPrefix}Right Element: ${GreenFG}`, elementPair.leftPointer, ResetConsole);

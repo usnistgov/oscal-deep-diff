@@ -14,8 +14,6 @@ import {
     Change,
     ArraySubElement,
     excludeContentReplacer,
-    RightArrayItem,
-    LeftArrayItem,
     ComparisonResult,
 } from './comparisons';
 import {
@@ -209,6 +207,45 @@ export class Comparator {
         return NO_CHANGES;
     }
 
+    private matchElementArray(left: TrackedElement[], right: TrackedElement[], instructions: MatchInstructions): [ArraySubElement[], number] {
+        const changes: ArraySubElement[] = [];
+        let changeCount: number = 0;
+        
+        for (const match of instructions.matchedIndices) {
+            if (match.confidence && match.confidence >= this.config.minimumConfidenceThreshold) {
+                // discard matches with a confidence under the threshold
+                instructions.unmatchedLeftIndices.push(match.leftElementIndex);
+                instructions.unmatchedRightIndices.push(match.rightElementIndex);
+                continue;
+            }
+
+            const leftSubElement = left[match.leftElementIndex];
+            const rightSubElement = right[match.rightElementIndex];
+            const subChanges: ArraySubElement = {
+                leftPointer: leftSubElement.pointer,
+                rightPointer: rightSubElement.pointer,
+                changes: [],
+            };
+            let subChangeCount;
+
+            [subChanges.changes, subChangeCount] = this.compareElements(leftSubElement, rightSubElement);
+
+            if (subChanges.changes.length > 0) {
+                changes.push(subChanges);
+                changeCount += subChangeCount;
+            }
+        }
+        
+        for (const unmatched of instructions.unmatchedLeftIndices) {
+            changeCount += countSubElements(left[unmatched]);
+        }
+        for (const unmatched of instructions.unmatchedRightIndices) {
+            changeCount += countSubElements(right[unmatched]);
+        }
+
+        return [changes, changeCount];
+    }
+
     /**
      * Match array pairs together based on instructions, building an ArrayChanged
      * object by recursing on each matched pair and returning the total number of
@@ -219,7 +256,7 @@ export class Comparator {
      */
     private matchArrays(left: TrackedArray, right: TrackedArray, instructions: MatchInstructions): [ArrayChanged, number] {
         let changeCount = 0;
-        const change = new ArrayChanged(left.pointer, right.pointer, [], [], []);
+        const change = new ArrayChanged(left.pointer, right.pointer, [], [], [], []);
 
         // iterate through all elements that have been matched and compare their sub-elements
         for (const match of instructions.matchedIndices) {
@@ -239,7 +276,7 @@ export class Comparator {
             };
             let subChangeCount;
 
-            [subChanges.changes, subChangeCount] = this.compareElements(left, right);
+            [subChanges.changes, subChangeCount] = this.compareElements(leftSubElement, rightSubElement);
 
             if (subChanges.changes.length > 0) {
                 change.subChanges.push(subChanges);
@@ -265,10 +302,9 @@ export class Comparator {
 
         // match indices that could be out of tree
         if (this.config.outOfTreeMatching) {
-            const outOfTreeMatches = this.matchOutOfTree(change.subChanges);
-            if (outOfTreeMatches) {
-                change.outOfTreeChanges = outOfTreeMatches;
-            }
+            const [outOfTreeMatches, outOfTreeChangeCount] = this.matchOutOfTree(change.subChanges);
+            change.outOfTreeChanges = outOfTreeMatches;
+            changeCount += outOfTreeChangeCount
         }
 
         return [change, changeCount];
@@ -312,13 +348,46 @@ export class Comparator {
     }
 
     /**
+     * Similar to compareArrays, but for comparing arrays of tracked elements
+     * that are NOT assumed to have common parents (such as matching out of
+     * tree elements).
+     * 
+     * Unlike compareArrays, memoization cannot be accomplished in this case.
+     */
+    private compareElementArrays(left: TrackedElement[], right: TrackedElement[], condition: string): [ArraySubElement[], number] {
+        let potentialMatches: MatchInstructions[];
+
+        const constraint = this.config.constraints.tryGetConstraint(condition);
+        if (constraint) {
+            potentialMatches = [constraint.matchArrayElements(left, right)];
+        } else {
+            potentialMatches = Comparator.generatePotentialMatches(left, right);
+        }
+
+        let optimalMatchScore = Infinity;
+        let optimalMatchChanges: ArraySubElement[] | undefined;
+
+        for (const potentialMatch of potentialMatches) {
+            const [potentialMatchChanges, potentialMatchScore] = this.matchElementArray(left, right, potentialMatch);
+
+            if (potentialMatchScore < optimalMatchScore) {
+                optimalMatchScore = potentialMatchScore;
+                optimalMatchChanges = potentialMatchChanges;
+            }
+        }
+
+        if (optimalMatchChanges) {
+            return [optimalMatchChanges, optimalMatchScore];
+        }
+        return [[], 0];
+    }
+
+    /**
      * Within an array's list of sub-changes (matched up properties changes), find array changes and match their unmatched properties.
      */
-    private matchOutOfTree(subChanges: ArraySubElement[]): ArraySubElement[] {
-        const rightPotentialMatches = new Map<string, RightArrayItem[]>();
-        const leftPotentialMatches = new Map<string, LeftArrayItem[]>();
-
-        const matches: ArraySubElement[] = [];
+    private matchOutOfTree(subChanges: ArraySubElement[]): [ArraySubElement[], number] {
+        const rightPotentialMatches = new Map<string, TrackedElement[]>();
+        const leftPotentialMatches = new Map<string, TrackedElement[]>();
 
         for (const subChange of subChanges) {
             for (const subChangeChanges of subChange.changes) {
@@ -326,41 +395,41 @@ export class Comparator {
                     for (const potentialLeftMatches of subChangeChanges.removedItems) {
                         const condition = convertPointerToCondition(potentialLeftMatches.leftPointer);
                         const potentialMatches = leftPotentialMatches.get(condition);
+
+                        const trackedPotentialMatches = trackRawObject(potentialLeftMatches.leftPointer, potentialLeftMatches.leftElement);
                         if (potentialMatches) {
-                            potentialMatches.push(potentialLeftMatches);
+                            potentialMatches.push(trackedPotentialMatches);
                         } else {
-                            leftPotentialMatches.set(condition, [potentialLeftMatches]);
+                            leftPotentialMatches.set(condition, [trackedPotentialMatches]);
                         }
                     }
 
                     for (const potentialRightMatches of subChangeChanges.addedItems) {
                         const condition = convertPointerToCondition(potentialRightMatches.rightPointer);
                         const potentialMatches = rightPotentialMatches.get(condition);
+
+                        const trackedPotentialMatches = trackRawObject(potentialRightMatches.rightPointer, potentialRightMatches.rightElement);
                         if (potentialMatches) {
-                            potentialMatches.push(potentialRightMatches);
+                            potentialMatches.push(trackedPotentialMatches);
                         } else {
-                            rightPotentialMatches.set(condition, [potentialRightMatches]);
+                            rightPotentialMatches.set(condition, [trackedPotentialMatches]);
                         }
                     }
                 }
             }
         }
 
+        const matches: ArraySubElement[] = [];
+        let numChanges: number = 0;
         for (const [condition, leftArrayItems] of leftPotentialMatches) {
             const rightArrayItems = rightPotentialMatches.get(condition);
             if (leftArrayItems && rightArrayItems) {
-                // TODO: compare arrays needs to be changed to use tracked items instead of assuming common parent
-                // THIS IS INCORRECT! AND PRODUCES THE broken json outputs everywhere
-                const leftArray = new TrackedArray(condition, leftArrayItems.map(item => item.leftElement));
-                const rightArray = new TrackedArray(condition, rightArrayItems.map(item => item.rightElement));
-                const [changes] = this.compareArrays(leftArray, rightArray);
-                if (changes[0] && changes[0] instanceof ArrayChanged) {
-                    const arraySubChange: ArrayChanged = changes[0];
-                    matches.push(...arraySubChange.subChanges);
-                }
+                const [conditionMatches, conditionChanges] = this.compareElementArrays(leftArrayItems, rightArrayItems, condition);
+                matches.push(...conditionMatches);
+                numChanges += conditionChanges;
             }
         }
 
-        return matches;
+        return [matches, numChanges];
     }
 }
