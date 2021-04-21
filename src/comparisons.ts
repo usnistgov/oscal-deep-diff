@@ -4,43 +4,43 @@ abstract class Printable {
     abstract printChange(): void;
 }
 
-export class PropertyAdded implements Printable {
-    change = 'property_added';
+export class PropertyRightOnly implements Printable {
+    change = 'property_right_only';
     leftParentPointer: string;
     rightPointer: string;
-    addedElement: any;
+    element: any;
 
-    constructor(leftParentPointer: string, rightPointer: string, addedElement: any) {
+    constructor(leftParentPointer: string, rightPointer: string, element: any) {
         this.leftParentPointer = leftParentPointer;
         this.rightPointer = rightPointer;
-        this.addedElement = addedElement;
+        this.element = element;
     }
 
     printChange(prefix=''): void {
         console.log(`${prefix}Change type:   ${this.change}`);
         console.log(`${prefix}Right pointer: ${this.rightPointer}`);
         console.log(`${prefix}Left parent pointer: ${this.leftParentPointer}`);
-        console.log(`${prefix}Added element: ${GreenFG}`, this.addedElement, ResetConsole);
+        console.log(`${prefix}Element: ${GreenFG}`, this.element, ResetConsole);
     }
 }
 
-export class PropertyDeleted implements Printable {
-    change = 'property_deleted';
+export class PropertyLeftOnly implements Printable {
+    change = 'property_left_only';
     leftPointer: string;
-    deletedElement: any;
     rightParentPointer: string;
+    element: any;
 
-    constructor(leftPointer: string, deletedElement: any, rightParentPointer: string) {
+    constructor(leftPointer: string, element: any, rightParentPointer: string) {
         this.leftPointer = leftPointer;
-        this.deletedElement = deletedElement;
         this.rightParentPointer = rightParentPointer;
+        this.element = element;
     }
 
     printChange(prefix=''): void {
         console.log(`${prefix}Change type:  ${this.change}`);
         console.log(`${prefix}Left pointer: ${this.leftPointer}`);
         console.log(`${prefix}Right parent pointer: ${this.rightParentPointer}`);
-        console.log(`${prefix}Deleted element: ${RedFG}`, this.deletedElement, ResetConsole);
+        console.log(`${prefix}Element: ${RedFG}`, this.element, ResetConsole);
     }
 }
 
@@ -88,8 +88,8 @@ export class ArrayChanged implements Printable {
     leftPointer: string;
     rightPointer: string;
 
-    addedItems: RightArrayItem[];
-    removedItems: LeftArrayItem[];
+    rightOnly: RightArrayItem[];
+    leftOnly: LeftArrayItem[];
 
     subChanges: ArraySubElement[];
 
@@ -99,7 +99,7 @@ export class ArrayChanged implements Printable {
     matchMethod?: string;
 
     hasChanges() {
-        return this.addedItems.length > 0 || this.removedItems.length > 0 || this.subChanges.length > 0;
+        return this.rightOnly.length > 0 || this.leftOnly.length > 0 || this.subChanges.length > 0;
     }
 
     constructor(
@@ -114,8 +114,8 @@ export class ArrayChanged implements Printable {
     ) {
         this.leftPointer = leftPointer;
         this.rightPointer = rightPointer;
-        this.addedItems = addedItems;
-        this.removedItems = removedItems;
+        this.rightOnly = addedItems;
+        this.leftOnly = removedItems;
         this.subChanges = subChanges;
 
         this.outOfTreeChanges = outOfTreeChanges;
@@ -156,7 +156,7 @@ export class ArrayChanged implements Printable {
     }
 }
 
-export type Change = PropertyAdded | PropertyDeleted | PropertyChanged | ArrayChanged;
+export type Change = PropertyRightOnly | PropertyLeftOnly | PropertyChanged | ArrayChanged;
 
 export type ComparisonResult = [Change[], number];
 

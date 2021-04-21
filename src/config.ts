@@ -1,7 +1,10 @@
 import { MatchConstraintsContainer } from "./matching";
 
 export class Config {
-    public ignore: string[];
+    // matching pointer conditions will not be considered during comparison (non-array) operations
+    public ignoreFieldsForComparison: string[];
+    // matching pointer conditions will not be considered during matching (array) operations
+    public ignoreFieldsForMatchComparison: string[];
     public ignoreCase: boolean;
     public constraints: MatchConstraintsContainer;
     public outOfTreeMatching: boolean;
@@ -9,8 +12,9 @@ export class Config {
     public disableMemoization: boolean;
     public minimumConfidenceThreshold: number;
 
-    constructor(ignore: string[], ignoreCase: boolean, constraints: MatchConstraintsContainer, outOfTreeMatching=false, minimumConfidenceThreshold=.8, excludeContent=false, disableMemoization=false) {
-        this.ignore = ignore;
+    constructor(ignoreFieldsForComparison: string[], ignoreFieldsForMatchComparison: string[], ignoreCase: boolean, constraints: MatchConstraintsContainer, outOfTreeMatching=false, minimumConfidenceThreshold=.8, excludeContent=false, disableMemoization=false) {
+        this.ignoreFieldsForComparison = ignoreFieldsForComparison;
+        this.ignoreFieldsForMatchComparison = ignoreFieldsForMatchComparison;
         this.ignoreCase = ignoreCase;
         this.constraints = constraints;
 
@@ -21,13 +25,31 @@ export class Config {
     }
 
     public static fromDict(obj: any): Config {
-        const {ignore, ignoreCase, constraints: constraintsSubObj, outOfTreeMatching, minimumConfidenceThreshold, disableMemoization, excludeContent, ...unknownOptions} = obj;
+        const {
+            ignoreFieldsForComparison,
+            ignoreFieldsForMatchComparison,
+            ignoreCase,
+            constraints: constraintsSubObj,
+            outOfTreeMatching,
+            minimumConfidenceThreshold,
+            disableMemoization,
+            excludeContent,
+            ...unknownOptions
+        } = obj;
+
         const constraints = MatchConstraintsContainer.fromDict(constraintsSubObj);
         
         console.log('WARNING: Unknown options in YAML config:', unknownOptions);
 
-        return new Config(ignore, ignoreCase, constraints, outOfTreeMatching, minimumConfidenceThreshold, disableMemoization, excludeContent);
+        return new Config(ignoreFieldsForComparison,
+            ignoreFieldsForMatchComparison,
+            ignoreCase,
+            constraints,
+            outOfTreeMatching,
+            minimumConfidenceThreshold,
+            disableMemoization,
+            excludeContent);
     }
 }
 
-export const defaultConfig = new Config([], true, new MatchConstraintsContainer([]));
+export const defaultConfig = new Config([], [], true, new MatchConstraintsContainer([]));

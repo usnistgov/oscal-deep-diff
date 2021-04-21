@@ -1,0 +1,30 @@
+ignoreFieldsForComparison:
+  - /catalog/metadata
+  - /catalog/back-matter
+  - /catalog/id
+ignoreFieldsForMatchComparison:
+  - class
+  - depends-on
+  - part/id
+baseComparisonPaths:
+  # - /catalog/groups/**/controls
+  # - /catalog/controls
+  # - /catalog/groups/**/controls/**/controls
+  # # but what about controls of controls of controls?
+
+  # # flatten each control to a single level
+  # - controls
+
+  # # flatten each part object to a single level, except parts of parts
+  # groups/**/parts
+  # controls/**/parts
+ignoreCase: false
+constraints:
+  /catalog/groups:
+    type: ObjectPropertyMatchConstraint
+    matchType: literal
+    propertyName: id
+    secondaryProperties: []
+excludeContent: false
+outOfTreeMatching: true
+disableMemoization: false

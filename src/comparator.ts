@@ -4,10 +4,11 @@ import {
     convertPointerToCondition,
     getPropertyIntersection,
     getType,
+    testPointerCondition,
 } from './utils';
 import {
-    PropertyAdded,
-    PropertyDeleted,
+    PropertyRightOnly,
+    PropertyLeftOnly,
     PropertyChanged,
     ArrayChanged,
     Comparison,
@@ -30,7 +31,7 @@ import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRaw
 const NO_CHANGES: ComparisonResult = [[], 0]
 
 /**
- * The Comparator class is designed to handle comparing two arbritrary JSON
+ * The Comparator class is designed to handle comparing two arbitrary JSON
  * documents, with support for customizable constraints to fit particular
  * schemas.
  */
@@ -92,7 +93,7 @@ export class Comparator {
      */
     private compareElements(left: TrackedElement, right: TrackedElement): ComparisonResult {
         // check if elements have been marked as ignored
-        for (const ignoreCondition of this.config.ignore) {
+        for (const ignoreCondition of this.config.ignoreFieldsForComparison) {
             if (left.testPointerCondition(ignoreCondition)) {
                 return NO_CHANGES;
             }
@@ -129,17 +130,17 @@ export class Comparator {
         const propertyUnion = getPropertyUnion(left.raw, right.raw);
 
         for (const property of propertyUnion) {
-            // for each property in both subdocuments, recurse and compare results
+            // for each property in both sub-documents, recurse and compare results
             if (!(property in left.raw)) {
-                // property added in right document
+                // property only in right document
                 changes.push(
-                    new PropertyAdded(left.pointer, `${right.pointer}/${property}`, right.raw[property]),
+                    new PropertyRightOnly(left.pointer, `${right.pointer}/${property}`, right.raw[property]),
                 );
                 changeCount += countSubElements(right.raw[property]);
             } else if (!(property in right.raw)) {
-                // property deleted from left document
+                // property only in left document
                 changes.push(
-                    new PropertyDeleted(`${left.pointer}/${property}`, left.raw[property], right.pointer),
+                    new PropertyLeftOnly(`${left.pointer}/${property}`, left.raw[property], right.pointer),
                 );
                 changeCount += countSubElements(left.raw[property]);
             } else {
@@ -179,7 +180,7 @@ export class Comparator {
         if (constraint) {
             potentialMatches = [constraint.matchArrayElements(left.raw, right.raw)];
         } else {
-            potentialMatches = Comparator.generatePotentialMatches(left.raw, right.raw);
+            potentialMatches = this.generatePotentialMatches(left.raw, right.raw, left.pointer);
         }
 
         // todo: add the ability to cache chosen constraints for consistent comparison of arrays with the same pointer location
@@ -285,7 +286,7 @@ export class Comparator {
         }
 
         for (const unmatchedLeftIndex of instructions.unmatchedLeftIndices) {
-            change.removedItems.push({
+            change.leftOnly.push({
                 leftPointer: `${left.pointer}/${unmatchedLeftIndex}`,
                 leftElement: left.raw[unmatchedLeftIndex],
             });
@@ -293,7 +294,7 @@ export class Comparator {
         }
 
         for (const unmatchedRightIndex of instructions.unmatchedRightIndices) {
-            change.addedItems.push({
+            change.rightOnly.push({
                 rightPointer: `${right.pointer}/${unmatchedRightIndex}`,
                 rightElement: right.raw[unmatchedRightIndex],
             });
@@ -310,7 +311,7 @@ export class Comparator {
         return [change, changeCount];
     }
 
-    private static generatePotentialMatches(leftArray: any[], rightArray: any[]): MatchInstructions[] {
+    private generatePotentialMatches(leftArray: any[], rightArray: any[], testPointer?: string): MatchInstructions[] {
         const potentialMatches: MatchInstructions[] = [{ // include match instructions with no matched indices
             matchedIndices: [],
             unmatchedLeftIndices: [...leftArray.keys()],
@@ -331,6 +332,19 @@ export class Comparator {
                 throw new Error('Array of array comparison between two objects is not supported');
             } else if (type === 'object') {
                 for (const property of getPropertyIntersection(leftSample, rightSample)) {
+                    if (testPointer) { // decide if this property should be skipped
+                        let skipProperty = false;
+                        for (const ignoreCondition of this.config.ignoreFieldsForMatchComparison) {
+                            if (testPointerCondition(`${testPointer}/${property}`, ignoreCondition)) {
+                                skipProperty = true;
+                                continue;
+                            }
+                        }
+                        if (skipProperty) {
+                            continue;
+                        }
+                    }
+                    
                     for (const matchType of ['literal', 'string-similarity']) {
                         const constraint = new ObjectPropertyMatchConstraint(matchType as MatchType, property);
                         potentialMatches.push(constraint.matchArrayElements(leftArray, rightArray));
@@ -361,7 +375,7 @@ export class Comparator {
         if (constraint) {
             potentialMatches = [constraint.matchArrayElements(left, right)];
         } else {
-            potentialMatches = Comparator.generatePotentialMatches(left, right);
+            potentialMatches = this.generatePotentialMatches(left, right);
         }
 
         let optimalMatchScore = Infinity;
@@ -392,7 +406,7 @@ export class Comparator {
         for (const subChange of subChanges) {
             for (const subChangeChanges of subChange.changes) {
                 if (subChangeChanges instanceof ArrayChanged) {
-                    for (const potentialLeftMatches of subChangeChanges.removedItems) {
+                    for (const potentialLeftMatches of subChangeChanges.leftOnly) {
                         const condition = convertPointerToCondition(potentialLeftMatches.leftPointer);
                         const potentialMatches = leftPotentialMatches.get(condition);
 
@@ -404,7 +418,7 @@ export class Comparator {
                         }
                     }
 
-                    for (const potentialRightMatches of subChangeChanges.addedItems) {
+                    for (const potentialRightMatches of subChangeChanges.rightOnly) {
                         const condition = convertPointerToCondition(potentialRightMatches.rightPointer);
                         const potentialMatches = rightPotentialMatches.get(condition);
 
