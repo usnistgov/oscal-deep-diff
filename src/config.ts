@@ -5,6 +5,7 @@ export class Config {
     public ignoreFieldsForComparison: string[];
     // matching pointer conditions will not be considered during matching (array) operations
     public ignoreFieldsForMatchComparison: string[];
+    public baseComparisonPaths: string[];
     public ignoreCase: boolean;
     public constraints: MatchConstraintsContainer;
     public outOfTreeMatching: boolean;
@@ -12,9 +13,10 @@ export class Config {
     public disableMemoization: boolean;
     public minimumConfidenceThreshold: number;
 
-    constructor(ignoreFieldsForComparison: string[], ignoreFieldsForMatchComparison: string[], ignoreCase: boolean, constraints: MatchConstraintsContainer, outOfTreeMatching=false, minimumConfidenceThreshold=.8, excludeContent=false, disableMemoization=false) {
+    constructor(ignoreFieldsForComparison: string[], ignoreFieldsForMatchComparison: string[], baseComparisonPaths: string[], ignoreCase: boolean, constraints: MatchConstraintsContainer, outOfTreeMatching=false, minimumConfidenceThreshold=.8, excludeContent=false, disableMemoization=false) {
         this.ignoreFieldsForComparison = ignoreFieldsForComparison;
         this.ignoreFieldsForMatchComparison = ignoreFieldsForMatchComparison;
+        this.baseComparisonPaths = baseComparisonPaths;
         this.ignoreCase = ignoreCase;
         this.constraints = constraints;
 
@@ -28,6 +30,7 @@ export class Config {
         const {
             ignoreFieldsForComparison,
             ignoreFieldsForMatchComparison,
+            baseComparisonPaths,
             ignoreCase,
             constraints: constraintsSubObj,
             outOfTreeMatching,
@@ -43,6 +46,7 @@ export class Config {
 
         return new Config(ignoreFieldsForComparison,
             ignoreFieldsForMatchComparison,
+            baseComparisonPaths,
             ignoreCase,
             constraints,
             outOfTreeMatching,
@@ -52,4 +56,4 @@ export class Config {
     }
 }
 
-export const defaultConfig = new Config([], [], true, new MatchConstraintsContainer([]));
+export const defaultConfig = new Config([], [], [], true, new MatchConstraintsContainer([]));

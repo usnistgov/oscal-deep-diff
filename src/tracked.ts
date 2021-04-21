@@ -106,6 +106,10 @@ export class TrackedObject extends TrackedElement {
 
     }
 
+    public getAll(): TrackedElement[] {
+        return [...Object.getOwnPropertyNames(this.raw).map(key => this.resolve(key))];
+    }
+
     // public properties(depth=1) {
     //     const properties: string[] = [];
     //     for (const subProp of Object.getOwnPropertyNames(this.raw)) {
