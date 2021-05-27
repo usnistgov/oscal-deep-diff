@@ -26,6 +26,7 @@ import {
 import { MemoizationCache } from './cache';
 import { Config } from './config';
 import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject } from './tracked';
+import { assembleBaseComparison } from './base-comparison';
 
 // Tuple of array changes and number of subchanges
 const NO_CHANGES: ComparisonResult = [[], 0]
@@ -74,8 +75,22 @@ export class Comparator {
     public newComparison(leftDocument: object, leftDocumentSource: string, rightDocument: object, rightDocumentSource: string) {
         console.log(`Starting comparison between ${leftDocumentSource} and ${rightDocumentSource}`);
         console.time('compareDocuments');
-    
-        const [changes, changeCount] = this.compareElements(trackRawObject('', leftDocument), trackRawObject('', rightDocument));
+        
+        const leftRootElement = trackRawObject('', leftDocument);
+        const rightRootElement = trackRawObject('', rightDocument)
+
+        let changes: Change[];
+        let changeCount: number;
+
+        if (this.config.baseComparisonPaths.length > 0) {
+            const [leftElements, rightElements] = assembleBaseComparison(leftRootElement, rightRootElement, this.config.baseComparisonPaths);
+            let outOfTreeChanges: ArraySubElement[];
+            [outOfTreeChanges, changeCount] = this.compareElementArrays(leftElements, rightElements, '')
+
+            changes = [new ArrayChanged('', '', [], [], [], outOfTreeChanges)];
+        } else {
+            [changes, changeCount] = this.compareElements(leftRootElement, rightRootElement);
+        }
 
         console.log(`Document comparison completed, ${changeCount} changes`);
         console.timeEnd('compareDocuments');
