@@ -83,8 +83,7 @@ export type Pointer = string;
  *
  * Notes:
  * * Starting with a / denotes that you want to search from the root
- * * \# and * denote numbers and wildcard tokens
- * * The first non-/ token must not be a # or a *
+ * * # and * denote numbers and wildcard tokens
  *
  * Examples:
  * * calling testPointerCondition('/catalog/groups/0/id', '/catalog/groups/#/id') returns true
@@ -96,36 +95,18 @@ export function testPointerCondition(pointer: string, condition: string): boolea
         throw new Error(`Invalid path '${pointer}', must start with a '/'`);
     }
 
-    let subConditions = condition.split('/');
-    if (subConditions[0] === '') {
-        // condition begins with a /
-        pointer = pointer.slice(1);
-    } else {
-        const index = pointer.indexOf(subConditions[0]);
-        if (index === -1) {
-            return false; // first token does not exist
-        }
+    // if a condition starts with '/', constrain regex to match with beginning of string
+    const patternPrefix = condition.startsWith('/') ? '^' : '';
+    
+    const patternRoot = condition
+        .replace(/\//g, '\\/')  // escape '/'
+        .replace(/#/g, '\\d+') // '#' matches all groups of digits
+        .replace(/\*/g, '[^/]') // '*' matches all non-'/' characters
 
-        // remove everything before found first element and the proceeding /
-        pointer = pointer.slice(index + subConditions[0].length + 1);
-    }
-    subConditions = subConditions.splice(1); // first condition has been handled
-    let subPointers = pointer.split('/');
+    // build regex match pattern
+    const pattern = new RegExp(`${patternPrefix}${patternRoot}$`)
 
-    for (const subCondition of subConditions) {
-        if (subPointers.length === 0) {
-            return false;
-        } else if (subCondition === '#') {
-            if (!Number.isInteger(Number(subPointers[0]))) {
-                return false;
-            }
-        } else if (subCondition !== '*' && subCondition !== subPointers[0]) {
-            return false;
-        }
-        subPointers = subPointers.slice(1);
-    }
-
-    return subPointers.length === 0 || subPointers[0] === ''; // only true if nothing is left
+    return pattern.test(pointer);
 }
 
 export function countSubElements(element: any): number {
