@@ -1,3 +1,6 @@
-export { Comparator } from './comparator';
-export { MatchInstructions as MatchReport, MatchType, MatchConstraintsContainer, PrimitiveMatchConstraint, ObjectPropertyMatchConstraint } from './matching';
-export { resolvePointer } from './utils';
+export * from './comparator';
+export * from './comparisons';
+export * from './config';
+export * from './matching';
+export * from './tracked';
+export * from './utils';
