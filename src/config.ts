@@ -1,4 +1,5 @@
 import { MatchConstraintsContainer } from "./matching";
+import { JSONObject } from "./utils";
 
 export class Config {
     // matching pointer conditions will not be considered during comparison (non-array) operations
@@ -26,7 +27,7 @@ export class Config {
         this.excludeContent = excludeContent;
     }
 
-    public static fromDict(obj: any): Config {
+    public static fromDict(obj: JSONObject): Config {
         const {
             ignoreFieldsForComparison,
             ignoreFieldsForMatchComparison,
@@ -40,19 +41,19 @@ export class Config {
             ...unknownOptions
         } = obj;
 
-        const constraints = MatchConstraintsContainer.fromDict(constraintsSubObj);
+        const constraints = MatchConstraintsContainer.fromDict(constraintsSubObj as JSONObject);
         
         console.log('WARNING: Unknown options in YAML config:', unknownOptions);
 
-        return new Config(ignoreFieldsForComparison,
-            ignoreFieldsForMatchComparison,
-            baseComparisonPaths,
-            ignoreCase,
+        return new Config(ignoreFieldsForComparison as string[],
+            ignoreFieldsForMatchComparison as string[],
+            baseComparisonPaths as string [],
+            ignoreCase as boolean,
             constraints,
-            outOfTreeMatching,
-            minimumConfidenceThreshold,
-            disableMemoization,
-            excludeContent);
+            outOfTreeMatching as boolean | undefined,
+            minimumConfidenceThreshold as number | undefined,
+            disableMemoization as boolean | undefined,
+            excludeContent as boolean | undefined);
     }
 }
 

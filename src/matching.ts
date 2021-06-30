@@ -1,5 +1,5 @@
 import { jaroWrinkerSimilarity } from './string-similarity';
-import { resolvePointer, Condition, testPointerCondition, getType, getPropertyIntersection } from './utils';
+import { resolvePointer, Condition, testPointerCondition, JSONObject, JSONValue, JSONArray } from './utils';
 
 export interface PotentialMatch {
     leftElementIndex: number;
@@ -27,7 +27,7 @@ type ConstraintConditionTuple = [Condition, AbstractMatchConstraint];
 export class MatchConstraintsContainer {
     private constraints: ConstraintConditionTuple[];
 
-    public tryGetConstraint(pointer: string) {
+    public tryGetConstraint(pointer: string): AbstractMatchConstraint | null {
         for (const constraint of this.constraints) {
             if (testPointerCondition(pointer, constraint[0])) {
                 return constraint[1];
@@ -46,10 +46,10 @@ export class MatchConstraintsContainer {
      * where each condition is a string and each `constraint` is an object.
      * @param obj Dictionary (parsed JSON/YAML) object
      */
-    public static fromDict(obj: any): MatchConstraintsContainer {
+    public static fromDict(obj: JSONObject): MatchConstraintsContainer {
         const constraints: ConstraintConditionTuple[] = [];
         for (const condition of Object.getOwnPropertyNames(obj)) {
-            const constraint = MatchConstraintfromDict(obj[condition]);
+            const constraint = MatchConstraintFromDict(obj[condition] as JSONObject);
             const constraintTuple = [condition, constraint] as ConstraintConditionTuple;
             constraints.push(constraintTuple);
         }
@@ -57,8 +57,8 @@ export class MatchConstraintsContainer {
     }
 }
 
-function MatchConstraintfromDict(obj: any): AbstractMatchConstraint {
-    if (!obj.hasOwnProperty('type')) {
+function MatchConstraintFromDict(obj: JSONObject): AbstractMatchConstraint {
+    if (!Object.prototype.hasOwnProperty.call(obj, 'type')) {
         throw new Error(`Error decoding object ${obj} into MatchConstraint`);
     }
 
@@ -68,14 +68,14 @@ function MatchConstraintfromDict(obj: any): AbstractMatchConstraint {
         case ObjectPropertyMatchConstraint.name:
             return ObjectPropertyMatchConstraint.fromDict(obj);
         default:
-            throw new Error(`Unkown match constraint: ${obj['type']}`);
+            throw new Error(`Unknown match constraint: ${obj['type']}`);
     }
 }
 
 export abstract class AbstractMatchConstraint {
-    abstract scoreElementPair(leftElement: any, rightElement: any): number;
+    abstract scoreElementPair(leftElement: JSONValue, rightElement: JSONValue): number;
 
-    public matchArrayElements(leftArray: any[], rightArray: any[]): MatchInstructions {
+    public matchArrayElements(leftArray: JSONArray, rightArray: JSONArray): MatchInstructions {
         const instructions: MatchInstructions = {
             matchedIndices: [],
             unmatchedLeftIndices: [],
@@ -113,7 +113,8 @@ export abstract class AbstractMatchConstraint {
         return instructions;
     }
 
-    public static fromDict(_: any): AbstractMatchConstraint {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public static fromDict(_: JSONObject): AbstractMatchConstraint {
         throw new Error('Not implemented');
     }
 }
@@ -121,11 +122,11 @@ export abstract class AbstractMatchConstraint {
 export class PrimitiveMatchConstraint extends AbstractMatchConstraint {
     matchType: MatchType;
 
-    scoreElementPair(leftElement: any, rightElement: any): number {
+    scoreElementPair(leftElement: JSONValue, rightElement: JSONValue): number {
         if (this.matchType === 'literal') {
             return leftElement === rightElement ? 1 : 0;
         } else if (this.matchType === 'string-similarity') {
-            return jaroWrinkerSimilarity(leftElement, rightElement);
+            return jaroWrinkerSimilarity(leftElement as string, rightElement as string);
         } else {
             throw new Error('unknown comparison type');
         }
@@ -136,8 +137,8 @@ export class PrimitiveMatchConstraint extends AbstractMatchConstraint {
         this.matchType = matchType;
     }
 
-    public static fromDict(obj: any): AbstractMatchConstraint {
-        if (!obj.hasOwnProperty('matchType')) {
+    public static fromDict(obj: JSONObject): AbstractMatchConstraint {
+        if (!Object.prototype.hasOwnProperty.call(obj, 'matchType')) {
             throw new Error(`Error decoding object ${obj} into ${ObjectPropertyMatchConstraint.name}`);
         }
 
@@ -150,7 +151,7 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
     propertyName: string;
     secondaryProperties?: string;
 
-    scoreElementPair(leftElement: any, rightElement: any): number {
+    scoreElementPair(leftElement: JSONObject, rightElement: JSONObject): number {
         if (this.secondaryProperties) {
             for (const secondaryProperty of this.secondaryProperties) {
                 if (leftElement[secondaryProperty] !== rightElement[secondaryProperty]) {
@@ -166,7 +167,7 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
             if (this.matchType === 'literal') {
                 return leftSubProperty === rightSubProperty ? 1 : 0;
             } else if (this.matchType === 'string-similarity') {
-                return jaroWrinkerSimilarity(leftSubProperty, rightSubProperty);
+                return jaroWrinkerSimilarity(leftSubProperty as string, rightSubProperty as string);
             } else {
                 throw new Error('unknown comparison type');
             }
@@ -182,15 +183,15 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
         this.secondaryProperties = secondaryProperties;
     }
 
-    public static fromDict(obj: any): AbstractMatchConstraint {
-        if (!obj.hasOwnProperty('matchType') || !obj.hasOwnProperty('propertyName') || !obj.hasOwnProperty('secondaryProperties')) {
+    public static fromDict(obj: JSONObject): AbstractMatchConstraint {
+        if (!Object.prototype.hasOwnProperty.call(obj, 'matchType') || !Object.prototype.hasOwnProperty.call(obj, 'propertyName') || !Object.prototype.hasOwnProperty.call(obj, 'secondaryProperties')) {
             throw new Error(`Error decoding object ${obj} into ${ObjectPropertyMatchConstraint.name}`);
         }
 
         return new ObjectPropertyMatchConstraint(
             obj['matchType'] as MatchType,
-            obj['propertyName'],
-            obj['secondaryProperties'],
+            obj['propertyName'] as string,
+            obj['secondaryProperties'] as string | undefined,
         );
     }
 }

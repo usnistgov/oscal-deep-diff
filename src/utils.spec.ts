@@ -89,7 +89,7 @@ describe('resolvePointer()', () => {
     });
 
     it('error cases', () => {
-        expect(() => resolvePointer({ a: true }, 'b')).to.throw(/does not exist in sub\-object/);
+        expect(() => resolvePointer({ a: true }, 'b')).to.throw(/does not exist in sub-object/);
         expect(() => resolvePointer([], '0')).to.throw(/is out of bounds/);
         expect(() => resolvePointer([], '0.5')).to.throw(/is not a valid index/);
         expect(() => resolvePointer(1, 'subprop')).to.throw(/of primitive/);

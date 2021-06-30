@@ -44,9 +44,9 @@ describe('ObjectPropertyMatchConstraint', () => {
     it('sub-property match', () => {
         // The user should be able to manually specify a sub-object's property
         // as the guide for how an array of objects are matched
-        const constraint = new ObjectPropertyMatchConstraint('literal', 'subobj/id');
-        const leftArray = [{ subobj: { id: 1 } }, { subobj: { id: 1 } }];
-        const rightArray = [{ subobj: { id: 1 } }, { subobj: { id: 1 } }];
+        const constraint = new ObjectPropertyMatchConstraint('literal', 'subObj/id');
+        const leftArray = [{ subObj: { id: 1 } }, { subObj: { id: 1 } }];
+        const rightArray = [{ subObj: { id: 1 } }, { subObj: { id: 1 } }];
         const report = constraint.matchArrayElements(leftArray, rightArray);
         console.log(report);
         expect(report.unmatchedLeftIndices).to.eql([], 'no unmatched left indices');

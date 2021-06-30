@@ -5,6 +5,9 @@ import {
     getPropertyIntersection,
     getType,
     testPointerCondition,
+    JSONValue,
+    JSONArray,
+    JSONObject,
 } from './utils';
 import {
     PropertyRightOnly,
@@ -72,7 +75,7 @@ export class Comparator {
      * @param rightDocument right document object
      * @param rightDocumentSource source of right document (URL, filepath)
      */
-    public newComparison(leftDocument: object, leftDocumentSource: string, rightDocument: object, rightDocumentSource: string) {
+    public newComparison(leftDocument: JSONValue, leftDocumentSource: string, rightDocument: JSONValue, rightDocumentSource: string): void {
         console.log(`Starting comparison between ${leftDocumentSource} and ${rightDocumentSource}`);
         console.time('compareDocuments');
         
@@ -120,7 +123,7 @@ export class Comparator {
             // elements are both objects, compare each sub-element in the object
             return this.compareObjects(left, right);
         } else if (left instanceof TrackedPrimitive && right instanceof TrackedPrimitive) {
-            if (left.raw instanceof String && right.raw instanceof String && this.config.ignoreCase) {
+            if (typeof left.raw === 'string' && typeof right.raw === 'string' && this.config.ignoreCase) {
                 if ((left.raw as string).toLowerCase() !== (right.raw as string).toLowerCase()) {
                     return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 1];
                 }
@@ -225,7 +228,7 @@ export class Comparator {
 
     private matchElementArray(left: TrackedElement[], right: TrackedElement[], instructions: MatchInstructions): [ArraySubElement[], number] {
         const changes: ArraySubElement[] = [];
-        let changeCount: number = 0;
+        let changeCount = 0;
         
         for (const match of instructions.matchedIndices) {
             if (match.confidence && match.confidence >= this.config.minimumConfidenceThreshold) {
@@ -253,10 +256,10 @@ export class Comparator {
         }
         
         for (const unmatched of instructions.unmatchedLeftIndices) {
-            changeCount += countSubElements(left[unmatched]);
+            changeCount += countSubElements(left[unmatched].raw);
         }
         for (const unmatched of instructions.unmatchedRightIndices) {
-            changeCount += countSubElements(right[unmatched]);
+            changeCount += countSubElements(right[unmatched].raw);
         }
 
         return [changes, changeCount];
@@ -326,7 +329,7 @@ export class Comparator {
         return [change, changeCount];
     }
 
-    private generatePotentialMatches(leftArray: any[], rightArray: any[], testPointer?: string): MatchInstructions[] {
+    private generatePotentialMatches(leftArray: JSONArray, rightArray: JSONArray, testPointer?: string): MatchInstructions[] {
         const potentialMatches: MatchInstructions[] = [{ // include match instructions with no matched indices
             matchedIndices: [],
             unmatchedLeftIndices: [...leftArray.keys()],
@@ -335,8 +338,8 @@ export class Comparator {
     
         if (leftArray.length > 0 && rightArray.length > 0) {
             // only try matching if an array item can be sampled from both
-            const leftSample = leftArray[0];
-            const rightSample = rightArray[0];
+            let leftSample = leftArray[0];
+            let rightSample = rightArray[0];
             // sample left and right arrays
             const type = getType(leftSample);
             if (type !== getType(rightSample)) {
@@ -346,6 +349,9 @@ export class Comparator {
             if (type === 'array') {
                 throw new Error('Array of array comparison between two objects is not supported');
             } else if (type === 'object') {
+                leftSample = leftSample as JSONObject;
+                rightSample = rightSample as JSONObject;
+
                 for (const property of getPropertyIntersection(leftSample, rightSample)) {
                     if (testPointer) { // decide if this property should be skipped
                         let skipProperty = false;
@@ -386,11 +392,14 @@ export class Comparator {
     private compareElementArrays(left: TrackedElement[], right: TrackedElement[], condition: string): [ArraySubElement[], number] {
         let potentialMatches: MatchInstructions[];
 
+        const leftRaw = left.map(tracked => tracked.raw);
+        const rightRaw = right.map(tracked => tracked.raw);
+
         const constraint = this.config.constraints.tryGetConstraint(condition);
         if (constraint) {
-            potentialMatches = [constraint.matchArrayElements(left, right)];
+            potentialMatches = [constraint.matchArrayElements(leftRaw, rightRaw)];
         } else {
-            potentialMatches = this.generatePotentialMatches(left, right);
+            potentialMatches = this.generatePotentialMatches(leftRaw, rightRaw);
         }
 
         let optimalMatchScore = Infinity;
@@ -449,7 +458,7 @@ export class Comparator {
         }
 
         const matches: ArraySubElement[] = [];
-        let numChanges: number = 0;
+        let numChanges = 0;
         for (const [condition, leftArrayItems] of leftPotentialMatches) {
             const rightArrayItems = rightPotentialMatches.get(condition);
             if (leftArrayItems && rightArrayItems) {

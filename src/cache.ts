@@ -24,13 +24,13 @@ export class MemoizationCache {
      * from the cache, since a recursive match should never reach any children
      * again.
      */
-    public set(leftPointer: string, rightPointer: string, item: [ArrayChanged, number]) {
+    public set(leftPointer: string, rightPointer: string, item: [ArrayChanged, number]): void {
         const oldItem = this.cache[`${leftPointer}:${rightPointer}`];
         this.cache[`${leftPointer}:${rightPointer}`] = item;
         if (oldItem == null) {
             // in this implementation, on setting all sub-items have to be removed via looping through all cache items
             for (const key in this.cache) {
-                if (this.cache.hasOwnProperty(key)) {
+                if (this.cache[key] !== undefined) {
                     const keySplit = key.split(':');
                     if (keySplit[0].startsWith(`${leftPointer}/`) && keySplit[1].startsWith(`${rightPointer}/`)) {
                         delete this.cache[key];

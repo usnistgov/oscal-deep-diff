@@ -1,14 +1,20 @@
+export type JSONPrimitive = string | number | boolean | null;
+export type JSONValue = JSONPrimitive | JSONObject | JSONArray;
+export type JSONObject = { [member: string]: JSONValue };
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface JSONArray extends Array<JSONValue> {}
+
 /**
  * Returns the union of properties for both documents
  */
-export function getPropertyUnion(leftDocument: object, rightDocument: object): string[] {
+export function getPropertyUnion(leftDocument: JSONObject, rightDocument: JSONObject): string[] {
     return [...new Set([...Object.getOwnPropertyNames(leftDocument), ...Object.getOwnPropertyNames(rightDocument)])];
 }
 
 /**
  * Returns the intersection of properties for both documents
  */
-export function getPropertyIntersection(leftDocument: any, rightDocument: any): string[] {
+export function getPropertyIntersection(leftDocument: JSONObject, rightDocument: JSONObject): string[] {
     const leftDocProps = Object.getOwnPropertyNames(leftDocument);
     const rightDocProps = Object.getOwnPropertyNames(rightDocument);
 
@@ -19,7 +25,7 @@ export function getPropertyIntersection(leftDocument: any, rightDocument: any): 
  * Will return if element is an object, array, null, or default to typeof
  * @param element
  */
-export function getType(element: any): string {
+export function getType(element: JSONValue): string {
     return typeof element === 'object'
         ? Array.isArray(element)
             ? 'array'
@@ -47,15 +53,17 @@ export function convertPointerToCondition(pointer: string): string {
  * @param obj
  * @param pointer
  */
-export function resolvePointer(obj: any, pointer: string) {
+export function resolvePointer(obj: JSONValue, pointer: string): JSONValue {
     for (const subProp of pointer.split('/')) {
         const type = getType(obj);
         if (type === 'object') {
+            obj = obj as JSONObject;
             if (!(subProp in obj)) {
                 throw new Error(`Cannot resolve ${pointer}, ${subProp} does not exist in sub-object`);
             }
             obj = obj[subProp];
         } else if (type === 'array') {
+            obj = obj as JSONArray
             const index = Number(subProp);
             if (!Number.isInteger(index)) {
                 throw new Error(
@@ -109,15 +117,17 @@ export function testPointerCondition(pointer: string, condition: string): boolea
     return pattern.test(pointer);
 }
 
-export function countSubElements(element: any): number {
+export function countSubElements(element: JSONValue): number {
     let count = 0;
     switch (getType(element)) {
         case 'object':
+            element = element as JSONObject;
             for (const property of Object.getOwnPropertyNames(element)) {
                 count += countSubElements(element[property]);
             }
             break;
         case 'array':
+            element = element as JSONArray;
             for (const subElement of element) {
                 count += countSubElements(subElement);
             }

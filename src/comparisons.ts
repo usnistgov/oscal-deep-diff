@@ -1,4 +1,4 @@
-import { GreenFG, ResetConsole, RedFG, YellowFG } from "./utils";
+import { GreenFG, ResetConsole, RedFG, YellowFG, JSONValue, JSONObject } from "./utils";
 
 abstract class Printable {
     abstract printChange(): void;
@@ -8,9 +8,9 @@ export class PropertyRightOnly implements Printable {
     change = 'property_right_only';
     leftParentPointer: string;
     rightPointer: string;
-    element: any;
+    element: JSONValue;
 
-    constructor(leftParentPointer: string, rightPointer: string, element: any) {
+    constructor(leftParentPointer: string, rightPointer: string, element: JSONValue) {
         this.leftParentPointer = leftParentPointer;
         this.rightPointer = rightPointer;
         this.element = element;
@@ -28,9 +28,9 @@ export class PropertyLeftOnly implements Printable {
     change = 'property_left_only';
     leftPointer: string;
     rightParentPointer: string;
-    element: any;
+    element: JSONValue;
 
-    constructor(leftPointer: string, element: any, rightParentPointer: string) {
+    constructor(leftPointer: string, element: JSONValue, rightParentPointer: string) {
         this.leftPointer = leftPointer;
         this.rightParentPointer = rightParentPointer;
         this.element = element;
@@ -47,11 +47,11 @@ export class PropertyLeftOnly implements Printable {
 export class PropertyChanged implements Printable {
     change = 'property_changed';
     leftPointer: string;
-    leftElement: any;
+    leftElement: JSONValue;
     rightPointer: string;
-    rightElement: any;
+    rightElement: JSONValue;
 
-    constructor(leftElement: any, leftPointer: string, rightElement: any, rightPointer: string) {
+    constructor(leftElement: JSONValue, leftPointer: string, rightElement: JSONValue, rightPointer: string) {
         this.leftPointer = leftPointer;
         this.leftElement = leftElement;
         this.rightPointer = rightPointer;
@@ -69,12 +69,12 @@ export class PropertyChanged implements Printable {
 
 export interface LeftArrayItem {
     leftPointer: string;
-    leftElement: any;
+    leftElement: JSONValue;
 }
 
 export interface RightArrayItem {
     rightPointer: string;
-    rightElement: any;
+    rightElement: JSONValue;
 }
 
 export interface ArraySubElement {
@@ -98,7 +98,7 @@ export class ArrayChanged implements Printable {
     matchProperty?: string;
     matchMethod?: string;
 
-    hasChanges() {
+    hasChanges(): boolean {
         return this.rightOnly.length > 0 || this.leftOnly.length > 0 || this.subChanges.length > 0;
     }
 
@@ -173,7 +173,8 @@ export interface Comparison {
  * @param key 
  * @param value 
  */
-export function excludeContentReplacer(key: string, value: any) {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-explicit-any
+export function excludeContentReplacer(key: string, value: any): any | undefined {
     switch(key) {
         case "leftElement":
         case "rightElement":
@@ -181,9 +182,9 @@ export function excludeContentReplacer(key: string, value: any) {
         case "addedElement":
             return undefined;
         case "addedItems":
-            return value.map((x: any) => x["rightPointer"]);
+            return value.map((x: JSONObject) => x["rightPointer"]);
         case "removedItems":
-            return value.map((x: any) => x["leftPointer"]);
+            return value.map((x: JSONObject) => x["leftPointer"]);
         default:
             return value;
     }

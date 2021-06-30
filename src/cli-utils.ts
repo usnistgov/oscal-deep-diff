@@ -24,7 +24,7 @@ export function parseOptions(): CLIOptions {
     return (rawOptions as unknown) as CLIOptions;
 }
 
-export function printComparison(comparison: Comparison) {
+export function printComparison(comparison: Comparison): void {
     console.log(`Comparison between ${RedFG}${comparison.leftDocument}${ResetConsole} and ${GreenFG}${comparison.rightDocument}${ResetConsole}:`);
     for (const change of comparison.changes) {
         console.log(`${YellowFG}---${ResetConsole}`);

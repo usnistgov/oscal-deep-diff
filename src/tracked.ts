@@ -1,20 +1,21 @@
-import { getType, testPointerCondition } from "./utils";
+import { getType, JSONArray, JSONObject, JSONPrimitive, JSONValue, testPointerCondition } from "./utils";
 
 
-export function trackRawObject(pointer: string, raw: any): TrackedElement {
+export function trackRawObject(pointer: string, raw: JSONValue): TrackedElement {
     const type = getType(raw);
+
     if (type === 'array') {
-        return new TrackedArray(pointer, raw);
+        return new TrackedArray(pointer, raw as JSONArray);
     } else if (type === 'object') {
-        return new TrackedObject(pointer, raw);
+        return new TrackedObject(pointer, raw as JSONObject);
     } else {
-        return new TrackedPrimitive(pointer, raw);
+        return new TrackedPrimitive(pointer, raw as JSONPrimitive);
     }
 }
 
 export abstract class TrackedElement {
     pointer: string;
-    raw: any;
+    abstract raw: JSONValue;
 
     constructor(pointer: string) {
         this.pointer = pointer;
@@ -33,8 +34,9 @@ export abstract class TrackedElement {
 }
 
 export class TrackedPrimitive extends TrackedElement {
+    raw: JSONPrimitive;
 
-    constructor(pointer: string, raw: any) {
+    constructor(pointer: string, raw: JSONPrimitive) {
         super(pointer);
         this.raw = raw;
     }
@@ -49,9 +51,9 @@ export class TrackedPrimitive extends TrackedElement {
 }
 
 export class TrackedArray extends TrackedElement {
-    raw: any[];
+    raw: JSONArray;
 
-    constructor(pointer: string, raw: any[]) {
+    constructor(pointer: string, raw: JSONArray) {
         super(pointer);
         this.raw = raw;
     }
@@ -75,7 +77,7 @@ export class TrackedArray extends TrackedElement {
     }
 
     // todo optimize
-    public getIndex(index: number) {
+    public getIndex(index: number): TrackedElement {
         return this.resolveImpl([index.toString()]);
     }
 
@@ -86,8 +88,9 @@ export class TrackedArray extends TrackedElement {
 }
 
 export class TrackedObject extends TrackedElement {
+    raw: JSONObject
 
-    constructor(pointer: string, raw: any) {
+    constructor(pointer: string, raw: JSONObject) {
         super(pointer);
         this.raw = raw;
     }
@@ -109,20 +112,4 @@ export class TrackedObject extends TrackedElement {
     public getAll(): TrackedElement[] {
         return [...Object.getOwnPropertyNames(this.raw).map(key => this.resolve(key))];
     }
-
-    // public properties(depth=1) {
-    //     const properties: string[] = [];
-    //     for (const subProp of Object.getOwnPropertyNames(this.raw)) {
-            
-    //     }
-
-    // }
-
-    // public propertiesUnion(other: Element, depth=1) {
-
-    // }
-
-    // public propertiesIntersection(other: Element, depth=1) {
-
-    // }
 }
