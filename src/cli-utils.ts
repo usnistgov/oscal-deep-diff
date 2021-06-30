@@ -21,11 +21,13 @@ export function parseOptions(): CLIOptions {
         .option('-c --config <filename>', 'YAML config file to read from', '')
         .parse(process.argv);
     // specially cast rawOptions object to CLIOptions interface (force typing)
-    return (rawOptions as unknown) as CLIOptions;
+    return rawOptions as unknown as CLIOptions;
 }
 
 export function printComparison(comparison: Comparison): void {
-    console.log(`Comparison between ${RedFG}${comparison.leftDocument}${ResetConsole} and ${GreenFG}${comparison.rightDocument}${ResetConsole}:`);
+    console.log(
+        `Comparison between ${RedFG}${comparison.leftDocument}${ResetConsole} and ${GreenFG}${comparison.rightDocument}${ResetConsole}:`,
+    );
     for (const change of comparison.changes) {
         console.log(`${YellowFG}---${ResetConsole}`);
         change.printChange();

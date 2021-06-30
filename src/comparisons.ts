@@ -1,4 +1,4 @@
-import { GreenFG, ResetConsole, RedFG, YellowFG, JSONValue, JSONObject } from "./utils";
+import { GreenFG, ResetConsole, RedFG, YellowFG, JSONValue, JSONObject } from './utils';
 
 abstract class Printable {
     abstract printChange(): void;
@@ -16,7 +16,7 @@ export class PropertyRightOnly implements Printable {
         this.element = element;
     }
 
-    printChange(prefix=''): void {
+    printChange(prefix = ''): void {
         console.log(`${prefix}Change type:   ${this.change}`);
         console.log(`${prefix}Right pointer: ${this.rightPointer}`);
         console.log(`${prefix}Left parent pointer: ${this.leftParentPointer}`);
@@ -36,7 +36,7 @@ export class PropertyLeftOnly implements Printable {
         this.element = element;
     }
 
-    printChange(prefix=''): void {
+    printChange(prefix = ''): void {
         console.log(`${prefix}Change type:  ${this.change}`);
         console.log(`${prefix}Left pointer: ${this.leftPointer}`);
         console.log(`${prefix}Right parent pointer: ${this.rightParentPointer}`);
@@ -58,7 +58,7 @@ export class PropertyChanged implements Printable {
         this.rightElement = rightElement;
     }
 
-    printChange(prefix=''): void {
+    printChange(prefix = ''): void {
         console.log(`${prefix}Change type:   ${this.change}`);
         console.log(`${prefix}Right pointer: ${this.rightPointer}`);
         console.log(`${prefix}Left pointer:  ${this.leftPointer}`);
@@ -124,7 +124,7 @@ export class ArrayChanged implements Printable {
         this.matchMethod = matchMethod;
     }
 
-    printChange(prefix=''): void {
+    printChange(prefix = ''): void {
         console.log(`${prefix}Change type:   ${this.change}`);
         console.log(`${prefix}Left pointer:  ${RedFG}${this.leftPointer}${ResetConsole}`);
         console.log(`${prefix}Right pointer: ${GreenFG}${this.rightPointer}${ResetConsole}`);
@@ -134,7 +134,7 @@ export class ArrayChanged implements Printable {
             console.log(`${newPrefix}${YellowFG}---${ResetConsole}`);
             console.log(`${newPrefix}Left Element:  ${RedFG}`, elementPair.leftPointer, ResetConsole);
             console.log(`${newPrefix}Right Element: ${GreenFG}`, elementPair.leftPointer, ResetConsole);
-            console.log(`${newPrefix}Changes:`)
+            console.log(`${newPrefix}Changes:`);
             for (const change of elementPair.changes) {
                 console.log(`${newPrefix + '  '}${YellowFG}---${ResetConsole}`);
                 change.printChange(newPrefix + '  ');
@@ -146,7 +146,7 @@ export class ArrayChanged implements Printable {
             console.log(`${newPrefix}${YellowFG}---${ResetConsole}`);
             console.log(`${newPrefix}Left Element:  ${RedFG}`, elementPair.leftPointer, ResetConsole);
             console.log(`${newPrefix}Right Element: ${GreenFG}`, elementPair.leftPointer, ResetConsole);
-            console.log(`${newPrefix}Changes:`)
+            console.log(`${newPrefix}Changes:`);
             for (const change of elementPair.changes) {
                 console.log(`${newPrefix + '  '}${YellowFG}---${ResetConsole}`);
                 change.printChange(newPrefix + '  ');
@@ -170,21 +170,21 @@ export interface Comparison {
  * To be used with `Json.stringify() in order to transform the default
  * comparator output object to a more compressed format that excludes all
  * content from either document.
- * @param key 
- * @param value 
+ * @param key
+ * @param value
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-explicit-any
 export function excludeContentReplacer(key: string, value: any): any | undefined {
-    switch(key) {
-        case "leftElement":
-        case "rightElement":
-        case "deletedElement":
-        case "addedElement":
+    switch (key) {
+        case 'leftElement':
+        case 'rightElement':
+        case 'deletedElement':
+        case 'addedElement':
             return undefined;
-        case "addedItems":
-            return value.map((x: JSONObject) => x["rightPointer"]);
-        case "removedItems":
-            return value.map((x: JSONObject) => x["leftPointer"]);
+        case 'addedItems':
+            return value.map((x: JSONObject) => x['rightPointer']);
+        case 'removedItems':
+            return value.map((x: JSONObject) => x['leftPointer']);
         default:
             return value;
     }

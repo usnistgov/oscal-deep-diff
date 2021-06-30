@@ -3,7 +3,7 @@
 
 // describe('verify excludeContentReplacer still works', () => {
 //     const changes: Change[] = [
-//         // note that these are completely arbritrary!
+//         // note that these are completely arbitrary!
 //         new PropertyAdded('/left', '/right/added', "I'm only on the right"),
 //         new PropertyDeleted('/left/deleted', "I'm only on the left", '/right'),
 //         new PropertyChanged('I\'m different here', '/left/changed', 'Then I am here!', '/right/changed'),
@@ -36,7 +36,7 @@
 //         expect(replaced[2]).does.not.have.property('rightElement');
 //     });
 
-//     it('assert array items have been trasformed', () => {
+//     it('assert array items have been transformed', () => {
 //         const arrayChanged = replaced[3];
 //         expect(arrayChanged['addedItems'][0]).to.equal('/right/array/0');
 //         expect(arrayChanged['removedItems'][0]).to.equal('/left/array/0');

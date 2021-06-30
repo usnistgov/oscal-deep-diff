@@ -184,7 +184,11 @@ export class ObjectPropertyMatchConstraint extends AbstractMatchConstraint {
     }
 
     public static fromDict(obj: JSONObject): AbstractMatchConstraint {
-        if (!Object.prototype.hasOwnProperty.call(obj, 'matchType') || !Object.prototype.hasOwnProperty.call(obj, 'propertyName') || !Object.prototype.hasOwnProperty.call(obj, 'secondaryProperties')) {
+        if (
+            !Object.prototype.hasOwnProperty.call(obj, 'matchType') ||
+            !Object.prototype.hasOwnProperty.call(obj, 'propertyName') ||
+            !Object.prototype.hasOwnProperty.call(obj, 'secondaryProperties')
+        ) {
             throw new Error(`Error decoding object ${obj} into ${ObjectPropertyMatchConstraint.name}`);
         }
 

@@ -1,8 +1,8 @@
 interface ControlLevelComparison {
-    leftIdentifiers?: {[key: string]: unknown};
-    rightIdentifiers?: {[key: string]: unknown};
+    leftIdentifiers?: { [key: string]: unknown };
+    rightIdentifiers?: { [key: string]: unknown };
 
-    status: "ok" | "added" | "withdrawn" | "changed";
+    status: 'ok' | 'added' | 'withdrawn' | 'changed';
 
     changes?: {
         field: string;
@@ -10,26 +10,26 @@ interface ControlLevelComparison {
         rightValue: string;
     }[];
 
-    moveDetails ?: {
-        leftParentIdentifiers: {[key: string]: unknown};
-        rightParentIdentifiers: {[key: string]: unknown};
-    }
+    moveDetails?: {
+        leftParentIdentifiers: { [key: string]: unknown };
+        rightParentIdentifiers: { [key: string]: unknown };
+    };
 }
 
 const exampleControlLevelComparison: ControlLevelComparison = {
     leftIdentifiers: {
-        id: "AC-1",
-        title: "Policy and Procedures"
+        id: 'AC-1',
+        title: 'Policy and Procedures',
     },
     status: 'changed',
     changes: [
         {
             field: 'title',
             leftValue: 'Access Control Policy and Procedures',
-            rightValue: 'Policy and Procedures'
-        }
-    ]
-}
+            rightValue: 'Policy and Procedures',
+        },
+    ],
+};
 
 // function PerformControlLevelComparison(comparison: Comparison, leftDocument: TrackedElement, rightDocument: TrackedElement): ControlLevelComparison[] {
 //     if (!(comparison.changes.length !== 1 && comparison.changes[0] instanceof ArrayChanged)) {
@@ -39,7 +39,7 @@ const exampleControlLevelComparison: ControlLevelComparison = {
 //     return comparison.changes[0].outOfTreeChanges.map(ootChange => {
 
 //         return {
-            
+
 //         }
 //     })
 // }

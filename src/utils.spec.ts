@@ -98,39 +98,26 @@ describe('resolvePointer()', () => {
 
 describe('testPointerCondition()', () => {
     it('pointer conditions without a beginning / should match sub-elements', () => {
-        expect(
-            testPointerCondition('/catalog/groups/0/controls/12', 'controls/#')
-        ).to.be.true;
+        expect(testPointerCondition('/catalog/groups/0/controls/12', 'controls/#')).to.be.true;
 
-        expect(
-            testPointerCondition('/metadata/id', 'id')
-        ).to.be.true;
+        expect(testPointerCondition('/metadata/id', 'id')).to.be.true;
     });
 
     it('pointer conditions with # should substitute array indices', () => {
-        expect(
-            testPointerCondition('/catalog/groups/0/id', '/catalog/groups/#/id')
-        ).to.be.true;
+        expect(testPointerCondition('/catalog/groups/0/id', '/catalog/groups/#/id')).to.be.true;
 
-        expect(
-            testPointerCondition('/catalog/groups/4/controls/10', '/catalog/groups/#/controls/#')
-        ).to.be.true
+        expect(testPointerCondition('/catalog/groups/4/controls/10', '/catalog/groups/#/controls/#')).to.be.true;
     });
 
     it('pointer conditions without a beginning / should test all possible sub-pointer starting candidates', () => {
         // match to first instance
-        expect(
-            testPointerCondition('/catalog/groups/0/controls/12/controls/5', 'controls/#/controls/#')
-        ).to.be.true;
+        expect(testPointerCondition('/catalog/groups/0/controls/12/controls/5', 'controls/#/controls/#')).to.be.true;
 
         // match to last instance
-        expect(
-            testPointerCondition('/catalog/groups/0/controls/12/controls/5', 'controls/#')
-        ).to.be.true;
+        expect(testPointerCondition('/catalog/groups/0/controls/12/controls/5', 'controls/#')).to.be.true;
 
         // match to instance in between
-        expect(
-            testPointerCondition('/catalog/groups/0/controls/12/controls/5/controls/1', 'controls/#/controls/#')
-        ).to.be.true;
+        expect(testPointerCondition('/catalog/groups/0/controls/12/controls/5/controls/1', 'controls/#/controls/#')).to
+            .be.true;
     });
 });

@@ -8,7 +8,7 @@ const options = parseOptions();
 
 let config = defaultConfig;
 if (options.config !== '') {
-    const configDict = YAML.parse(fs.readFileSync(options.config).toString())
+    const configDict = YAML.parse(fs.readFileSync(options.config).toString());
     config = Config.fromDict(configDict);
 }
 

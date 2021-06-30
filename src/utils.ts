@@ -36,12 +36,15 @@ export function getType(element: JSONValue): string {
 }
 
 export function convertPointerToCondition(pointer: string): string {
-    return pointer.split('/').map(property => {
-        if (Number.isInteger(Number(property)) && property !== '') {
-            return '#'
-        }
-        return property
-    }).join('/');
+    return pointer
+        .split('/')
+        .map((property) => {
+            if (Number.isInteger(Number(property)) && property !== '') {
+                return '#';
+            }
+            return property;
+        })
+        .join('/');
 }
 
 /**
@@ -63,7 +66,7 @@ export function resolvePointer(obj: JSONValue, pointer: string): JSONValue {
             }
             obj = obj[subProp];
         } else if (type === 'array') {
-            obj = obj as JSONArray
+            obj = obj as JSONArray;
             const index = Number(subProp);
             if (!Number.isInteger(index)) {
                 throw new Error(
@@ -105,14 +108,14 @@ export function testPointerCondition(pointer: string, condition: string): boolea
 
     // if a condition starts with '/', constrain regex to match with beginning of string
     const patternPrefix = condition.startsWith('/') ? '^' : '';
-    
+
     const patternRoot = condition
-        .replace(/\//g, '\\/')  // escape '/'
+        .replace(/\//g, '\\/') // escape '/'
         .replace(/#/g, '\\d+') // '#' matches all groups of digits
-        .replace(/\*/g, '[^/]') // '*' matches all non-'/' characters
+        .replace(/\*/g, '[^/]'); // '*' matches all non-'/' characters
 
     // build regex match pattern
-    const pattern = new RegExp(`${patternPrefix}${patternRoot}$`)
+    const pattern = new RegExp(`${patternPrefix}${patternRoot}$`);
 
     return pattern.test(pointer);
 }

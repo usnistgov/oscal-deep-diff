@@ -1,5 +1,5 @@
-import { MatchConstraintsContainer } from "./matching";
-import { JSONObject } from "./utils";
+import { MatchConstraintsContainer } from './matching';
+import { JSONObject } from './utils';
 
 export class Config {
     // matching pointer conditions will not be considered during comparison (non-array) operations
@@ -14,7 +14,17 @@ export class Config {
     public disableMemoization: boolean;
     public minimumConfidenceThreshold: number;
 
-    constructor(ignoreFieldsForComparison: string[], ignoreFieldsForMatchComparison: string[], baseComparisonPaths: string[], ignoreCase: boolean, constraints: MatchConstraintsContainer, outOfTreeMatching=false, minimumConfidenceThreshold=.8, excludeContent=false, disableMemoization=false) {
+    constructor(
+        ignoreFieldsForComparison: string[],
+        ignoreFieldsForMatchComparison: string[],
+        baseComparisonPaths: string[],
+        ignoreCase: boolean,
+        constraints: MatchConstraintsContainer,
+        outOfTreeMatching = false,
+        minimumConfidenceThreshold = 0.8,
+        excludeContent = false,
+        disableMemoization = false,
+    ) {
         this.ignoreFieldsForComparison = ignoreFieldsForComparison;
         this.ignoreFieldsForMatchComparison = ignoreFieldsForMatchComparison;
         this.baseComparisonPaths = baseComparisonPaths;
@@ -42,18 +52,20 @@ export class Config {
         } = obj;
 
         const constraints = MatchConstraintsContainer.fromDict(constraintsSubObj as JSONObject);
-        
+
         console.log('WARNING: Unknown options in YAML config:', unknownOptions);
 
-        return new Config(ignoreFieldsForComparison as string[],
+        return new Config(
+            ignoreFieldsForComparison as string[],
             ignoreFieldsForMatchComparison as string[],
-            baseComparisonPaths as string [],
+            baseComparisonPaths as string[],
             ignoreCase as boolean,
             constraints,
             outOfTreeMatching as boolean | undefined,
             minimumConfidenceThreshold as number | undefined,
             disableMemoization as boolean | undefined,
-            excludeContent as boolean | undefined);
+            excludeContent as boolean | undefined,
+        );
     }
 }
 

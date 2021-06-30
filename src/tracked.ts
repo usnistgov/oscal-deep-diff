@@ -1,5 +1,4 @@
-import { getType, JSONArray, JSONObject, JSONPrimitive, JSONValue, testPointerCondition } from "./utils";
-
+import { getType, JSONArray, JSONObject, JSONPrimitive, JSONValue, testPointerCondition } from './utils';
 
 export function trackRawObject(pointer: string, raw: JSONValue): TrackedElement {
     const type = getType(raw);
@@ -83,12 +82,12 @@ export class TrackedArray extends TrackedElement {
 
     // todo heavily optimize
     public getAll(): TrackedElement[] {
-        return [...this.raw.keys()].map(index => this.getIndex(index));
+        return [...this.raw.keys()].map((index) => this.getIndex(index));
     }
 }
 
 export class TrackedObject extends TrackedElement {
-    raw: JSONObject
+    raw: JSONObject;
 
     constructor(pointer: string, raw: JSONObject) {
         super(pointer);
@@ -106,10 +105,9 @@ export class TrackedObject extends TrackedElement {
             return trackedSubElement; // base case, no remaining items left
         }
         return trackedSubElement.resolveImpl(remaining);
-
     }
 
     public getAll(): TrackedElement[] {
-        return [...Object.getOwnPropertyNames(this.raw).map(key => this.resolve(key))];
+        return [...Object.getOwnPropertyNames(this.raw).map((key) => this.resolve(key))];
     }
 }
