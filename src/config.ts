@@ -53,7 +53,9 @@ export class Config {
 
         const constraints = MatchConstraintsContainer.fromDict(constraintsSubObj as JSONObject);
 
-        console.log('WARNING: Unknown options in YAML config:', unknownOptions);
+        if (Object.keys(unknownOptions).length !== 0) {
+            console.log('WARNING: Unknown options in YAML config:', unknownOptions);
+        }
 
         return new Config(
             ignoreFieldsForComparison as string[],
