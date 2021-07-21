@@ -8,6 +8,7 @@ interface CLIOptions {
     rightDoc: string;
     write: string;
     config: string;
+    controlLevelComparison: boolean;
 }
 
 export function parseOptions(): CLIOptions {
@@ -19,6 +20,7 @@ export function parseOptions(): CLIOptions {
         .requiredOption('-r, --rightDoc <filename>', 'Right (new) document to compare (in JSON representation)')
         .option('-w, --write <filename>', 'File to output difference document to', '')
         .option('-c --config <filename>', 'YAML config file to read from', '')
+        .option('--controlLevelComparison', 'Perform a control level comparison', false)
         .parse(process.argv);
     // specially cast rawOptions object to CLIOptions interface (force typing)
     return rawOptions as unknown as CLIOptions;

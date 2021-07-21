@@ -41,7 +41,8 @@
                 "--write",
                 "vault/NIST_SP-800-53_rev4_rev5_comparison-minthresh.json",
                 "--config",
-                "vault/config.yaml"
+                "vault/config.yaml",
+                "--controlLevelComparison"
             ]
         },
         {

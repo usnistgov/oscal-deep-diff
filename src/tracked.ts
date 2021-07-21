@@ -95,6 +95,12 @@ export class TrackedObject extends TrackedElement {
     }
 
     public resolveImpl([property, ...remaining]: string[]): TrackedElement {
+        if (property === '') {
+            // special case when called from root of document
+            // e.g. /catalog when split will be ['', 'catalog']
+            return this.resolveImpl(remaining);
+        }
+
         const rawSubElement = this.raw[property];
         if (rawSubElement === undefined) {
             throw new Error(`Cannot resolve path, property ${property} does not exist in object ${this.pointer}`);

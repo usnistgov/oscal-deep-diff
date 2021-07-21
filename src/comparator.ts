@@ -87,7 +87,7 @@ export class Comparator {
         let changes: Change[];
         let changeCount = 0;
 
-        if (this.config.baseComparisonPaths.length > 0) {
+        if (this.config.baseComparisonPaths?.length > 0) {
             const [leftElements, rightElements] = assembleBaseComparison(
                 leftRootElement,
                 rightRootElement,
