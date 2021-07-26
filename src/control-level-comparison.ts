@@ -8,6 +8,11 @@ interface ChangeDetails {
     rightValue?: JSONValue;
 }
 
+interface MoveDetails {
+    leftParentIdentifiers?: { [key: string]: string };
+    rightParentIdentifiers?: { [key: string]: string };
+}
+
 interface ControlLevelComparison {
     leftIdentifiers?: { [key: string]: string };
     rightIdentifiers?: { [key: string]: string };
@@ -16,10 +21,7 @@ interface ControlLevelComparison {
 
     changes?: ChangeDetails[];
 
-    moveDetails?: {
-        leftParentIdentifiers: { [key: string]: unknown };
-        rightParentIdentifiers: { [key: string]: unknown };
-    };
+    moveDetails?: MoveDetails;
 }
 
 function sortControlLevelComparison(comparison: ControlLevelComparison[], primaryIdentifier = 'id') {
@@ -124,10 +126,28 @@ export function PerformControlLevelComparison(
             const rightControl = rightDocument.resolve(subElems.rightPointer);
 
             const changes: ChangeDetails[] = [];
-
             subElems.changes.forEach((change) =>
                 FlattenControlChanges(change, changes, leftControl.pointer, rightControl.pointer),
             );
+
+            const leftParentSlices = subElems.leftPointer.split('/');
+            const leftParent = leftDocument.resolve(leftParentSlices.slice(0, leftParentSlices.length - 2).join('/'));
+
+            const rightParentSlices = subElems.rightPointer.split('/');
+            const rightParent = rightDocument.resolve(
+                rightParentSlices.slice(0, rightParentSlices.length - 2).join('/'),
+            );
+
+            const moveDetails: MoveDetails = {
+                leftParentIdentifiers: {
+                    id: (leftParent.resolve('id')?.raw as string) ?? undefined,
+                    title: (leftParent.resolve('title')?.raw as string) ?? undefined,
+                },
+                rightParentIdentifiers: {
+                    id: (rightParent.resolve('id')?.raw as string) ?? undefined,
+                    title: (rightParent.resolve('title')?.raw as string) ?? undefined,
+                },
+            };
 
             return {
                 leftIdentifiers: {
@@ -140,6 +160,11 @@ export function PerformControlLevelComparison(
                 },
                 status: subElems.changes.length > 0 ? 'changed' : 'ok',
                 changes,
+                moveDetails:
+                    moveDetails.leftParentIdentifiers?.['id'] !== moveDetails.rightParentIdentifiers?.['id'] ||
+                    moveDetails.leftParentIdentifiers?.['title'] !== moveDetails.rightParentIdentifiers?.['title']
+                        ? moveDetails
+                        : undefined,
             } as ControlLevelComparison;
         }),
     );
