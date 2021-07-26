@@ -158,7 +158,7 @@ export function PerformControlLevelComparison(
                     id: rightControl.resolve('id').raw,
                     title: rightControl.resolve('title').raw,
                 },
-                status: subElems.changes.length > 0 ? 'changed' : 'ok',
+                status: changes.length > 0 ? 'changed' : 'ok',
                 changes,
                 moveDetails:
                     moveDetails.leftParentIdentifiers?.['id'] !== moveDetails.rightParentIdentifiers?.['id'] ||

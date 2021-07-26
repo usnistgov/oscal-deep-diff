@@ -39,59 +39,11 @@
                 "--rightDoc",
                 "vault/NIST_SP-800-53_rev5_catalog.json",
                 "--write",
-                "vault/NIST_SP-800-53_rev4_rev5_comparison-minthresh.json",
+                "vault/comparison_NIST_SP-800-53_rev4_rev5_catalog.json",
                 "--config",
                 "vault/config.yaml",
                 "--controlLevelComparison"
             ]
         },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Run on NIST_SP-800-53 Machine Readable Mode",
-            "program": "${workspaceFolder}/src/cli.ts",
-            "preLaunchTask": "npm: build",
-            "sourceMaps": true,
-            "smartStep": true,
-            "internalConsoleOptions": "openOnSessionStart",
-            "outFiles": [
-                "${workspaceFolder}/lib/**/*.js"
-            ],
-            // Note that this requires NIST-SP-800-53 Revisions 4 and 5 in the vault/ directory
-            "args": [
-                "--leftCatalog",
-                "vault/NIST_SP-800-53_rev4_catalog.json",
-                "--rightCatalog",
-                "vault/NIST_SP-800-53_rev5-FPD_catalog.json",
-                "--write",
-                "vault/NIST_SP-800-53_rev4_rev5_comparison.json",
-                "--verbose",
-                "--ignore",
-                "/catalog/back-matter/resources,id",
-                "--excludeContent"
-            ]
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Run on NIST_SP-800-53 Human Readable Mode",
-            "program": "${workspaceFolder}/src/cli.ts",
-            "preLaunchTask": "npm: build",
-            "sourceMaps": true,
-            "smartStep": true,
-            "internalConsoleOptions": "openOnSessionStart",
-            "outFiles": [
-                "${workspaceFolder}/lib/**/*.js"
-            ],
-            // Note that this requires NIST-SP-800-53 Revisions 4 and 5 in the vault/ directory
-            "args": [
-                "--leftCatalog",
-                "vault/NIST_SP-800-53_rev4_catalog.json",
-                "--rightCatalog",
-                "vault/NIST_SP-800-53_rev5-FPD_catalog.json",
-                "--ignore",
-                "/catalog/back-matter/resources,id",
-            ]
-        }
     ]
 }
