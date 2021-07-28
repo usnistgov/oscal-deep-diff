@@ -13,7 +13,7 @@ interface MoveDetails {
     rightParentIdentifiers?: { [key: string]: string };
 }
 
-interface ControlLevelComparison {
+export interface ControlLevelComparison {
     leftIdentifiers?: { [key: string]: string };
     rightIdentifiers?: { [key: string]: string };
 

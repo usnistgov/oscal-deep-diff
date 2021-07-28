@@ -5,6 +5,7 @@ import { Comparator } from './comparator';
 import { ArrayChanged } from './comparisons';
 import { Config, defaultConfig } from './config';
 import { PerformControlLevelComparison } from './control-level-comparison';
+import { generateClcSpreadsheet } from './control-level-comparison-output';
 import { trackRawObject } from './tracked';
 
 const options = parseOptions();
@@ -41,4 +42,6 @@ if (options.controlLevelComparison) {
     );
 
     fs.writeFileSync(options.write + '.clc.json', JSON.stringify(data, null, 2));
+
+    generateClcSpreadsheet(data, options.write + '.clc.xlsx');
 }
