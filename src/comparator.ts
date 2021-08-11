@@ -26,7 +26,7 @@ import { MatchInstructions, MatchType, ObjectPropertyMatchConstraint, PrimitiveM
 import { MemoizationCache } from './cache';
 import { Config } from './config';
 import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject } from './tracked';
-import { assembleBaseComparison } from './base-comparison';
+import { assembleBaseComparison } from './base-comparisons/assembler';
 
 // Tuple of array changes and number of subchanges
 const NO_CHANGES: ComparisonResult = [[], 0];

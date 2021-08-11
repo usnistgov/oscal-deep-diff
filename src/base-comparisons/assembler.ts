@@ -1,4 +1,4 @@
-import { TrackedElement, TrackedObject, TrackedArray } from './tracked';
+import { TrackedElement, TrackedObject, TrackedArray } from '../tracked';
 
 /**
  * Flatten all elements in the right and left document that match some baseComparisonPaths condition

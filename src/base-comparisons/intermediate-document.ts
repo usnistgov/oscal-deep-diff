@@ -1,6 +1,7 @@
-import { ArrayChanged, Change, PropertyChanged, PropertyLeftOnly, PropertyRightOnly } from './comparisons';
-import { TrackedElement } from './tracked';
-import { JSONValue } from './utils';
+import { ArrayChanged, Change, PropertyChanged, PropertyLeftOnly, PropertyRightOnly } from '../comparisons';
+import { TrackedElement } from '../tracked';
+import { JSONValue } from '../utils';
+import { sortBaseLevelComparison } from './util';
 
 interface ChangeDetails {
     field: string;
@@ -13,7 +14,7 @@ interface MoveDetails {
     rightParentIdentifiers?: { [key: string]: string };
 }
 
-export interface ControlLevelComparison {
+export interface BaseLevelComparison {
     leftIdentifiers?: { [key: string]: string };
     rightIdentifiers?: { [key: string]: string };
 
@@ -22,17 +23,6 @@ export interface ControlLevelComparison {
     changes?: ChangeDetails[];
 
     moveDetails?: MoveDetails;
-}
-
-function sortControlLevelComparison(comparison: ControlLevelComparison[], primaryIdentifier = 'id') {
-    comparison.sort((a, b) => {
-        // extract id from control comparisons. First right identifiers, then left identifiers
-        // (in the case of a withdrawn control)
-        const aId = a.rightIdentifiers?.[primaryIdentifier] ?? a.leftIdentifiers?.[primaryIdentifier] ?? '';
-        const bId = b.rightIdentifiers?.[primaryIdentifier] ?? b.leftIdentifiers?.[primaryIdentifier] ?? '';
-
-        return aId > bId ? 1 : aId < bId ? -1 : 0;
-    });
 }
 
 function FlattenControlChanges(
@@ -81,18 +71,18 @@ function FlattenControlChanges(
     }
 }
 
-export function PerformControlLevelComparison(
+export function PerformBaseLevelComparison(
     comparison: ArrayChanged,
     leftDocument: TrackedElement,
     rightDocument: TrackedElement,
-): ControlLevelComparison[] {
+): BaseLevelComparison[] {
     if (!(comparison instanceof ArrayChanged)) {
         throw new Error('Malformed base-level comparison');
     }
 
-    const controlLevelComparisons: ControlLevelComparison[] = [];
+    const blc: BaseLevelComparison[] = [];
 
-    controlLevelComparisons.push(
+    blc.push(
         ...comparison.leftOnly.map((leftOnly) => {
             const control = leftDocument.resolve(leftOnly.leftPointer);
 
@@ -102,11 +92,11 @@ export function PerformControlLevelComparison(
                     title: control.resolve('title').raw,
                 },
                 status: 'withdrawn',
-            } as ControlLevelComparison;
+            } as BaseLevelComparison;
         }),
     );
 
-    controlLevelComparisons.push(
+    blc.push(
         ...comparison.rightOnly.map((rightOnly) => {
             const control = rightDocument.resolve(rightOnly.rightPointer);
 
@@ -116,11 +106,11 @@ export function PerformControlLevelComparison(
                     title: control.resolve('title').raw,
                 },
                 status: 'added',
-            } as ControlLevelComparison;
+            } as BaseLevelComparison;
         }),
     );
 
-    controlLevelComparisons.push(
+    blc.push(
         ...comparison.subChanges.map((subElems) => {
             const leftControl = leftDocument.resolve(subElems.leftPointer);
             const rightControl = rightDocument.resolve(subElems.rightPointer);
@@ -165,11 +155,11 @@ export function PerformControlLevelComparison(
                     moveDetails.leftParentIdentifiers?.['title'] !== moveDetails.rightParentIdentifiers?.['title']
                         ? moveDetails
                         : undefined,
-            } as ControlLevelComparison;
+            } as BaseLevelComparison;
         }),
     );
 
-    sortControlLevelComparison(controlLevelComparisons);
+    sortBaseLevelComparison(blc);
 
-    return controlLevelComparisons;
+    return blc;
 }

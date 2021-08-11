@@ -4,8 +4,8 @@ import { parseOptions, printComparison } from './cli-utils';
 import { Comparator } from './comparator';
 import { ArrayChanged } from './comparisons';
 import { Config, defaultConfig } from './config';
-import { PerformControlLevelComparison } from './control-level-comparison';
-import { generateClcSpreadsheet } from './control-level-comparison-output';
+import { PerformBaseLevelComparison } from './base-comparisons/intermediate-document';
+import { generateBlcSpreadsheet } from './base-comparisons/excel-output';
 import { trackRawObject } from './tracked';
 
 const options = parseOptions();
@@ -35,7 +35,7 @@ if (options.controlLevelComparison) {
         throw new Error('ControlLevelComparison can only be used with a baseLevelComparison');
     }
 
-    const data = PerformControlLevelComparison(
+    const data = PerformBaseLevelComparison(
         comparator.comparison.changes[0],
         trackRawObject('', leftDoc),
         trackRawObject('', rightDoc),
@@ -43,5 +43,5 @@ if (options.controlLevelComparison) {
 
     fs.writeFileSync(options.write + '.clc.json', JSON.stringify(data, null, 2));
 
-    generateClcSpreadsheet(data, options.write + '.clc.xlsx');
+    generateBlcSpreadsheet(data, options.write + '.clc.xlsx');
 }

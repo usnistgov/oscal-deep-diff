@@ -48,7 +48,7 @@ export class MatchConstraintsContainer {
      */
     public static fromDict(obj: JSONObject): MatchConstraintsContainer {
         const constraints: ConstraintConditionTuple[] = [];
-        for (const condition of Object.getOwnPropertyNames(obj)) {
+        for (const condition of Object.getOwnPropertyNames(obj ?? {})) {
             const constraint = MatchConstraintFromDict(obj[condition] as JSONObject);
             const constraintTuple = [condition, constraint] as ConstraintConditionTuple;
             constraints.push(constraintTuple);

@@ -1,5 +1,5 @@
 import * as ExcelJS from 'exceljs';
-import { ControlLevelComparison } from './control-level-comparison';
+import { BaseLevelComparison } from './intermediate-document';
 
 const COLOR_GREEN = { argb: 'FF63BE7B' };
 const COLOR_YELLOW = { argb: 'FFFFEB84' };
@@ -105,14 +105,14 @@ function defineIdentifierColumns(identifiers: string[]): ExcelJS.TableColumnProp
     ]);
 }
 
-function identifierColumnsForComparison(change: ControlLevelComparison, identifiers: string[]) {
+function identifierColumnsForComparison(change: BaseLevelComparison, identifiers: string[]) {
     return identifiers.flatMap((identifier) => [
         change.leftIdentifiers?.[identifier] ?? '',
         change.rightIdentifiers?.[identifier] ?? '',
     ]);
 }
 
-function generateClcOverview(changes: ControlLevelComparison[], workbook: ExcelJS.Workbook, identifiers: string[]) {
+function generateBlcOverview(changes: BaseLevelComparison[], workbook: ExcelJS.Workbook, identifiers: string[]) {
     const worksheet = workbook.addWorksheet('Overview');
 
     worksheet.addTable({
@@ -180,7 +180,7 @@ function clipText(input: string, maxLength = 32000): string {
     return input.length > maxLength ? input.substring(0, maxLength - 3) + '...' : input;
 }
 
-function generateClcDetails(changes: ControlLevelComparison[], workbook: ExcelJS.Workbook, identifiers: string[]) {
+function generateBlcDetails(changes: BaseLevelComparison[], workbook: ExcelJS.Workbook, identifiers: string[]) {
     const worksheet = workbook.addWorksheet('Change Details');
 
     worksheet.addTable({
@@ -232,15 +232,15 @@ function generateClcDetails(changes: ControlLevelComparison[], workbook: ExcelJS
     autosizeColumns(worksheet);
 }
 
-export function generateClcSpreadsheet(
-    changes: ControlLevelComparison[],
+export function generateBlcSpreadsheet(
+    changes: BaseLevelComparison[],
     outputPath: string,
     identifiers: string[] = ['id', 'title'],
 ): void {
     const workbook = new ExcelJS.Workbook();
 
-    generateClcOverview(changes, workbook, identifiers);
-    generateClcDetails(changes, workbook, identifiers);
+    generateBlcOverview(changes, workbook, identifiers);
+    generateBlcDetails(changes, workbook, identifiers);
 
     workbook.xlsx.writeFile(outputPath);
 }
