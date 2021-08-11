@@ -1,4 +1,5 @@
-import { BaseLevelComparison } from './intermediate-document';
+import { TrackedElement } from '../tracked';
+import { BaseLevelComparison } from './intermediate-output';
 
 function padNumericIdentifier(identifier: string, digits = 3) {
     return identifier
@@ -20,4 +21,11 @@ export function sortBaseLevelComparison(comparison: BaseLevelComparison[], prima
 
         return aId > bId ? 1 : aId < bId ? -1 : 0;
     });
+}
+
+export function extractIdentifiers(element: TrackedElement, identfiers: string[]): { [key: string]: string } {
+    return identfiers.reduce((obj, identifier) => {
+        obj[identifier] = element.resolve(identifier).raw?.toString() ?? '';
+        return obj;
+    }, {} as { [key: string]: string });
 }

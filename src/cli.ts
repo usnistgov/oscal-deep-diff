@@ -4,7 +4,7 @@ import { parseOptions, printComparison } from './cli-utils';
 import { Comparator } from './comparator';
 import { ArrayChanged } from './comparisons';
 import { Config, defaultConfig } from './config';
-import { PerformBaseLevelComparison } from './base-comparisons/intermediate-document';
+import { PerformBaseLevelComparison } from './base-comparisons/intermediate-output';
 import { generateBlcSpreadsheet } from './base-comparisons/excel-output';
 import { trackRawObject } from './tracked';
 

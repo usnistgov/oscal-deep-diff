@@ -1,7 +1,7 @@
 import { ArrayChanged, Change, PropertyChanged, PropertyLeftOnly, PropertyRightOnly } from '../comparisons';
 import { TrackedElement } from '../tracked';
 import { JSONValue } from '../utils';
-import { sortBaseLevelComparison } from './util';
+import { extractIdentifiers, sortBaseLevelComparison } from './util';
 
 interface ChangeDetails {
     field: string;
@@ -75,42 +75,25 @@ export function PerformBaseLevelComparison(
     comparison: ArrayChanged,
     leftDocument: TrackedElement,
     rightDocument: TrackedElement,
+    identfiers = ['id', 'title'],
 ): BaseLevelComparison[] {
     if (!(comparison instanceof ArrayChanged)) {
         throw new Error('Malformed base-level comparison');
     }
 
-    const blc: BaseLevelComparison[] = [];
-
-    blc.push(
+    const blc: BaseLevelComparison[] = [
         ...comparison.leftOnly.map((leftOnly) => {
-            const control = leftDocument.resolve(leftOnly.leftPointer);
-
             return {
-                leftIdentifiers: {
-                    id: control.resolve('id').raw,
-                    title: control.resolve('title').raw,
-                },
+                leftIdentifiers: extractIdentifiers(leftDocument.resolve(leftOnly.leftPointer), identfiers),
                 status: 'withdrawn',
             } as BaseLevelComparison;
         }),
-    );
-
-    blc.push(
         ...comparison.rightOnly.map((rightOnly) => {
-            const control = rightDocument.resolve(rightOnly.rightPointer);
-
             return {
-                rightIdentifiers: {
-                    id: control.resolve('id').raw,
-                    title: control.resolve('title').raw,
-                },
+                rightIdentifiers: extractIdentifiers(rightDocument.resolve(rightOnly.rightPointer), identfiers),
                 status: 'added',
             } as BaseLevelComparison;
         }),
-    );
-
-    blc.push(
         ...comparison.subChanges.map((subElems) => {
             const leftControl = leftDocument.resolve(subElems.leftPointer);
             const rightControl = rightDocument.resolve(subElems.rightPointer);
@@ -129,35 +112,25 @@ export function PerformBaseLevelComparison(
             );
 
             const moveDetails: MoveDetails = {
-                leftParentIdentifiers: {
-                    id: (leftParent.resolve('id')?.raw as string) ?? undefined,
-                    title: (leftParent.resolve('title')?.raw as string) ?? undefined,
-                },
-                rightParentIdentifiers: {
-                    id: (rightParent.resolve('id')?.raw as string) ?? undefined,
-                    title: (rightParent.resolve('title')?.raw as string) ?? undefined,
-                },
+                leftParentIdentifiers: extractIdentifiers(leftParent, identfiers),
+                rightParentIdentifiers: extractIdentifiers(rightParent, identfiers),
             };
 
             return {
-                leftIdentifiers: {
-                    id: leftControl.resolve('id').raw,
-                    title: leftControl.resolve('title').raw,
-                },
-                rightIdentifiers: {
-                    id: rightControl.resolve('id').raw,
-                    title: rightControl.resolve('title').raw,
-                },
+                leftIdentifiers: extractIdentifiers(leftControl, identfiers),
+                rightIdentifiers: extractIdentifiers(rightControl, identfiers),
                 status: changes.length > 0 ? 'changed' : 'ok',
                 changes,
-                moveDetails:
-                    moveDetails.leftParentIdentifiers?.['id'] !== moveDetails.rightParentIdentifiers?.['id'] ||
-                    moveDetails.leftParentIdentifiers?.['title'] !== moveDetails.rightParentIdentifiers?.['title']
-                        ? moveDetails
-                        : undefined,
+                moveDetails: identfiers.reduce(
+                    (flag, identifier) =>
+                        flag ||
+                        moveDetails.leftParentIdentifiers?.[identifier] !==
+                            moveDetails.rightParentIdentifiers?.[identifier],
+                    false,
+                ),
             } as BaseLevelComparison;
         }),
-    );
+    ];
 
     sortBaseLevelComparison(blc);
 

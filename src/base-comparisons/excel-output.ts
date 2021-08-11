@@ -1,5 +1,5 @@
 import * as ExcelJS from 'exceljs';
-import { BaseLevelComparison } from './intermediate-document';
+import { BaseLevelComparison } from './intermediate-output';
 
 const COLOR_GREEN = { argb: 'FF63BE7B' };
 const COLOR_YELLOW = { argb: 'FFFFEB84' };
