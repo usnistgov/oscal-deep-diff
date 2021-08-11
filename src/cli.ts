@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import YAML from 'yaml';
-import { parseOptions, printComparison } from './cli-utils';
+import { parseOptions } from './cli-utils';
 import { Comparator } from './comparator';
 import { ArrayChanged } from './comparisons';
 import { Config, defaultConfig } from './config';
-import { PerformBaseLevelComparison } from './base-comparisons/intermediate-output';
+import { performBaseLevelComparison } from './base-comparisons/intermediate-output';
 import { generateBlcSpreadsheet } from './base-comparisons/excel-output';
 import { trackRawObject } from './tracked';
 
@@ -23,19 +23,15 @@ const rightDoc = JSON.parse(fs.readFileSync(options.rightDoc).toString());
 
 comparator.newComparison(leftDoc, options.leftDoc, rightDoc, options.rightDoc);
 
-if (options.write !== '') {
-    console.log(`Saving compared document to ${options.write}`);
-    fs.writeFileSync(options.write, comparator.comparisonToJson());
-} else {
-    printComparison(comparator.comparison);
-}
+console.log(`Saving compared document to ${options.write}`);
+fs.writeFileSync(options.write, comparator.comparisonToJson());
 
 if (options.controlLevelComparison) {
     if (!(comparator.comparison.changes.length === 1 && comparator.comparison.changes[0] instanceof ArrayChanged)) {
         throw new Error('ControlLevelComparison can only be used with a baseLevelComparison');
     }
 
-    const data = PerformBaseLevelComparison(
+    const data = performBaseLevelComparison(
         comparator.comparison.changes[0],
         trackRawObject('', leftDoc),
         trackRawObject('', rightDoc),
