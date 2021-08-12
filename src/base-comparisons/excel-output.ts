@@ -85,6 +85,15 @@ const CFR_NONEMPTY_FIELD: ExcelJS.ConditionalFormattingRule[] = [
     },
 ];
 
+function excelCol(index: number) {
+    let column = '';
+    while (index > 26) {
+        column += 'Z';
+        index -= 26;
+    }
+    return column + String.fromCharCode(65 + index);
+}
+
 function autosizeColumns(worksheet: ExcelJS.Worksheet, maxLength = 100, minLength = 10) {
     worksheet.columns.forEach((column) => {
         let largestLength = 0;
@@ -144,26 +153,36 @@ function generateBlcOverview(changes: BaseLevelComparison[], workbook: ExcelJS.W
         ]),
     });
 
+    let columnCursor = identifiers.length * 2 - 1;
+    let columnLetter = excelCol(columnCursor);
+
     // colors for empty identifiers
     worksheet.addConditionalFormatting({
-        ref: `A2:D${worksheet.rowCount}`,
+        ref: `A2:${columnLetter}${worksheet.rowCount}`,
         rules: CFR_EMPTY_FIELD,
     });
 
+    columnLetter = excelCol(++columnCursor);
+
     // colors for status category
     worksheet.addConditionalFormatting({
-        ref: `E2:E${worksheet.rowCount}`,
+        ref: `${columnLetter}2:${columnLetter}${worksheet.rowCount}`,
         rules: CFR_CHANGE_STATUS,
     });
 
+    columnLetter = excelCol(++columnCursor);
+
     // color scale for change size
     worksheet.addConditionalFormatting({
-        ref: `F2:F${worksheet.rowCount}`,
+        ref: `${columnLetter}2:${columnLetter}${worksheet.rowCount}`,
         rules: CFR_PERCENTILE_COLORRAMP,
     });
 
+    columnLetter = excelCol(++columnCursor);
+
+    // highlight controls with changed parents (listing all identifiers)
     worksheet.addConditionalFormatting({
-        ref: `G2:J${worksheet.rowCount}`,
+        ref: `${columnLetter}2:${excelCol(columnCursor + identifiers.length * 2 - 1)}${worksheet.rowCount}`,
         rules: CFR_NONEMPTY_FIELD,
     });
 
@@ -195,6 +214,7 @@ function generateBlcDetails(changes: BaseLevelComparison[], workbook: ExcelJS.Wo
         columns: [
             ...defineIdentifierColumns(identifiers),
             { name: 'Field', filterButton: true },
+            { name: 'Resolved Field', filterButton: true },
             { name: 'Status', filterButton: true },
             { name: 'Left Value', filterButton: true },
             { name: 'Right Value', filterButton: true },
@@ -207,6 +227,7 @@ function generateBlcDetails(changes: BaseLevelComparison[], workbook: ExcelJS.Wo
                         change.changes?.map((subChange) => [
                             ...identifierColumnsForComparison(change, identifiers),
                             subChange.field ?? '',
+                            subChange.resolvedField ?? '',
                             // status can be added | withdrawn | changed
                             subChange.leftValue ? (subChange.rightValue ? 'changed' : 'withdrawn') : 'added',
                             subChange.leftValue ? clipText(JSON.stringify(subChange.leftValue)) : undefined,
@@ -217,15 +238,21 @@ function generateBlcDetails(changes: BaseLevelComparison[], workbook: ExcelJS.Wo
             ),
     });
 
+    // skip identifier columns, as well as field and parametrized field columns
+    let columnCursor = identifiers.length * 2 + 2;
+    let columnLetter = excelCol(columnCursor);
+
     // colors for status category
     worksheet.addConditionalFormatting({
-        ref: `F2:F${worksheet.rowCount}`,
+        ref: `${columnLetter}2:${columnLetter}${worksheet.rowCount}`,
         rules: CFR_CHANGE_STATUS,
     });
 
+    columnLetter = excelCol(++columnCursor);
+
     // colors for empty values
     worksheet.addConditionalFormatting({
-        ref: `G2:H${worksheet.rowCount}`,
+        ref: `${columnLetter}2:${excelCol(columnCursor + 1)}${worksheet.rowCount}`,
         rules: CFR_EMPTY_FIELD,
     });
 

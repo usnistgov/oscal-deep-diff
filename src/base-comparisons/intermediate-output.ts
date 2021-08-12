@@ -1,15 +1,16 @@
-import { ArrayChanged, Change, PropertyChanged, PropertyLeftOnly, PropertyRightOnly } from '../comparisons';
+import { ArrayChanged } from '../comparisons';
 import { TrackedElement } from '../tracked';
 import { JSONValue } from '../utils';
-import { extractIdentifiers, sortBaseLevelComparison } from './util';
+import { extractIdentifiers, flattenControlChanges, sortBaseLevelComparison } from './util';
 
-interface ChangeDetails {
+export interface ChangeDetails {
     field: string;
+    resolvedField: string;
     leftValue?: JSONValue;
     rightValue?: JSONValue;
 }
 
-interface MoveDetails {
+export interface MoveDetails {
     leftParentIdentifiers?: { [key: string]: string };
     rightParentIdentifiers?: { [key: string]: string };
 }
@@ -25,53 +26,7 @@ export interface BaseLevelComparison {
     moveDetails?: MoveDetails;
 }
 
-function FlattenControlChanges(
-    change: Change,
-    detailsList: ChangeDetails[],
-    leftParentPointer: string,
-    rightParentPointer: string,
-): void {
-    if (change instanceof ArrayChanged) {
-        change.leftOnly.forEach((leftOnly) =>
-            detailsList.push({
-                field: leftOnly.leftPointer.slice(leftParentPointer.length + 1),
-                leftValue: leftOnly.leftElement,
-            }),
-        );
-
-        change.rightOnly.forEach((rightOnly) =>
-            detailsList.push({
-                field: rightOnly.rightPointer.slice(rightParentPointer.length + 1),
-                rightValue: rightOnly.rightElement,
-            }),
-        );
-
-        change.subChanges.forEach((subChange) =>
-            subChange.changes.forEach((subChangeChanges) =>
-                FlattenControlChanges(subChangeChanges, detailsList, leftParentPointer, rightParentPointer),
-            ),
-        );
-    } else {
-        const changeOutput: ChangeDetails = {
-            field:
-                change instanceof PropertyLeftOnly
-                    ? change.leftPointer.slice(leftParentPointer.length + 1)
-                    : change.rightPointer.slice(rightParentPointer.length + 1),
-        };
-
-        if (change instanceof PropertyLeftOnly) {
-            changeOutput.leftValue = change.element;
-        } else if (change instanceof PropertyRightOnly) {
-            changeOutput.rightValue = change.element;
-        } else if (change instanceof PropertyChanged) {
-            changeOutput.leftValue = change.leftElement;
-            changeOutput.rightValue = change.rightElement;
-        }
-        detailsList.push(changeOutput);
-    }
-}
-
-export function PerformBaseLevelComparison(
+export function performBaseLevelComparison(
     comparison: ArrayChanged,
     leftDocument: TrackedElement,
     rightDocument: TrackedElement,
@@ -99,9 +54,7 @@ export function PerformBaseLevelComparison(
             const rightControl = rightDocument.resolve(subElems.rightPointer);
 
             const changes: ChangeDetails[] = [];
-            subElems.changes.forEach((change) =>
-                FlattenControlChanges(change, changes, leftControl.pointer, rightControl.pointer),
-            );
+            subElems.changes.forEach((change) => flattenControlChanges(change, changes, leftControl, rightControl));
 
             const leftParentSlices = subElems.leftPointer.split('/');
             const leftParent = leftDocument.resolve(leftParentSlices.slice(0, leftParentSlices.length - 2).join('/'));
@@ -121,13 +74,16 @@ export function PerformBaseLevelComparison(
                 rightIdentifiers: extractIdentifiers(rightControl, identfiers),
                 status: changes.length > 0 ? 'changed' : 'ok',
                 changes,
+                // include moveDetails if one of the identifiers has changed
                 moveDetails: identfiers.reduce(
                     (flag, identifier) =>
                         flag ||
                         moveDetails.leftParentIdentifiers?.[identifier] !==
                             moveDetails.rightParentIdentifiers?.[identifier],
                     false,
-                ),
+                )
+                    ? moveDetails
+                    : undefined,
             } as BaseLevelComparison;
         }),
     ];
