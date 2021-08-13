@@ -267,30 +267,10 @@ export class Comparator {
     ): [LeftArrayItem[], RightArrayItem[], ArraySubElement[], number] {
         let changeCount = 0;
 
-        const leftOnly: LeftArrayItem[] = instructions.unmatchedLeftIndices.map((i) => {
-            const item = left[i];
-            changeCount += countSubElements(item.raw);
-
-            return {
-                leftPointer: item.pointer,
-                leftElement: item.raw,
-            };
-        });
-
-        const rightOnly: RightArrayItem[] = instructions.unmatchedRightIndices.map((i) => {
-            const item = right[i];
-            changeCount += countSubElements(item.raw);
-
-            return {
-                rightPointer: item.pointer,
-                rightElement: item.raw,
-            };
-        });
-
         const changes: ArraySubElement[] = [];
         // iterate through all elements that have been matched and compare their sub-elements
         for (const match of instructions.matchedIndices) {
-            if (match.confidence && match.confidence >= this.config.minimumConfidenceThreshold) {
+            if (match.confidence != undefined && match.confidence < this.config.minimumConfidenceThreshold) {
                 // discard matches with a confidence under the threshold
                 instructions.unmatchedLeftIndices.push(match.leftElementIndex);
                 instructions.unmatchedRightIndices.push(match.rightElementIndex);
@@ -313,6 +293,26 @@ export class Comparator {
                 changeCount += subChangeCount;
             }
         }
+
+        const leftOnly: LeftArrayItem[] = instructions.unmatchedLeftIndices.map((i) => {
+            const item = left[i];
+            changeCount += countSubElements(item.raw);
+
+            return {
+                leftPointer: item.pointer,
+                leftElement: item.raw,
+            };
+        });
+
+        const rightOnly: RightArrayItem[] = instructions.unmatchedRightIndices.map((i) => {
+            const item = right[i];
+            changeCount += countSubElements(item.raw);
+
+            return {
+                rightPointer: item.pointer,
+                rightElement: item.raw,
+            };
+        });
 
         return [leftOnly, rightOnly, changes, changeCount];
     }

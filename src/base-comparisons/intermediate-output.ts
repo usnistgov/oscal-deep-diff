@@ -19,7 +19,7 @@ export interface BaseLevelComparison {
     leftIdentifiers?: { [key: string]: string };
     rightIdentifiers?: { [key: string]: string };
 
-    status: 'ok' | 'added' | 'withdrawn' | 'changed';
+    status: 'ok' | 'added' | 'removed' | 'changed';
 
     changes?: ChangeDetails[];
 
@@ -40,7 +40,7 @@ export function performBaseLevelComparison(
         ...comparison.leftOnly.map((leftOnly) => {
             return {
                 leftIdentifiers: extractIdentifiers(leftDocument.resolve(leftOnly.leftPointer), identfiers),
-                status: 'withdrawn',
+                status: 'removed',
             } as BaseLevelComparison;
         }),
         ...comparison.rightOnly.map((rightOnly) => {

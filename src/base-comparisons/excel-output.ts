@@ -56,7 +56,7 @@ const CFR_CHANGE_STATUS: ExcelJS.ConditionalFormattingRule[] = [
         type: 'containsText',
         priority: 6,
         operator: 'containsText',
-        text: 'withdrawn',
+        text: 'removed',
         style: {
             fill: { type: 'pattern', pattern: 'solid', bgColor: COLOR_RED },
         },
@@ -228,8 +228,8 @@ function generateBlcDetails(changes: BaseLevelComparison[], workbook: ExcelJS.Wo
                             ...identifierColumnsForComparison(change, identifiers),
                             subChange.field ?? '',
                             subChange.resolvedField ?? '',
-                            // status can be added | withdrawn | changed
-                            subChange.leftValue ? (subChange.rightValue ? 'changed' : 'withdrawn') : 'added',
+                            // status can be added | removed | changed
+                            subChange.leftValue ? (subChange.rightValue ? 'changed' : 'removed') : 'added',
                             subChange.leftValue ? clipText(JSON.stringify(subChange.leftValue)) : undefined,
                             subChange.rightValue ? clipText(JSON.stringify(subChange.rightValue)) : undefined,
                         ]) ?? [],
