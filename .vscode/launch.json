@@ -39,7 +39,7 @@
                 "--rightDoc",
                 "vault/NIST_SP-800-53_rev5_catalog.json",
                 "--write",
-                "vault/comparison_NIST_SP-800-53_rev4_rev5_catalog.json",
+                "vault/out.json",
                 "--config",
                 "vault/config.yaml",
                 "--controlLevelComparison"

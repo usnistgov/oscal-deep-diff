@@ -1,4 +1,11 @@
-import { ArrayChanged, Change, PropertyChanged, PropertyLeftOnly, PropertyRightOnly } from '../comparisons';
+import {
+    ArrayChanged,
+    Change,
+    PropertyChanged,
+    PropertyLeftOnly,
+    PropertyRightOnly,
+    SelectionResults,
+} from '../comparisons';
 import { TrackedElement } from '../tracked';
 import { BaseLevelComparison, ChangeDetails } from './intermediate-output';
 
@@ -37,7 +44,7 @@ export function flattenControlChanges(
     leftParent: TrackedElement,
     rightParent: TrackedElement,
 ): void {
-    if (change instanceof ArrayChanged) {
+    if (change instanceof ArrayChanged || change instanceof SelectionResults) {
         change.leftOnly.forEach((leftOnly) => {
             const field = leftOnly.leftPointer.slice(leftParent.pointer.length + 1);
             detailsList.push({

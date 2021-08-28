@@ -104,6 +104,7 @@ export abstract class AbstractMatchConstraint {
                 instructions.matchedIndices.push({
                     leftElementIndex,
                     rightElementIndex: topScoreIndex,
+                    confidence: topScore,
                 });
             }
         }

@@ -25,6 +25,11 @@ constraints:
     matchType: literal
     propertyName: id
     secondaryProperties: []
+  parts:
+    type: ObjectPropertyMatchConstraint
+    matchType: string-similarity
+    propertyName: prose
+    secondaryProperties: []
 excludeContent: false
 outOfTreeMatching: true
 disableMemoization: false

@@ -72,10 +72,6 @@ export class ArrayChanged {
     matchProperty?: string;
     matchMethod?: string;
 
-    hasChanges(): boolean {
-        return this.rightOnly.length > 0 || this.leftOnly.length > 0 || this.subChanges.length > 0;
-    }
-
     constructor(
         leftPointer: string,
         rightPointer: string,
@@ -99,11 +95,38 @@ export class ArrayChanged {
     }
 }
 
-export type Change = PropertyRightOnly | PropertyLeftOnly | PropertyChanged | ArrayChanged;
+export class SelectionResults {
+    change = 'selection';
+    leftRoot: string;
+    rightRoot: string;
+
+    leftOnly: LeftArrayItem[];
+    rightOnly: RightArrayItem[];
+
+    subChanges: ArraySubElement[];
+
+    constructor(
+        leftRoot: string,
+        rightRoot: string,
+        leftOnly: LeftArrayItem[],
+        rightOnly: RightArrayItem[],
+        subChanges: ArraySubElement[],
+    ) {
+        this.leftRoot = leftRoot;
+        this.rightRoot = rightRoot;
+
+        this.leftOnly = leftOnly;
+        this.rightOnly = rightOnly;
+
+        this.subChanges = subChanges;
+    }
+}
+
+export type Change = PropertyRightOnly | PropertyLeftOnly | PropertyChanged | ArrayChanged | SelectionResults;
 
 export type ComparisonResult = [Change[], number];
 
-export interface Comparison {
+export interface DocumentComparison {
     leftDocument: string;
     rightDocument: string;
     changes: Change[];
