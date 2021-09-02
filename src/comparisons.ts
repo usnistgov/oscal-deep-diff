@@ -1,4 +1,4 @@
-import { JSONValue, JSONObject } from './utils';
+import { JSONValue } from './utils/utils';
 
 export class PropertyRightOnly {
     change = 'property_right_only';
@@ -130,28 +130,4 @@ export interface DocumentComparison {
     leftDocument: string;
     rightDocument: string;
     changes: Change[];
-}
-
-/**
- * To be used with `Json.stringify() in order to transform the default
- * comparator output object to a more compressed format that excludes all
- * content from either document.
- * @param key
- * @param value
- */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-explicit-any
-export function excludeContentReplacer(key: string, value: any): any | undefined {
-    switch (key) {
-        case 'leftElement':
-        case 'rightElement':
-        case 'deletedElement':
-        case 'addedElement':
-            return undefined;
-        case 'addedItems':
-            return value.map((x: JSONObject) => x['rightPointer']);
-        case 'removedItems':
-            return value.map((x: JSONObject) => x['leftPointer']);
-        default:
-            return value;
-    }
 }

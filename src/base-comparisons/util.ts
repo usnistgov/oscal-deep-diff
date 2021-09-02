@@ -6,7 +6,7 @@ import {
     PropertyRightOnly,
     SelectionResults,
 } from '../comparisons';
-import { TrackedElement } from '../tracked';
+import { TrackedElement } from '../utils/tracked';
 import { BaseLevelComparison, ChangeDetails } from './intermediate-output';
 
 function padNumericIdentifier(identifier: string, digits = 3) {

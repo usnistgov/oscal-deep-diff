@@ -1,4 +1,4 @@
-import Cache from './cache';
+import Cache from './utils/cache';
 import {
     ArrayChanged,
     Change,
@@ -9,9 +9,9 @@ import {
     PropertyRightOnly,
     SelectionResults,
 } from './comparisons';
-import { MatcherGenerator, MatcherResults, scoringMatcherFactory } from './refactor_matching';
-import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject } from './tracked';
-import { countSubElements, getPropertyIntersection, getPropertyUnion, JSONValue, select } from './utils';
+import { MatcherGenerator, MatcherResults, scoringMatcherFactory } from './matching';
+import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject } from './utils/tracked';
+import { countSubElements, getPropertyIntersection, getPropertyUnion, JSONValue, select } from './utils/utils';
 
 const INF_CHANGES: MatcherResults = [[], [], [], Infinity];
 

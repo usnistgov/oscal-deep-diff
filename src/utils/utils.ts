@@ -1,4 +1,4 @@
-import { TrackedElement, TrackedObject, TrackedArray } from '.';
+import { TrackedElement, TrackedObject, TrackedArray } from '..';
 
 export type JSONPrimitive = string | number | boolean | null;
 export type JSONValue = JSONPrimitive | JSONObject | JSONArray;
