@@ -1,4 +1,4 @@
-import { JSONValue } from './utils/utils';
+import { JSONValue } from './utils/json';
 
 export class PropertyRightOnly {
     change = 'property_right_only';

@@ -1,4 +1,4 @@
 export * from './comparator';
-export * from './comparisons';
+export * from './results';
 export * from './utils/tracked';
-export * from './utils/utils';
+export * from './utils/json';

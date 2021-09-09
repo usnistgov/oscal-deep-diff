@@ -1,4 +1,4 @@
-import { getType, JSONArray, JSONObject, JSONPrimitive, JSONValue, testPointerCondition } from './utils';
+import { getType, JSONArray, JSONObject, JSONPrimitive, JSONValue, testPointerCondition } from './json';
 
 export function trackRawObject(pointer: string, raw: JSONValue): TrackedElement {
     const type = getType(raw);
@@ -115,5 +115,47 @@ export class TrackedObject extends TrackedElement {
 
     public getAll(): TrackedElement[] {
         return [...Object.getOwnPropertyNames(this.raw).map((key) => this.resolve(key))];
+    }
+}
+
+/**
+ * Flatten all elements in the right and left document that match some baseComparisonPaths condition
+ * @param left A tracked element at the root of the document
+ * @param right A tracked element at the root of the document
+ * @param paths The paths that should be included in the flattening operation
+ * @returns An array of left and right elements at some common path
+ */
+export function select(
+    left: TrackedElement,
+    right: TrackedElement,
+    paths: string[],
+): [TrackedElement[], TrackedElement[]] {
+    const leftBaseObjects: TrackedElement[] = [];
+    const rightBaseObjects: TrackedElement[] = [];
+
+    traverseMatchSelectionPaths(left, paths, leftBaseObjects);
+    traverseMatchSelectionPaths(right, paths, rightBaseObjects);
+
+    return [leftBaseObjects, rightBaseObjects];
+}
+
+/**
+ * A recursive function that traverses the children of a tracked element and appends all children
+ * that match one of the baseComparisonPaths conditions.
+ * @param element The element whose children to traverse. To traverse an entire document, pass the root element.
+ * @param paths The paths that should be included.
+ * @param matched The array of tracked elements to build. This function will MODIFY the array of tracked elements as a side-effect.
+ */
+function traverseMatchSelectionPaths(element: TrackedElement, paths: string[], matched: TrackedElement[]) {
+    for (const baseComparisonPath of paths) {
+        if (element.testPointerCondition(baseComparisonPath)) {
+            matched.push(element);
+            break; // only append a given base object once
+        }
+    }
+
+    // object and array types are compared, primitives are skipped
+    if (element instanceof TrackedObject || element instanceof TrackedArray) {
+        element.getAll().forEach((sub) => traverseMatchSelectionPaths(sub, paths, matched));
     }
 }

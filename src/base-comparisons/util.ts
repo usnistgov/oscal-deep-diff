@@ -5,7 +5,7 @@ import {
     PropertyLeftOnly,
     PropertyRightOnly,
     SelectionResults,
-} from '../comparisons';
+} from '../results';
 import { TrackedElement } from '../utils/tracked';
 import { BaseLevelComparison, ChangeDetails } from './intermediate-output';
 

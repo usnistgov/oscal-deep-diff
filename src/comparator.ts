@@ -8,18 +8,33 @@ import {
     PropertyLeftOnly,
     PropertyRightOnly,
     SelectionResults,
-} from './comparisons';
-import { MatcherGenerator, MatcherResults, scoringMatcherFactory } from './matching';
-import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject } from './utils/tracked';
-import { countSubElements, getPropertyIntersection, getPropertyUnion, JSONValue, select } from './utils/utils';
+} from './results';
+import { MatcherResults } from './matching';
+import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject, select } from './utils/tracked';
+import { countSubElements, getPropertyUnion, JSONValue, testPointerCondition } from './utils/json';
+import { BASE_SETTINGS, mergeSettings, PartialSettings, Settings } from './settings';
 
+/**
+ * Dummy matcher results representing infinite changes
+ */
 const INF_CHANGES: MatcherResults = [[], [], [], Infinity];
 
-// Tuple of array changes and number of subchanges
+/**
+ * Helper result representing an empty set of changes
+ */
 const NO_CHANGES: ComparisonResult = [[], 0];
 
 export default class Comparator {
+    /**
+     * The cache stores the results of a comparison on array types
+     */
     private cache = new Cache<ComparisonResult>();
+
+    private settingsCandidates: { [key: string]: PartialSettings };
+
+    constructor(settingsCandidates?: { [key: string]: Settings }) {
+        this.settingsCandidates = settingsCandidates ?? {};
+    }
 
     public compare(left: JSONValue, leftSource: string, right: JSONValue, rightSource: string): DocumentComparison {
         const leftRoot = trackRawObject('', left);
@@ -34,9 +49,22 @@ export default class Comparator {
         };
     }
 
+    private settingsForPointer(pointer: string, base: Settings = BASE_SETTINGS) {
+        return mergeSettings(
+            base,
+            ...Object.entries(this.settingsCandidates)
+                .filter(([condition]) => testPointerCondition(pointer, condition))
+                .map(([, settings]) => settings),
+        );
+    }
+
+    /**
+     * This recursive function is called for each element pair being compared.
+     *
+     * This method gets the settings appropriate for the element pair, and then calls the correct comparison operation.
+     */
     private compareElements(left: TrackedElement, right: TrackedElement): ComparisonResult {
-        // get settings
-        const settings = BASE_SETTINGS;
+        const settings = this.settingsForPointer(right.pointer);
 
         // check if elements have been marked as ignored
         for (const ignoreCondition of settings.ignore) {
@@ -136,64 +164,3 @@ export default class Comparator {
             }, INF_CHANGES);
     }
 }
-
-type Settings = {
-    ignore: string[];
-    ignoreCase: boolean;
-    ignoreMatchProperty: string[];
-    matcherGenerators: MatcherGenerator[];
-    selectionPaths: string[];
-    priority: number;
-};
-
-const BASE_SETTINGS: Settings = {
-    ignore: [],
-    ignoreCase: false,
-    ignoreMatchProperty: [],
-    matcherGenerators: [
-        (left, right) => {
-            if (left.length === 0 || right.length === 0) {
-                return [];
-            }
-            const lSample = left[0];
-            const rSample = right[0];
-            if (lSample instanceof TrackedArray && rSample instanceof TrackedArray) {
-                throw new Error('Array of array comparison is not supported');
-            } else if (lSample instanceof TrackedObject && rSample instanceof TrackedObject) {
-                return scoringMatcherFactory(
-                    getPropertyIntersection(lSample.raw, rSample.raw).map((prop) => (left, right) => {
-                        if (!(left instanceof TrackedObject && right instanceof TrackedObject)) {
-                            throw new Error('Non-homogenous array of items cannot be compared');
-                        }
-                        return left.raw[prop] === right.raw[prop] ? 1 : 0;
-                    }),
-                );
-            } else if (lSample instanceof TrackedPrimitive && rSample instanceof TrackedPrimitive) {
-                return scoringMatcherFactory([(left, right) => (left.raw === right.raw ? 1 : 0)]);
-            } else {
-                throw new Error('Mismatched types are not supported');
-            }
-        },
-    ],
-    selectionPaths: [],
-    priority: 0,
-};
-
-// Like Partial<T>, but requires that some key K of T is defined
-// type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
-//
-// function mergeSettings(
-//     base: ComparisonSettings,
-//     // each override requires at least 'priority' is defined
-//     ...overrides: AtLeast<ComparisonSettings, 'priority'>[]
-// ): ComparisonSettings {
-//     overrides
-//         .sort((a, b) => (a.priority > b.priority ? 1 : a.priority < b.priority ? -1 : 0))
-//         .forEach((override) => {
-//             base = {
-//                 ...base,
-//                 ...override,
-//             };
-//         });
-//     return base;
-// }

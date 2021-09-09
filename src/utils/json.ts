@@ -1,5 +1,4 @@
-import { TrackedElement, TrackedObject, TrackedArray } from '..';
-
+// raw json types
 export type JSONPrimitive = string | number | boolean | null;
 export type JSONValue = JSONPrimitive | JSONObject | JSONArray;
 export type JSONObject = { [member: string]: JSONValue };
@@ -25,7 +24,6 @@ export function getPropertyIntersection(leftDocument: JSONObject, rightDocument:
 
 /**
  * Will return if element is an object, array, null, or default to typeof
- * @param element
  */
 export function getType(element: JSONValue): string {
     return typeof element === 'object'
@@ -88,9 +86,6 @@ export function resolvePointer(obj: JSONValue, pointer: string): JSONValue {
     return obj;
 }
 
-export type Condition = string;
-export type Pointer = string;
-
 /**
  * Tests if a pointer matches a certain condition
  *
@@ -141,46 +136,4 @@ export function countSubElements(element: JSONValue): number {
             return 1;
     }
     return count;
-}
-
-/**
- * Flatten all elements in the right and left document that match some baseComparisonPaths condition
- * @param left A tracked element at the root of the document
- * @param right A tracked element at the root of the document
- * @param paths The paths that should be included in the flattening operation
- * @returns An array of left and right elements at some common path
- */
-export function select(
-    left: TrackedElement,
-    right: TrackedElement,
-    paths: string[],
-): [TrackedElement[], TrackedElement[]] {
-    const leftBaseObjects: TrackedElement[] = [];
-    const rightBaseObjects: TrackedElement[] = [];
-
-    traverseMatchSelectionPaths(left, paths, leftBaseObjects);
-    traverseMatchSelectionPaths(right, paths, rightBaseObjects);
-
-    return [leftBaseObjects, rightBaseObjects];
-}
-
-/**
- * A recursive function that traverses the children of a tracked element and appends all children
- * that match one of the baseComparisonPaths conditions.
- * @param element The element whose children to traverse. To traverse an entire document, pass the root element.
- * @param paths The paths that should be included.
- * @param matched The array of tracked elements to build. This function will MODIFY the array of tracked elements as a side-effect.
- */
-function traverseMatchSelectionPaths(element: TrackedElement, paths: string[], matched: TrackedElement[]) {
-    for (const baseComparisonPath of paths) {
-        if (element.testPointerCondition(baseComparisonPath)) {
-            matched.push(element);
-            break; // only append a given base object once
-        }
-    }
-
-    // object and array types are compared, primitives are skipped
-    if (element instanceof TrackedObject || element instanceof TrackedArray) {
-        element.getAll().forEach((sub) => traverseMatchSelectionPaths(sub, paths, matched));
-    }
 }

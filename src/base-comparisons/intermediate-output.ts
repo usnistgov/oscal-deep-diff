@@ -1,6 +1,6 @@
-import { ArrayChanged } from '../comparisons';
+import { ArrayChanged } from '../results';
 import { TrackedElement } from '../utils/tracked';
-import { JSONValue } from '../utils/utils';
+import { JSONValue } from '../utils/json';
 import { extractIdentifiers, flattenControlChanges, sortBaseLevelComparison } from './util';
 
 export interface ChangeDetails {

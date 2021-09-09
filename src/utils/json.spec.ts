@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { getPropertyUnion, getPropertyIntersection, getType, resolvePointer, testPointerCondition } from './utils';
+import { getPropertyUnion, getPropertyIntersection, getType, resolvePointer, testPointerCondition } from './json';
 
 /*
  * Tests for util.ts
