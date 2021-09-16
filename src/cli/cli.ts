@@ -1,32 +1,40 @@
 import * as fs from 'fs';
-import { parseOptions } from './cli-utils';
+import { parseCliOptions } from './cli-utils';
 import Comparator from '../comparator';
-import { toJSON } from 'yaml/util';
+import { parseConfig } from '../configuration';
+import { performBaseLevelComparison } from '../base-comparisons/intermediate-output';
+import { SelectionResults } from '../results';
+import { trackRawObject } from '../utils/tracked';
+import { generateBlcSpreadsheet } from '../base-comparisons/excel-output';
+import YAML from 'yaml';
 
-const options = parseOptions();
+const cliOptions = parseCliOptions();
+const config = parseConfig(YAML.parse(fs.readFileSync(cliOptions.config).toString()));
 
-const comparator = new Comparator();
+const comparator = new Comparator(config.comparatorConfig);
 
-const leftDoc = JSON.parse(fs.readFileSync(options.leftDoc).toString());
-const rightDoc = JSON.parse(fs.readFileSync(options.rightDoc).toString());
+const leftDoc = JSON.parse(fs.readFileSync(config.leftPath).toString());
+const rightDoc = JSON.parse(fs.readFileSync(config.rightPath).toString());
 
-const comparison = comparator.compare(leftDoc, options.leftDoc, rightDoc, options.rightDoc);
+const comparison = comparator.compare(leftDoc, config.leftPath, rightDoc, config.rightPath);
 
-console.log(`Saving compared document to ${options.write}`);
-fs.writeFileSync(options.write, toJSON(comparison));
+console.log(`Saving compared document to ${config.outputPath}`);
+fs.writeFileSync(config.outputPath, JSON.stringify(comparison));
 
-// if (options.controlLevelComparison) {
-//     if (!(comparator.comparison.changes.length === 1 && comparator.comparison.changes[0] instanceof ArrayChanged)) {
-//         throw new Error('ControlLevelComparison can only be used with a baseLevelComparison');
-//     }
+if (config.baseComparison) {
+    if (!(comparison.changes.length === 1 && comparison.changes[0] instanceof SelectionResults)) {
+        throw new Error('ControlLevelComparison can only be used with a baseLevelComparison');
+    }
 
-//     const data = performBaseLevelComparison(
-//         comparator.comparison.changes[0],
-//         trackRawObject('', leftDoc),
-//         trackRawObject('', rightDoc),
-//     );
+    const blc = performBaseLevelComparison(
+        comparison.changes[0],
+        trackRawObject('', leftDoc),
+        trackRawObject('', rightDoc),
+    );
 
-//     fs.writeFileSync(options.write + '.clc.json', JSON.stringify(data, null, 2));
-
-//     generateBlcSpreadsheet(data, options.write + '.clc.xlsx');
-// }
+    if (config.baseComparison.outputType === 'raw') {
+        fs.writeFileSync(config.baseComparison.outputPath, JSON.stringify(blc, null, 2));
+    } else if (config.baseComparison.outputType === 'excel') {
+        generateBlcSpreadsheet(blc, config.baseComparison.outputPath);
+    }
+}

@@ -77,10 +77,10 @@ export abstract class MatcherContainer {
     public static fromDict(dict: JSONObject): MatcherContainer {
         if ('type' in dict && typeof dict.type === 'string') {
             switch (dict.type) {
-                case ObjectPropertyMatcherContainer.constructor.name:
+                case ObjectPropertyMatcherContainer.name:
                     return ObjectPropertyMatcherContainer.fromDict(dict);
-                case OptimalMatchContainer.constructor.name:
-                    return OptimalMatchContainer.fromDict(dict);
+                case OptimalMatcherContainer.name:
+                    return OptimalMatcherContainer.fromDict(dict);
                 default:
                     throw new Error('Error deserializing matcher container: unknown type');
             }
@@ -90,7 +90,7 @@ export abstract class MatcherContainer {
 }
 
 export class ObjectPropertyMatcherContainer implements MatcherContainer {
-    private matchProperty: string;
+    private property: string;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     generate(_: TrackedElement[], __: TrackedElement[]): Matcher[] {
@@ -99,8 +99,8 @@ export class ObjectPropertyMatcherContainer implements MatcherContainer {
                 if (
                     left instanceof TrackedObject &&
                     right instanceof TrackedObject &&
-                    this.matchProperty in left.raw &&
-                    this.matchProperty in right.raw
+                    this.property in left.raw &&
+                    this.property in right.raw
                 ) {
                     return left.raw.matchProperty === right.raw.matchProperty ? 1 : 0;
                 }
@@ -109,19 +109,19 @@ export class ObjectPropertyMatcherContainer implements MatcherContainer {
         ]);
     }
 
-    constructor(matchProperty: string) {
-        this.matchProperty = matchProperty;
+    constructor(property: string) {
+        this.property = property;
     }
 
     static fromDict(dict: JSONObject): MatcherContainer {
-        if ('matchProperty' in dict && typeof dict.matchProperty === 'string') {
-            return new ObjectPropertyMatcherContainer(dict.matchProperty);
+        if ('property' in dict && typeof dict.property === 'string') {
+            return new ObjectPropertyMatcherContainer(dict.property);
         }
         throw new Error('Error deserializing ObjectPropertyMatchContainer');
     }
 }
 
-export class OptimalMatchContainer implements MatcherContainer {
+export class OptimalMatcherContainer implements MatcherContainer {
     // TODO: add ignore options
 
     generate(left: TrackedElement[], right: TrackedElement[]): Matcher[] {
@@ -151,6 +151,6 @@ export class OptimalMatchContainer implements MatcherContainer {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     static fromDict(_: JSONObject): MatcherContainer {
-        return new OptimalMatchContainer();
+        return new OptimalMatcherContainer();
     }
 }

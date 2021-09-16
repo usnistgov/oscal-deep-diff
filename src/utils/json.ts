@@ -103,6 +103,10 @@ export function testPointerCondition(pointer: string, condition: string): boolea
         throw new Error(`Invalid path '${pointer}', must start with a '/'`);
     }
 
+    if (pointer === '' && condition === '/') {
+        return true;
+    }
+
     // if a condition starts with '/', constrain regex to match with beginning of string
     const patternPrefix = condition.startsWith('/') ? '^' : '';
 

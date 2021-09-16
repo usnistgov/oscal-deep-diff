@@ -12,12 +12,12 @@ import {
 import { MatcherResults } from './matching';
 import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject, select } from './utils/tracked';
 import { countSubElements, getPropertyUnion, JSONValue, testPointerCondition } from './utils/json';
-import { BASE_SETTINGS, mergeSettings, PartialSettings, Settings } from './settings';
-
-/**
- * Dummy matcher results representing infinite changes
- */
-const INF_CHANGES: MatcherResults = [[], [], [], Infinity];
+import {
+    BASE_SETTINGS,
+    mergePartialComparatorStepConfigs,
+    ComparatorStepConfig,
+    ComparatorConfig,
+} from './configuration';
 
 /**
  * Helper result representing an empty set of changes
@@ -30,9 +30,9 @@ export default class Comparator {
      */
     private cache = new Cache<ComparisonResult>();
 
-    private settingsCandidates: { [key: string]: PartialSettings };
+    private settingsCandidates: ComparatorConfig;
 
-    constructor(settingsCandidates?: { [key: string]: Settings }) {
+    constructor(settingsCandidates?: ComparatorConfig) {
         this.settingsCandidates = settingsCandidates ?? {};
     }
 
@@ -49,8 +49,8 @@ export default class Comparator {
         };
     }
 
-    private settingsForPointer(pointer: string, base: Settings = BASE_SETTINGS) {
-        return mergeSettings(
+    private settingsForPointer(pointer: string, base: ComparatorStepConfig = BASE_SETTINGS) {
+        return mergePartialComparatorStepConfigs(
             base,
             ...Object.entries(this.settingsCandidates)
                 .filter(([condition]) => testPointerCondition(pointer, condition))
@@ -75,8 +75,10 @@ export default class Comparator {
 
         // check selection paths
         if (settings.selectionPaths.length !== 0) {
+            const [leftSubElems, rightSubElems] = select(left, right, settings.selectionPaths);
             const [leftOnly, rightOnly, subElements, changeCount] = this.compareElementArray(
-                ...select(left, right, settings.selectionPaths),
+                leftSubElems,
+                rightSubElems,
                 settings,
             );
             return [[new SelectionResults(left.pointer, right.pointer, leftOnly, rightOnly, subElements)], changeCount];
@@ -122,7 +124,11 @@ export default class Comparator {
         return [changes, changeCount];
     }
 
-    private comparePrimitives(left: TrackedPrimitive, right: TrackedPrimitive, settings: Settings): ComparisonResult {
+    private comparePrimitives(
+        left: TrackedPrimitive,
+        right: TrackedPrimitive,
+        settings: ComparatorStepConfig,
+    ): ComparisonResult {
         if (typeof left.raw === 'string' && typeof right.raw === 'string' && settings.ignoreCase) {
             if (left.raw.toLowerCase() != right.raw.toLowerCase()) {
                 return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 1];
@@ -133,7 +139,7 @@ export default class Comparator {
         return NO_CHANGES;
     }
 
-    private compareArrays(left: TrackedArray, right: TrackedArray, settings: Settings): ComparisonResult {
+    private compareArrays(left: TrackedArray, right: TrackedArray, settings: ComparatorStepConfig): ComparisonResult {
         const cached = this.cache.get(left.pointer, right.pointer);
         if (cached) {
             return cached;
@@ -154,13 +160,20 @@ export default class Comparator {
         return result;
     }
 
-    private compareElementArray(left: TrackedElement[], right: TrackedElement[], settings: Settings): MatcherResults {
+    private compareElementArray(
+        left: TrackedElement[],
+        right: TrackedElement[],
+        settings: ComparatorStepConfig,
+    ): MatcherResults {
         return settings.matcherGenerators
-            .map((generator) => generator(left, right))
+            .map((container) => container.generate(left, right))
             .flat()
-            .reduce((prev, matcher): MatcherResults => {
-                const results = matcher(left, right, this.compareElements);
-                return prev[3] < results[3] ? prev : results;
-            }, INF_CHANGES);
+            .reduce<MatcherResults>(
+                (prev, matcher): MatcherResults => {
+                    const results = matcher(left, right, this.compareElements);
+                    return prev[3] < results[3] ? prev : results;
+                },
+                [[], [], [], Infinity],
+            );
     }
 }

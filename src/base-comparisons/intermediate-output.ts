@@ -1,7 +1,7 @@
-import { ArrayChanged } from '../results';
 import { TrackedElement } from '../utils/tracked';
 import { JSONValue } from '../utils/json';
 import { extractIdentifiers, flattenControlChanges, sortBaseLevelComparison } from './util';
+import { SelectionResults } from '..';
 
 export interface ChangeDetails {
     field: string;
@@ -27,15 +27,11 @@ export interface BaseLevelComparison {
 }
 
 export function performBaseLevelComparison(
-    comparison: ArrayChanged,
+    comparison: SelectionResults,
     leftDocument: TrackedElement,
     rightDocument: TrackedElement,
     identfiers = ['id', 'title'],
 ): BaseLevelComparison[] {
-    if (!(comparison instanceof ArrayChanged)) {
-        throw new Error('Malformed base-level comparison');
-    }
-
     const blc: BaseLevelComparison[] = [
         ...comparison.leftOnly.map((leftOnly) => {
             return {
