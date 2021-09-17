@@ -21,14 +21,14 @@ export function scoringMatcherFactory(
                     const [topScoreIndex] = rightArrayIndices.reduce(
                         (prev, rightIndex) => {
                             const score = scorer(leftElement, right[rightIndex]);
-                            return score > prev[1] && score > minConfidence ? [rightIndex, score] : prev;
+                            return score > prev[1] && score >= minConfidence ? [rightIndex, score] : prev;
                         },
                         [-1, 0],
                     );
                     if (topScoreIndex === -1) {
                         unmatchedLeftIndices.push(leftIndex);
                     } else {
-                        rightArrayIndices.splice(rightArrayIndices.indexOf(topScoreIndex));
+                        rightArrayIndices.splice(rightArrayIndices.indexOf(topScoreIndex), 1);
                         matchedIndices.push([leftIndex, topScoreIndex]);
                     }
                 });
@@ -122,7 +122,7 @@ export class ObjectPropertyMatcherContainer implements MatcherContainer {
 }
 
 export class OptimalMatcherContainer implements MatcherContainer {
-    // TODO: add ignore options
+    // TODO: add ignore options, options for string-similarity
 
     generate(left: TrackedElement[], right: TrackedElement[]): Matcher[] {
         if (left.length === 0 || right.length === 0) {

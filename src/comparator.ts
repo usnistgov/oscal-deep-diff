@@ -170,7 +170,9 @@ export default class Comparator {
             .flat()
             .reduce<MatcherResults>(
                 (prev, matcher): MatcherResults => {
-                    const results = matcher(left, right, this.compareElements);
+                    // Surround method passed as fp in clojure to prevent orphaned `this`
+                    // https://github.com/Microsoft/TypeScript/wiki/FAQ#why-does-this-get-orphaned-in-my-instance-methods
+                    const results = matcher(left, right, (l, r) => this.compareElements(l, r));
                     return prev[3] < results[3] ? prev : results;
                 },
                 [[], [], [], Infinity],
