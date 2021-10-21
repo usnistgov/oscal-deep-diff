@@ -1,4 +1,4 @@
-// Via https://medium.com/@sumn2u/string-similarity-comparision-in-js-with-examples-4bae35f13968
+// Adopted from https://medium.com/@sumn2u/string-similarity-comparision-in-js-with-examples-4bae35f13968
 
 export function jaroWrinkerSimilarity(s1: string, s2: string): number {
     let m = 0;
@@ -67,4 +67,57 @@ export function jaroWrinkerSimilarity(s1: string, s2: string): number {
     }
 
     return weight;
+}
+
+function termFreqMap(s: string): { [key: string]: number } {
+    return s.split(' ').reduce<{ [key: string]: number }>((acc, word) => {
+        acc[word] = (acc[word] ?? 0) + 1;
+        return acc;
+    }, {});
+}
+
+function termFreqMapToVec(map: { [key: string]: number }, set: Set<string>): number[] {
+    return [...set].map((item) => map[item] ?? 0);
+}
+
+function vecDotProduct(v1: number[], v2: number[]): number {
+    let dotProduct = 0;
+    for (let i = 0; i < v1.length; i++) {
+        dotProduct += v1[i] * v2[i];
+    }
+    return dotProduct;
+}
+
+function vecMagnitude(vec: number[]): number {
+    return Math.sqrt(vec.reduce((acc, curr) => acc + curr ** 2, 0));
+}
+
+export function cosineSimilarity(s1: string, s2: string): number {
+    const termFreqMap1 = termFreqMap(s1);
+    const termFreqMap2 = termFreqMap(s2);
+
+    const termsSet = new Set<string>([...Object.keys(termFreqMap1), ...Object.keys(termFreqMap2)]);
+
+    const termFreqVec1 = termFreqMapToVec(termFreqMap1, termsSet);
+    const termFreqVec2 = termFreqMapToVec(termFreqMap2, termsSet);
+
+    return vecDotProduct(termFreqVec1, termFreqVec2) / (vecMagnitude(termFreqVec2) * vecMagnitude(termFreqVec2));
+}
+
+export default function stringSimilarity(s1: string, s2: string, method: string, ignoreCase: boolean): number {
+    if (ignoreCase) {
+        s1 = s1.toLowerCase();
+        s2 = s2.toLowerCase();
+    }
+
+    switch (method) {
+        case 'jaro-wrinker':
+            return jaroWrinkerSimilarity(s1, s2);
+        case 'cosine':
+            return cosineSimilarity(s1, s2);
+        case 'absolute':
+            return s1 === s2 ? 1 : 0;
+        default:
+            throw new Error(`Unknown string-similarity method '${method}'`);
+    }
 }

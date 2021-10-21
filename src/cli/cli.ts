@@ -23,7 +23,9 @@ fs.writeFileSync(config.outputPath, JSON.stringify(comparison));
 
 if (config.baseComparison) {
     if (!(comparison.changes.length === 1 && comparison.changes[0] instanceof SelectionResults)) {
-        throw new Error('ControlLevelComparison can only be used with a baseLevelComparison');
+        throw new Error(
+            'BaseLevelComparison can only be used with a comparison with a top-level selection path setting',
+        );
     }
 
     const blc = performBaseLevelComparison(
@@ -35,6 +37,6 @@ if (config.baseComparison) {
     if (config.baseComparison.outputType === 'raw') {
         fs.writeFileSync(config.baseComparison.outputPath, JSON.stringify(blc, null, 2));
     } else if (config.baseComparison.outputType === 'excel') {
-        generateBlcSpreadsheet(blc, config.baseComparison.outputPath);
+        generateBlcSpreadsheet(blc, config.baseComparison.outputPath, config.baseComparison.identifiers);
     }
 }

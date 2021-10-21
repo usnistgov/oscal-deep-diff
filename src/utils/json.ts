@@ -121,19 +121,21 @@ export function testPointerCondition(pointer: string, condition: string): boolea
     return pattern.test(pointer);
 }
 
-export function countSubElements(element: JSONValue): number {
+export function countSubElements(element: JSONValue, shallow = false): number {
     let count = 0;
     switch (getType(element)) {
         case 'object':
             element = element as JSONObject;
             for (const property of Object.getOwnPropertyNames(element)) {
-                count += countSubElements(element[property]);
+                count += countSubElements(element[property], shallow);
             }
             break;
         case 'array':
-            element = element as JSONArray;
-            for (const subElement of element) {
-                count += countSubElements(subElement);
+            if (!shallow) {
+                element = element as JSONArray;
+                for (const subElement of element) {
+                    count += countSubElements(subElement);
+                }
             }
             break;
         default:

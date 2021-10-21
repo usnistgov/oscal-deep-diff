@@ -7,13 +7,14 @@
     "outDir": "lib",
     "rootDir": "src",
     "strict": true,
-    "types": ["node", "mocha", "chai", "commander"],
+    "types": ["node", "mocha", "chai", "commander", "munkres-js"],
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "sourceMap": true,
-    "allowJs": false
+    "allowJs": false,
+    "typeRoots": ["./types", "./node_modules/@types"]
   },
   "include": ["./src"],
-  "exclude": ["**/*.spec.*", "./lib/**/*"],
+  "exclude": ["**/*.spec.*", "./lib/**/*", "./types"],
 }

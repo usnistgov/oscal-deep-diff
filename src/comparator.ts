@@ -18,6 +18,7 @@ import {
     ComparatorStepConfig,
     ComparatorConfig,
 } from './configuration';
+import stringSimilarity from './utils/string-similarity';
 
 /**
  * Helper result representing an empty set of changes
@@ -63,7 +64,7 @@ export default class Comparator {
      *
      * This method gets the settings appropriate for the element pair, and then calls the correct comparison operation.
      */
-    private compareElements(left: TrackedElement, right: TrackedElement): ComparisonResult {
+    private compareElements(left: TrackedElement, right: TrackedElement, shallow = false): ComparisonResult {
         const settings = this.settingsForPointer(right.pointer);
 
         // check if elements have been marked as ignored
@@ -83,9 +84,12 @@ export default class Comparator {
             );
             return [[new SelectionResults(left.pointer, right.pointer, leftOnly, rightOnly, subElements)], changeCount];
         } else if (left instanceof TrackedArray && right instanceof TrackedArray) {
-            return this.compareArrays(left, right, settings);
+            if (!shallow) {
+                return this.compareArrays(left, right, settings);
+            }
+            return NO_CHANGES;
         } else if (left instanceof TrackedObject && right instanceof TrackedObject) {
-            return this.compareObjects(left, right);
+            return this.compareObjects(left, right, shallow);
         } else if (left instanceof TrackedPrimitive && right instanceof TrackedPrimitive) {
             return this.comparePrimitives(left, right, settings);
         }
@@ -93,7 +97,7 @@ export default class Comparator {
         throw new Error('Left and right (sub)document are not of the same "type"');
     }
 
-    private compareObjects(left: TrackedObject, right: TrackedObject): ComparisonResult {
+    private compareObjects(left: TrackedObject, right: TrackedObject, shallow = false): ComparisonResult {
         const changes: Change[] = [];
         let changeCount = 0;
 
@@ -104,16 +108,17 @@ export default class Comparator {
             if (!(property in left.raw)) {
                 // property only in right document
                 changes.push(new PropertyRightOnly(left.pointer, `${right.pointer}/${property}`, right.raw[property]));
-                changeCount += countSubElements(right.raw[property]);
+                changeCount += countSubElements(right.raw[property], shallow);
             } else if (!(property in right.raw)) {
                 // property only in left document
                 changes.push(new PropertyLeftOnly(`${left.pointer}/${property}`, left.raw[property], right.pointer));
-                changeCount += countSubElements(left.raw[property]);
+                changeCount += countSubElements(left.raw[property], shallow);
             } else {
                 // property exists in both, recurse on sub-document
                 const [subChanges, subChangeCount] = this.compareElements(
                     left.resolve(property),
                     right.resolve(property),
+                    shallow,
                 );
 
                 changeCount += subChangeCount;
@@ -130,8 +135,12 @@ export default class Comparator {
         settings: ComparatorStepConfig,
     ): ComparisonResult {
         if (typeof left.raw === 'string' && typeof right.raw === 'string' && settings.ignoreCase) {
-            if (left.raw.toLowerCase() != right.raw.toLowerCase()) {
-                return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 1];
+            const score = stringSimilarity(left.raw, right.raw, 'jaro-wrinker', settings.ignoreCase);
+
+            if (score < 0.7) {
+                return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 1 - score];
+            } else {
+                return [[], 1 - score];
             }
         } else if (left.raw !== right.raw) {
             return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 1];
@@ -172,7 +181,7 @@ export default class Comparator {
                 (prev, matcher): MatcherResults => {
                     // Surround method passed as fp in clojure to prevent orphaned `this`
                     // https://github.com/Microsoft/TypeScript/wiki/FAQ#why-does-this-get-orphaned-in-my-instance-methods
-                    const results = matcher(left, right, (l, r) => this.compareElements(l, r));
+                    const results = matcher(left, right, (l, r, s) => this.compareElements(l, r, s));
                     return prev[3] < results[3] ? prev : results;
                 },
                 [[], [], [], Infinity],
