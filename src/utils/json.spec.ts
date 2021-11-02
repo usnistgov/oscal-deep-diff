@@ -63,7 +63,6 @@ describe('getType()', () => {
         expect(getType(123)).equals('number');
         expect(getType('hey there')).equals('string');
         expect(getType(null)).equals('null');
-        expect(getType(undefined)).equals('undefined');
     });
 
     it('object', () => {
