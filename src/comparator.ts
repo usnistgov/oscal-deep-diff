@@ -134,11 +134,11 @@ export default class Comparator {
         right: TrackedPrimitive,
         settings: ComparatorStepConfig,
     ): ComparisonResult {
-        if (typeof left.raw === 'string' && typeof right.raw === 'string' && settings.ignoreCase) {
-            const score = stringSimilarity(left.raw, right.raw, 'jaro-wrinker', settings.ignoreCase);
+        if (typeof left.raw === 'string' && typeof right.raw === 'string') {
+            const score = stringSimilarity(left.raw, right.raw, settings.stringComparisonMethod, settings.ignoreCase);
 
             if (score < 0.7) {
-                return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 1 - score];
+                return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 1];
             } else {
                 return [[], 1 - score];
             }
@@ -149,10 +149,10 @@ export default class Comparator {
     }
 
     private compareArrays(left: TrackedArray, right: TrackedArray, settings: ComparatorStepConfig): ComparisonResult {
-        const cached = this.cache.get(left.pointer, right.pointer);
-        if (cached) {
-            return cached;
-        }
+        // const cached = this.cache.get(left.pointer, right.pointer);
+        // if (cached) {
+        //     return cached;
+        // }
 
         const [leftOnly, rightOnly, subElements, changeCount] = this.compareElementArray(
             left.getAll(),
@@ -165,7 +165,7 @@ export default class Comparator {
             changeCount,
         ];
 
-        this.cache.set(left.pointer, right.pointer, result);
+        // this.cache.set(left.pointer, right.pointer, result);
         return result;
     }
 

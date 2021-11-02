@@ -6,6 +6,7 @@ export type ComparatorStepConfig = {
     ignoreCase: boolean;
     matcherGenerators: MatcherContainer[];
     selectionPaths: string[];
+    stringComparisonMethod: 'jaro-wrinker' | 'cosine' | 'absolute';
     priority: number;
 };
 
@@ -14,6 +15,7 @@ export const BASE_SETTINGS: ComparatorStepConfig = {
     ignoreCase: false,
     matcherGenerators: [new OptimalMatcherContainer()],
     selectionPaths: [],
+    stringComparisonMethod: 'absolute',
     priority: 0,
 };
 
@@ -66,6 +68,18 @@ export function parsePartialComparatorStepConfig(dict: JSONObject): PartialCompa
 
     if ('selectionPaths' in dict && Array.isArray(dict.selectionPaths)) {
         partial.selectionPaths = dict.selectionPaths as string[];
+    }
+
+    if ('stringComparisonMethod' in dict && typeof dict.stringComparisonMethod === 'string') {
+        if (
+            dict.stringComparisonMethod === 'absolute' ||
+            dict.stringComparisonMethod === 'cosine' ||
+            dict.stringComparisonMethod === 'jaro-wrinker'
+        ) {
+            partial.stringComparisonMethod = dict.stringComparisonMethod;
+        } else {
+            throw new Error(`Unknown string-similarity method ${dict.stringComparisonMethod}`);
+        }
     }
 
     return partial;
