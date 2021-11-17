@@ -99,7 +99,7 @@ export default class Comparator {
 
     private compareObjects(left: TrackedObject, right: TrackedObject, shallow = false): ComparisonResult {
         const changes: Change[] = [];
-        let changeCount = 0;
+        let cost = 0;
 
         const propertyUnion = getPropertyUnion(left.raw, right.raw);
 
@@ -108,11 +108,11 @@ export default class Comparator {
             if (!(property in left.raw)) {
                 // property only in right document
                 changes.push(new PropertyRightOnly(left.pointer, `${right.pointer}/${property}`, right.raw[property]));
-                changeCount += countSubElements(right.raw[property], shallow);
+                cost += countSubElements(right.raw[property], shallow);
             } else if (!(property in right.raw)) {
                 // property only in left document
                 changes.push(new PropertyLeftOnly(`${left.pointer}/${property}`, left.raw[property], right.pointer));
-                changeCount += countSubElements(left.raw[property], shallow);
+                cost += countSubElements(left.raw[property], shallow);
             } else {
                 // property exists in both, recurse on sub-document
                 const [subChanges, subChangeCount] = this.compareElements(
@@ -121,12 +121,12 @@ export default class Comparator {
                     shallow,
                 );
 
-                changeCount += subChangeCount;
+                cost += subChangeCount;
                 changes.push(...subChanges);
             }
         }
 
-        return [changes, changeCount];
+        return [changes, cost];
     }
 
     private comparePrimitives(
@@ -135,15 +135,15 @@ export default class Comparator {
         settings: ComparatorStepConfig,
     ): ComparisonResult {
         if (typeof left.raw === 'string' && typeof right.raw === 'string') {
-            const score = stringSimilarity(left.raw, right.raw, settings.stringComparisonMethod, settings.ignoreCase);
+            const cost = stringSimilarity(left.raw, right.raw, settings.stringComparisonMethod, settings.ignoreCase);
 
-            if (score < 0.7) {
-                return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 1];
+            if (cost < 0.7) {
+                return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 2 * (1 - cost)];
             } else {
-                return [[], 1 - score];
+                return [[], 2 * (1 - cost)];
             }
         } else if (left.raw !== right.raw) {
-            return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 1];
+            return [[new PropertyChanged(left.raw, left.pointer, right.raw, right.pointer)], 2];
         }
         return NO_CHANGES;
     }

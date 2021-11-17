@@ -126,7 +126,7 @@ describe('Comparator Comparison', () => {
         expect(changes).to.have.length(1); // just a sanity check
         expect(cost).to.be.greaterThan(2, "cost should be at least 2 accounting for Element 3's properties");
         expect(cost).to.be.lessThanOrEqual(
-            3,
+            4,
             "cost should be no more than 3 accounting for Element 2's changed property",
         );
     });

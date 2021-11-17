@@ -3,7 +3,7 @@ import { Matcher, MatcherContainer } from './matching';
 import { countSubElements, JSONObject } from './utils/json';
 import { ArraySubElement } from './results';
 import { TrackedElement } from './utils/tracked';
-import { writeFileSync } from 'fs';
+import compute from './utils/hungarian';
 
 export default class HungarianMatcherContainer implements MatcherContainer {
     scorer?: (l: TrackedElement, r: TrackedElement) => number;
@@ -18,22 +18,27 @@ export default class HungarianMatcherContainer implements MatcherContainer {
     generate(_: TrackedElement[], __: TrackedElement[]): Matcher[] {
         return [
             (left, right, compareFunc) => {
-                console.time('compute_cost');
+                // console.time('compute_cost');
 
                 // the most expensive part, score each possible element pair and throw it into a matrix
                 let cost: number[][];
                 if (this.scorer !== undefined) {
                     cost = left.map((l) => right.map((r) => this.scorer?.(l, r) ?? 0));
                 } else {
-                    cost = left.map((l) => right.map((r) => compareFunc(l, r)[1]));
+                    cost = left.map((l) => {
+                        return right.map((r) => {
+                            const cost = compareFunc(l, r)[1] / (countSubElements(l.raw) + countSubElements(r.raw));
+                            return cost;
+                        });
+                    });
                 }
-                console.timeEnd('compute_cost');
+                // console.timeEnd('compute_cost');
 
-                writeFileSync('vault/cost_output.json', JSON.stringify(cost, null, 2));
+                // writeFileSync('vault/cost_output.json', JSON.stringify(cost, null, 2));
 
-                console.time('compute_assignment');
-                const rawPairs = computeMunkres(cost);
-                console.timeEnd('compute_assignment');
+                // console.time('compute_assignment');
+                const rawPairs = compute(cost);
+                // console.timeEnd('compute_assignment');
                 let unmatchedLeftIndices = [...left.keys()];
                 let unmatchedRightIndices = [...right.keys()];
 
@@ -49,7 +54,7 @@ export default class HungarianMatcherContainer implements MatcherContainer {
                         cost / (countSubElements(leftElement.raw) + countSubElements(rightElement.raw));
 
                     // todo refine this definition of "costPotentialRatio"
-                    if (costPotentialRatio < 0.95) {
+                    if (costPotentialRatio < 0.9) {
                         matches.push({
                             leftPointer: leftElement.pointer,
                             rightPointer: rightElement.pointer,
