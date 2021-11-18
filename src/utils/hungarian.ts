@@ -51,19 +51,129 @@ type State = {
 /**
  * Make a square matrix of some size
  */
-function make_matrix(size: number, val: number): number[][] {
-    return Array.from(new Array(size), (_) => Array.from(new Array(size), (_) => val));
+function make_matrix(rows: number, cols: number, val: number): number[][] {
+    return Array.from(new Array(rows), (_) => Array.from(new Array(cols), (_) => val));
 }
 
-export default function compute(raw_cost_matrix: CostMatrix): [number, number][] {
-    const matrix = pad_matrix(raw_cost_matrix);
+/**
+ * Augment a cost matrix with costs of leaving an item unmatched, allowing for
+ * incomplete matching.
+ *
+ * For example, given the following cost matrix:
+ *     | B-1 | B-2 | B-3
+ * ----+-----+-----+----
+ * A-1 | 42  | 0   | 100
+ * A-2 | 10  | 14  | 120
+ * A-3 | 15  | 30  | 999
+ *
+ * And the following unmatched costs:
+ * { A-1: 50, A-2: 10, A-3: 20 }
+ * { B-1: 44, B-2: 30, B-3: 25 }
+ *
+ * The resulting cost matrix would be:
+ *     | B-1 | B-2 | B-3 | a-1 | a-2 | a3
+ * ----+-----+-----+-----|-----+-----+-----
+ * A-1 | 42  | 0   | 100 | 50  | --- | ---
+ * A-2 | 10  | 14  | 120 | --- | 10  | ---
+ * A-3 | 15  | 30  | 999 | --- | --- | 20
+ * b-1 | 44  | --- | --- | 0   | 0   | 0
+ * b-2 | --- | 30  | --- | 0   | 0   | 0
+ * b-3 | --- | --- | 25  | 0   | 0   | 0
+ *
+ * This output has the following properties:
+ * - The new matrix has size [A]+[B] (always square)
+ * - Each element can match with a special item representing the unmatched cost
+ * - The unmatched costs can match with each other with 0 cost (these results
+ *     should be discarded)
+ */
+function makeAugmentedMatrix(matchCost: CostMatrix, lUnmatchedCost: number[], rUnmatchedCost: number[]): CostMatrix {
+    const leftSize = matchCost.length;
+    const rightSize = matchCost[0].length;
+
+    const augmentedCost = [];
+    for (let l = 0; l < leftSize; l++) {
+        const augmentedRow = [
+            ...matchCost[l],
+            ...new Array(l).fill('DISALLOWED'),
+            lUnmatchedCost[l],
+            ...new Array(leftSize - l - 2).fill('DISALLOWED'),
+        ];
+        augmentedCost.push(augmentedRow);
+    }
+
+    for (let r = 0; r < rightSize; r++) {
+        const augmentedRow = [
+            ...new Array(r).fill('DISALLOWED'),
+            rUnmatchedCost[r],
+            ...new Array(rightSize - r - 2).fill('DISALLOWED'),
+            ...new Array(leftSize).fill(0),
+        ];
+        augmentedCost.push(augmentedRow);
+    }
+
+    return augmentedCost;
+}
+
+/**
+ * Compute a pairing of the given adjacency matrix along with unpaired element
+ * costs
+ * @param matchCost An adjacency matrix of costs to minimize
+ * @param lUnmatchedCost The cost associated with leaving a left (row) element
+ *  unmatched
+ * @param rUnmatchedCost THe cost associated with leaving a right (column)
+ *  element unmatched
+ * @returns An optimized pairing along with unmatched elements
+ */
+export function computeWithUnmatchedElements(
+    matchCost: CostMatrix,
+    lUnmatchedCost: number[],
+    rUnmatchedCost: number[],
+): [[number, number][], number[], number[]] {
+    const augmentedCost = makeAugmentedMatrix(matchCost, lUnmatchedCost, rUnmatchedCost);
+    // since the augmented matrix must be square, pad step can be skipped
+    const solution = compute(augmentedCost, false);
+
+    const pairs: [number, number][] = [];
+    const lUnmatched: number[] = [];
+    const rUnmatched: number[] = [];
+
+    const leftSize = matchCost.length;
+    const rightSize = matchCost[0].length;
+
+    for (let i = 0; i < solution.length; i++) {
+        const [leftIndex, rightIndex] = solution[i];
+
+        if (leftIndex < leftSize && rightIndex < rightSize) {
+            // Valid pairings
+            pairs.push([leftIndex, rightIndex]);
+        } else if (leftIndex < leftSize && rightIndex >= rightSize) {
+            // Unmatched left element
+            lUnmatched.push(leftIndex);
+        } else if (leftIndex >= leftSize && rightIndex < rightSize) {
+            // Unmatched right element
+            rUnmatched.push(rightIndex);
+        }
+        // The fourth quadrant can be ignored
+    }
+
+    return [pairs, lUnmatched, rUnmatched];
+}
+
+/**
+ * Compute a pairing of the given adjacency matrix
+ * @param raw_cost_matrix An adjacency matrix of 'costs' to minimize
+ * @param pad Set to false if you trust the matrix to be square
+ * @returns An array of matched pairs
+ */
+export default function compute(raw_cost_matrix: CostMatrix, pad = true): [number, number][] {
+    const matrix = pad ? pad_matrix(raw_cost_matrix) : raw_cost_matrix.map((col) => col.slice());
     const state: State = {
         matrix,
         size: matrix.length,
         row_covered: Array.from(new Array(matrix.length), (_) => false),
         col_covered: Array.from(new Array(matrix.length), (_) => false),
-        path: make_matrix(matrix.length * 2, 0),
-        marked: make_matrix(matrix.length, 0),
+        path: make_matrix(matrix.length * 2, 2, 0),
+        marked: make_matrix(matrix.length, matrix.length, 0),
         Z0_c: 0,
         Z0_r: 0,
     };
@@ -171,7 +281,7 @@ function step4(state: State) {
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-        [row, col] = find_a_zero(state, row, col);
+        [row, col] = find_a_zero(state);
         if (row < 0) {
             return 6;
         } else {
@@ -225,7 +335,7 @@ function step5(state: State) {
         }
     }
 
-    convert_path(state, count);
+    augment_path(state, count);
     // clear covers & erase primes
     for (let i = 0; i < state.size; i++) {
         state.row_covered[i] = false;
@@ -296,7 +406,7 @@ function step6(state: State) {
 /**
  * Find the first uncovered element with value 0
  */
-function find_a_zero({ matrix, size, row_covered, col_covered }: State, i0 = 0, j0 = 0): [number, number] {
+function find_a_zero({ matrix, size, row_covered, col_covered }: State /*,i0 = 0, j0 = 0*/): [number, number] {
     // let row = 0;
     // let col = 0;
     // let i = i0;
@@ -376,7 +486,7 @@ function find_prime_in_row({ size, marked }: State, row: number): number {
     return -1;
 }
 
-function convert_path({ path, marked }: State, count: number) {
+function augment_path({ path, marked }: State, count: number) {
     for (let i = 0; i <= count; i++) {
         marked[path[i][0]][path[i][1]] = marked[path[i][0]][path[i][1]] === 1 ? 0 : 1;
     }
