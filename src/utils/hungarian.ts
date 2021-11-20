@@ -1,61 +1,6 @@
 type CostMatrix = (number | 'DISALLOWED')[][];
 
 /**
- * Pad a possibly non-square matrix to make it square
- */
-function pad_matrix(matrix: CostMatrix, pad_value: number | 'DISALLOWED' = 0): CostMatrix {
-    let max_columns = 0;
-    let total_rows = matrix.length;
-
-    for (let i = 0; i < total_rows; i++) {
-        if (matrix[i].length > max_columns) {
-            max_columns = matrix[i].length;
-        }
-    }
-
-    total_rows = max_columns > total_rows ? max_columns : total_rows;
-
-    const padded: CostMatrix = [];
-
-    for (let i = 0; i < total_rows; i++) {
-        const row = matrix[i]?.slice() ?? [];
-
-        // if the row is too short, pad it
-        while (total_rows > row.length) {
-            row.push(pad_value);
-        }
-
-        padded.push(row);
-    }
-
-    return padded;
-}
-
-type State = {
-    /**
-     * The square cost matrix (be sure to pad it!)
-     */
-    matrix: CostMatrix;
-    /**
-     * The size of the cost matrix
-     */
-    size: number;
-    row_covered: boolean[];
-    col_covered: boolean[];
-    path: number[][];
-    marked: number[][];
-    Z0_r: number;
-    Z0_c: number;
-};
-
-/**
- * Make a square matrix of some size
- */
-function make_matrix(rows: number, cols: number, val: number): number[][] {
-    return Array.from(new Array(rows), (_) => Array.from(new Array(cols), (_) => val));
-}
-
-/**
  * Augment a cost matrix with costs of leaving an item unmatched, allowing for
  * incomplete matching.
  *
@@ -86,7 +31,11 @@ function make_matrix(rows: number, cols: number, val: number): number[][] {
  * - The unmatched costs can match with each other with 0 cost (these results
  *     should be discarded)
  */
-function makeAugmentedMatrix(matchCost: CostMatrix, lUnmatchedCost: number[], rUnmatchedCost: number[]): CostMatrix {
+export function makeAugmentedMatrix(
+    matchCost: CostMatrix,
+    lUnmatchedCost: number[],
+    rUnmatchedCost: number[],
+): CostMatrix {
     const leftSize = matchCost.length;
     const rightSize = matchCost[0].length;
 
@@ -96,7 +45,7 @@ function makeAugmentedMatrix(matchCost: CostMatrix, lUnmatchedCost: number[], rU
             ...matchCost[l],
             ...new Array(l).fill('DISALLOWED'),
             lUnmatchedCost[l],
-            ...new Array(leftSize - l - 2).fill('DISALLOWED'),
+            ...new Array(leftSize - l - 1).fill('DISALLOWED'),
         ];
         augmentedCost.push(augmentedRow);
     }
@@ -105,7 +54,7 @@ function makeAugmentedMatrix(matchCost: CostMatrix, lUnmatchedCost: number[], rU
         const augmentedRow = [
             ...new Array(r).fill('DISALLOWED'),
             rUnmatchedCost[r],
-            ...new Array(rightSize - r - 2).fill('DISALLOWED'),
+            ...new Array(rightSize - r - 1).fill('DISALLOWED'),
             ...new Array(leftSize).fill(0),
         ];
         augmentedCost.push(augmentedRow);
@@ -159,38 +108,54 @@ export function computeWithUnmatchedElements(
     return [pairs, lUnmatched, rUnmatched];
 }
 
+type State = {
+    /**
+     * The square cost matrix (be sure to pad it!)
+     */
+    matrix: CostMatrix;
+    /**
+     * The size of the cost matrix
+     */
+    size: number;
+    rowCovered: boolean[];
+    colCovered: boolean[];
+    path: number[][];
+    marked: number[][];
+    z0r: number;
+    z0c: number;
+};
+
 /**
  * Compute a pairing of the given adjacency matrix
- * @param raw_cost_matrix An adjacency matrix of 'costs' to minimize
+ * @param rawMatchCost An adjacency matrix of 'costs' to minimize
  * @param pad Set to false if you trust the matrix to be square
  * @returns An array of matched pairs
  */
-export default function compute(raw_cost_matrix: CostMatrix, pad = true): [number, number][] {
-    const matrix = pad ? pad_matrix(raw_cost_matrix) : raw_cost_matrix.map((col) => col.slice());
+export default function compute(rawMatchCost: CostMatrix, pad = true): [number, number][] {
+    const matrix = pad ? padMatrix(rawMatchCost) : rawMatchCost.map((col) => col.slice());
     const state: State = {
         matrix,
         size: matrix.length,
-        row_covered: Array.from(new Array(matrix.length), (_) => false),
-        col_covered: Array.from(new Array(matrix.length), (_) => false),
+        rowCovered: Array.from(new Array(matrix.length), (_) => false),
+        colCovered: Array.from(new Array(matrix.length), (_) => false),
         path: make_matrix(matrix.length * 2, 2, 0),
         marked: make_matrix(matrix.length, matrix.length, 0),
-        Z0_c: 0,
-        Z0_r: 0,
+        z0c: 0,
+        z0r: 0,
     };
 
-    const original_length = raw_cost_matrix.length;
-    const original_width = raw_cost_matrix[0].length;
+    const originalLength = rawMatchCost.length;
+    const originalWidth = rawMatchCost[0].length;
 
     let step = 1;
     const steps = [step1, step2, step3, step4, step5, step6];
     while (step != 7) {
-        console.log(step);
         step = steps[step - 1](state);
     }
 
     const results: [number, number][] = [];
-    for (let i = 0; i < original_length; i++) {
-        for (let j = 0; j < original_width; j++) {
+    for (let i = 0; i < originalLength; i++) {
+        for (let j = 0; j < originalWidth; j++) {
             if (state.marked[i][j] == 1) {
                 results.push([i, j]);
             }
@@ -228,13 +193,13 @@ function step1({ matrix, size }: State) {
  * Find a zero in the resulting matrix. If there is no starred zero in its row
  * or column, star Z. Repeat for each element in the matrix. Go to step 3.
  */
-function step2({ matrix, size, row_covered, col_covered, marked }: State) {
+function step2({ matrix, size, rowCovered, colCovered, marked }: State) {
     for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
-            if (matrix[i][j] === 0 && !col_covered[j] && !row_covered[i]) {
+            if (matrix[i][j] === 0 && !colCovered[j] && !rowCovered[i]) {
                 marked[i][j] = 1;
-                col_covered[j] = true;
-                row_covered[i] = true;
+                colCovered[j] = true;
+                rowCovered[i] = true;
                 break;
             }
         }
@@ -242,8 +207,8 @@ function step2({ matrix, size, row_covered, col_covered, marked }: State) {
 
     // clear covers
     for (let i = 0; i < size; i++) {
-        row_covered[i] = false;
-        col_covered[i] = false;
+        rowCovered[i] = false;
+        colCovered[i] = false;
     }
 
     return 3;
@@ -254,12 +219,12 @@ function step2({ matrix, size, row_covered, col_covered, marked }: State) {
  * starred zeros describe a complete set of unique assignments. In this case,
  * Go to done, otherwise, go to step 4
  */
-function step3({ size, col_covered, marked }: State) {
+function step3({ size, colCovered, marked }: State) {
     let count = 0;
     for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
-            if (marked[i][j] === 1 && !col_covered[j]) {
-                col_covered[j] = true;
+            if (marked[i][j] === 1 && !colCovered[j]) {
+                colCovered[j] = true;
                 count++;
             }
         }
@@ -281,19 +246,19 @@ function step4(state: State) {
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-        [row, col] = find_a_zero(state);
+        [row, col] = findAZero(state);
         if (row < 0) {
             return 6;
         } else {
             state.marked[row][col] = 2;
-            const star_col = find_star_in_row(state, row);
-            if (star_col >= 0) {
-                col = star_col;
-                state.row_covered[row] = true;
-                state.col_covered[col] = false;
+            const starCol = findStarInRow(state, row);
+            if (starCol >= 0) {
+                col = starCol;
+                state.rowCovered[row] = true;
+                state.colCovered[col] = false;
             } else {
-                state.Z0_r = row;
-                state.Z0_c = col;
+                state.z0r = row;
+                state.z0c = col;
                 return 5;
             }
         }
@@ -313,12 +278,12 @@ function step4(state: State) {
 function step5(state: State) {
     let count = 0;
 
-    state.path[count][0] = state.Z0_r;
-    state.path[count][1] = state.Z0_c;
+    state.path[count][0] = state.z0r;
+    state.path[count][1] = state.z0c;
     let done = false;
 
     while (!done) {
-        const row = find_star_in_col(state, state.path[count][1]);
+        const row = findStarInColumn(state, state.path[count][1]);
         if (row >= 0) {
             count++;
             state.path[count][0] = row;
@@ -328,18 +293,18 @@ function step5(state: State) {
         }
 
         if (!done) {
-            const col = find_prime_in_row(state, state.path[count][0]);
+            const col = findPrimeInRow(state, state.path[count][0]);
             count++;
             state.path[count][0] = state.path[count - 1][0];
             state.path[count][1] = col;
         }
     }
 
-    augment_path(state, count);
+    augmentPath(state, count);
     // clear covers & erase primes
     for (let i = 0; i < state.size; i++) {
-        state.row_covered[i] = false;
-        state.col_covered[i] = false;
+        state.rowCovered[i] = false;
+        state.colCovered[i] = false;
         for (let j = 0; j < state.size; j++) {
             if (state.marked[i][j] === 2) {
                 state.marked[i][j] = 0;
@@ -361,7 +326,7 @@ function step6(state: State) {
     // find the smallest uncovered value in the matrix
     for (let i = 0; i < state.size; i++) {
         for (let j = 0; j < state.size; j++) {
-            if (!state.row_covered[i] && !state.col_covered[j]) {
+            if (!state.rowCovered[i] && !state.colCovered[j]) {
                 const value = state.matrix[i][j];
                 if (value !== 'DISALLOWED' && value < min) {
                     min = value;
@@ -378,17 +343,17 @@ function step6(state: State) {
                 continue;
             }
 
-            if (state.row_covered[i]) {
+            if (state.rowCovered[i]) {
                 val += min;
                 events++;
             }
 
-            if (!state.col_covered[j]) {
+            if (!state.colCovered[j]) {
                 val -= min;
                 events++;
             }
 
-            if (state.row_covered[i] && !state.col_covered[j]) {
+            if (state.rowCovered[i] && !state.colCovered[j]) {
                 events -= 2;
             }
 
@@ -406,36 +371,10 @@ function step6(state: State) {
 /**
  * Find the first uncovered element with value 0
  */
-function find_a_zero({ matrix, size, row_covered, col_covered }: State /*,i0 = 0, j0 = 0*/): [number, number] {
-    // let row = 0;
-    // let col = 0;
-    // let i = i0;
-    // let done = false;
-
-    // while (!done) {
-    //     let j = j0;
-    //     // eslint-disable-next-line no-constant-condition
-    //     while (true) {
-    //         if (matrix[i][j] === 0 && !row_covered[i] && !col_covered[j]) {
-    //             row = i;
-    //             col = j;
-    //             done = true;
-    //         }
-    //         j = (j + 1) % size;
-    //         if (j === j0) {
-    //             break;
-    //         }
-    //     }
-    //     i = (i + 1) % size;
-    //     if (i === i0) {
-    //         done = true;
-    //     }
-    // }
-    // return [row, col];
-
+function findAZero({ matrix, size, rowCovered, colCovered }: State): [number, number] {
     for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
-            if (matrix[i][j] === 0 && !row_covered[i] && !col_covered[j]) {
+            if (matrix[i][j] === 0 && !rowCovered[i] && !colCovered[j]) {
                 return [i, j];
             }
         }
@@ -448,7 +387,7 @@ function find_a_zero({ matrix, size, row_covered, col_covered }: State /*,i0 = 0
  * Find the first starred element in the specific row. Returns the row index,
  * or -1 if no starred element was found.
  */
-function find_star_in_row({ size, marked }: State, row: number): number {
+function findStarInRow({ size, marked }: State, row: number): number {
     for (let j = 0; j < size; j++) {
         if (marked[row][j] == 1) {
             return j;
@@ -462,7 +401,7 @@ function find_star_in_row({ size, marked }: State, row: number): number {
  * Find the first starred element in the specific column. Returns the column
  * index, or -1 if no starred element was found.
  */
-function find_star_in_col({ size, marked }: State, col: number): number {
+function findStarInColumn({ size, marked }: State, col: number): number {
     for (let i = 0; i < size; i++) {
         if (marked[i][col] === 1) {
             return i;
@@ -476,7 +415,7 @@ function find_star_in_col({ size, marked }: State, col: number): number {
  * Find the first prime element in the specified row. Returns the column index,
  * or -1 if no starred element was found.
  */
-function find_prime_in_row({ size, marked }: State, row: number): number {
+function findPrimeInRow({ size, marked }: State, row: number): number {
     for (let j = 0; j < size; j++) {
         if (marked[row][j] == 2) {
             return j;
@@ -486,8 +425,46 @@ function find_prime_in_row({ size, marked }: State, row: number): number {
     return -1;
 }
 
-function augment_path({ path, marked }: State, count: number) {
+function augmentPath({ path, marked }: State, count: number) {
     for (let i = 0; i <= count; i++) {
         marked[path[i][0]][path[i][1]] = marked[path[i][0]][path[i][1]] === 1 ? 0 : 1;
     }
+}
+
+/**
+ * Make a matrix of some size
+ */
+function make_matrix(rows: number, cols: number, val: number): number[][] {
+    return Array.from(new Array(rows), (_) => Array.from(new Array(cols), (_) => val));
+}
+
+/**
+ * Pad a possibly non-square matrix to make it square
+ */
+function padMatrix(matrix: CostMatrix, padValue: number | 'DISALLOWED' = 0): CostMatrix {
+    let maxColumns = 0;
+    let totalRows = matrix.length;
+
+    for (let i = 0; i < totalRows; i++) {
+        if (matrix[i].length > maxColumns) {
+            maxColumns = matrix[i].length;
+        }
+    }
+
+    totalRows = maxColumns > totalRows ? maxColumns : totalRows;
+
+    const padded: CostMatrix = [];
+
+    for (let i = 0; i < totalRows; i++) {
+        const row = matrix[i]?.slice() ?? [];
+
+        // if the row is too short, pad it
+        while (totalRows > row.length) {
+            row.push(padValue);
+        }
+
+        padded.push(row);
+    }
+
+    return padded;
 }

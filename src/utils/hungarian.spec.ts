@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import compute from './hungarian';
+import compute, { makeAugmentedMatrix, computeWithUnmatchedElements } from './hungarian';
 
 describe('Hungarian Algorithm', () => {
     it('Basic Pairing', () => {
@@ -157,5 +157,42 @@ describe('Hungarian Algorithm', () => {
 
             expect(total_cost).to.equal(expected_cost);
         }
+    });
+});
+
+describe('Hungarian Algorithm With Unmatched Costs', () => {
+    it('Augmented Matrix', () => {
+        const augmented = makeAugmentedMatrix(
+            [
+                [40, 0, 100],
+                [10, 14, 120],
+                [15, 30, 999],
+            ],
+            [50, 10, 30],
+            [44, 30, 25],
+        );
+        expect(augmented).to.deep.equal([
+            [40, 0, 100, 50, 'DISALLOWED', 'DISALLOWED'],
+            [10, 14, 120, 'DISALLOWED', 10, 'DISALLOWED'],
+            [15, 30, 999, 'DISALLOWED', 'DISALLOWED', 30],
+            [44, 'DISALLOWED', 'DISALLOWED', 0, 0, 0],
+            ['DISALLOWED', 30, 'DISALLOWED', 0, 0, 0],
+            ['DISALLOWED', 'DISALLOWED', 25, 0, 0, 0],
+        ]);
+    });
+
+    it('Basic pairing with optimally unmatched solution', () => {
+        const [pairs, lUnmatched, rUnmatched] = computeWithUnmatchedElements([[2]], [0.5], [0.5]);
+        expect(pairs).to.have.length(0);
+        expect(lUnmatched).to.deep.equal([0]);
+        expect(rUnmatched).to.deep.equal([0]);
+    });
+
+    it('Basic pairing with optimally matched solution', () => {
+        const [pairs, lUnmatched, rUnmatched] = computeWithUnmatchedElements([[1]], [1], [1]);
+        expect(pairs).to.deep.equal([[0, 0]]);
+        expect(lUnmatched).to.have.length(0);
+        expect(rUnmatched).to.have.length(0);
+        // second solution from augmented matrix [1, 1] is discarded
     });
 });

@@ -1,4 +1,4 @@
-import { MatcherContainer, OptimalMatcherContainer } from './matching';
+import MatcherContainer, { OptimalMatcherContainer } from './matching';
 import { JSONObject } from './utils/json';
 
 export type ComparatorStepConfig = {

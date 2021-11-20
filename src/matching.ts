@@ -2,7 +2,7 @@ import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive } from '.
 import { JSONObject, countSubElements, getPropertyIntersection } from './utils/json';
 import { ArraySubElement, ComparisonResult, LeftArrayItem, RightArrayItem } from './results';
 import stringSimilarity from './utils/string-similarity';
-import HungarianMatcherContainer from './hungarian';
+import { computeWithUnmatchedElements } from './utils/hungarian';
 
 type ComparatorFunc = (left: TrackedElement, right: TrackedElement, shallow?: boolean) => ComparisonResult;
 export type MatcherResults = [LeftArrayItem[], RightArrayItem[], ArraySubElement[], number];
@@ -73,7 +73,7 @@ export function scoringMatcherFactory(
     );
 }
 
-export abstract class MatcherContainer {
+export default abstract class MatcherContainer {
     abstract generate(left: TrackedElement[], right: TrackedElement[]): Matcher[];
 
     public static fromDict(dict: JSONObject): MatcherContainer {
@@ -178,5 +178,63 @@ export class OptimalMatcherContainer implements MatcherContainer {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     static fromDict(_: JSONObject): MatcherContainer {
         return new OptimalMatcherContainer();
+    }
+}
+
+export const hungarianMatcher: Matcher = (left, right, compareFunc) => {
+    // the most expensive part, score each possible element pair and throw it into a matrix
+    const cost = left.map((l) => {
+        return right.map((r) => {
+            return compareFunc(l, r)[1];
+        });
+    });
+    const lUnmatchedCost = left.map((l) => countSubElements(l.raw));
+    const rUnmatchedCost = right.map((r) => countSubElements(r.raw));
+
+    const [matchedPairs, lUnmatched, rUnmatched] = computeWithUnmatchedElements(cost, lUnmatchedCost, rUnmatchedCost);
+
+    let totalCost = 0;
+
+    return [
+        lUnmatched.map((lIndex) => {
+            const element = left[lIndex];
+            totalCost += lUnmatchedCost[lIndex];
+            return {
+                leftPointer: element.pointer,
+                leftElement: element.raw,
+            };
+        }),
+        rUnmatched.map((rIndex) => {
+            const element = right[rIndex];
+            totalCost += rUnmatchedCost[rIndex];
+            return {
+                rightPointer: element.pointer,
+                rightElement: element.raw,
+            };
+        }),
+        matchedPairs.map(([lIndex, rIndex]) => {
+            const leftElement = left[lIndex];
+            const rightElement = right[rIndex];
+
+            const [changes, cost] = compareFunc(leftElement, rightElement);
+            totalCost += cost;
+
+            return {
+                leftPointer: leftElement.pointer,
+                rightPointer: rightElement.pointer,
+                changes,
+            };
+        }),
+        totalCost,
+    ];
+};
+
+export class HungarianMatcherContainer implements MatcherContainer {
+    generate(_: TrackedElement[], __: TrackedElement[]): Matcher[] {
+        return [hungarianMatcher];
+    }
+
+    static fromDict(_: JSONObject): MatcherContainer {
+        return new HungarianMatcherContainer();
     }
 }
