@@ -121,6 +121,15 @@ export function testPointerCondition(pointer: string, condition: string): boolea
     return pattern.test(pointer);
 }
 
+export function testPointerConditions(pointer: string, ...conditions: string[]): boolean {
+    for (const condition of conditions) {
+        if (testPointerCondition(pointer, condition)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 export function countSubElements(element: JSONValue, shallow = false): number {
     let count = 0;
     switch (getType(element)) {

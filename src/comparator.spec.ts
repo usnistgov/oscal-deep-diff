@@ -131,3 +131,84 @@ describe('Comparator Comparison', () => {
         );
     });
 });
+
+describe('Comparator ignore option', () => {
+    const ignoreIdComparator = new Comparator({
+        '*': {
+            priority: 1,
+            ignore: ['id', 'ignoreme'],
+        },
+    });
+
+    // Ignore id on top level
+    it('should work on simple object properties', () => {
+        const simpleObject: CompareParams = [{ id: 1 }, 'simple_object_left', { id: 2 }, 'simple_object_right'];
+        const results = ignoreIdComparator.compare(...simpleObject);
+        expect(results.changes).to.have.length(0);
+    });
+
+    // Ignore id propagates downwards
+    it('should work on nested object properties', () => {
+        const nestedObject: CompareParams = [
+            { test: 1, sub: { id: 1 } },
+            'nested_object_left',
+            { test: 1, sub: { id: 2 } },
+            'nested_object_right',
+        ];
+        const results = ignoreIdComparator.compare(...nestedObject);
+        expect(results.changes).to.have.length(0);
+    });
+
+    // Ignore id propagates through arrays
+    it('should work on array element properties', () => {
+        const arrayObject: CompareParams = [
+            [
+                { test: 1, id: 2 },
+                { test: 2, id: 1 },
+            ],
+            'array_left',
+            [{ test: 1, id: 1 }, { test: 2 }],
+            'array_right',
+        ];
+        const results = ignoreIdComparator.compare(...arrayObject);
+        expect(results.changes).to.have.length(1);
+        const arrayChanges = results.changes[0];
+        expect(arrayChanges).to.be.instanceOf(ArrayChanged);
+        if (arrayChanges instanceof ArrayChanged) {
+            expect(arrayChanges.leftOnly).to.have.length(0);
+            expect(arrayChanges.rightOnly).to.have.length(0);
+            // they should be matched to each other
+            expect(arrayChanges.subChanges).to.deep.equal([
+                {
+                    leftPointer: '/0',
+                    rightPointer: '/0',
+                    changes: [],
+                },
+                {
+                    leftPointer: '/1',
+                    rightPointer: '/1',
+                    changes: [],
+                },
+            ]);
+        }
+    });
+
+    it('should ignore subobjects', () => {
+        const ignoredSubObjects: CompareParams = [
+            {
+                ignoreme: {
+                    test: 'one',
+                },
+            },
+            'ignoredSubObject_left',
+            {
+                ignoreme: {
+                    test: 'two',
+                },
+            },
+            'ignoredSubObject_right',
+        ];
+        const results = ignoreIdComparator.compare(...ignoredSubObjects);
+        expect(results.changes).to.have.length(0);
+    });
+});

@@ -11,7 +11,13 @@ import {
 } from './results';
 import { MatcherResults } from './matching';
 import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject, select } from './utils/tracked';
-import { countSubElements, getPropertyUnion, JSONValue, testPointerCondition } from './utils/json';
+import {
+    countSubElements,
+    getPropertyUnion,
+    JSONValue,
+    testPointerCondition,
+    testPointerConditions,
+} from './utils/json';
 import {
     BASE_SETTINGS,
     mergePartialComparatorStepConfigs,
@@ -68,10 +74,8 @@ export default class Comparator {
         const settings = this.settingsForPointer(right.pointer);
 
         // check if elements have been marked as ignored
-        for (const ignoreCondition of settings.ignore) {
-            if (left.testPointerCondition(ignoreCondition)) {
-                return NO_CHANGES;
-            }
+        if (testPointerConditions(left.pointer, ...settings.ignore)) {
+            return NO_CHANGES;
         }
 
         // check selection paths
@@ -89,7 +93,7 @@ export default class Comparator {
             }
             return NO_CHANGES;
         } else if (left instanceof TrackedObject && right instanceof TrackedObject) {
-            return this.compareObjects(left, right, shallow);
+            return this.compareObjects(left, right, settings, shallow);
         } else if (left instanceof TrackedPrimitive && right instanceof TrackedPrimitive) {
             return this.comparePrimitives(left, right, settings);
         }
@@ -97,13 +101,22 @@ export default class Comparator {
         throw new Error('Left and right (sub)document are not of the same "type"');
     }
 
-    private compareObjects(left: TrackedObject, right: TrackedObject, shallow = false): ComparisonResult {
+    private compareObjects(
+        left: TrackedObject,
+        right: TrackedObject,
+        settings: ComparatorStepConfig,
+        shallow = false,
+    ): ComparisonResult {
         const changes: Change[] = [];
         let cost = 0;
 
         const propertyUnion = getPropertyUnion(left.raw, right.raw);
 
         for (const property of propertyUnion) {
+            if (testPointerConditions(`${left.pointer}/${property}`, ...settings.ignore)) {
+                continue;
+            }
+
             // for each property in both sub-documents, recurse and compare results
             if (!(property in left.raw)) {
                 // property only in right document
