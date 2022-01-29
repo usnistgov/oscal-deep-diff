@@ -1,12 +1,15 @@
+import { testPointerCondition } from '..';
 import {
     ArrayChanged,
+    ArraySubElement,
     Change,
+    DocumentComparison,
     PropertyChanged,
     PropertyLeftOnly,
     PropertyRightOnly,
     SelectionResults,
 } from '../results';
-import { TrackedElement } from '../utils/tracked';
+import { TrackedElement, trackRawObject, traverseMatchSelectionPaths } from '../utils/tracked';
 import { BaseLevelComparison, ChangeDetails } from './intermediate-output';
 
 function padNumericIdentifier(identifier: string, digits = 3) {
@@ -106,4 +109,53 @@ export function resolvePointerIndices(pointer: string, cursor: TrackedElement, i
             }
         })
         .join('/');
+}
+
+export interface Selection {
+    leftOnly: { leftPointer: string }[];
+    rightOnly: { rightPointer: string }[];
+    matched: ArraySubElement[];
+}
+
+export function buildSelection(comparison: DocumentComparison, condition: string): Selection {
+    const selection: Selection = {
+        leftOnly: [],
+        rightOnly: [],
+        matched: [],
+    };
+    searchComparisonForSelection(comparison.changes, condition, selection);
+    return selection;
+}
+
+function searchComparisonForSelection(changes: Change[], condition: string, selection: Selection) {
+    changes.forEach((change) => {
+        if (change instanceof ArrayChanged) {
+            change.subChanges.forEach((subChange) => {
+                searchComparisonForSelection(subChange.changes, condition, selection);
+            });
+
+            const leftMatches: TrackedElement[] = [];
+            change.leftOnly.forEach((leftOnly) => {
+                const elem = trackRawObject(leftOnly.leftPointer, leftOnly.leftElement);
+                traverseMatchSelectionPaths(elem, [condition], leftMatches);
+            });
+            selection.leftOnly.push(...leftMatches.map((l) => ({ leftPointer: l.pointer })));
+
+            const rightMatches: TrackedElement[] = [];
+            change.rightOnly.forEach((rightOnly) => {
+                const elem = trackRawObject(rightOnly.rightPointer, rightOnly.rightElement);
+                traverseMatchSelectionPaths(elem, [condition], rightMatches);
+            });
+            selection.rightOnly.push(...rightMatches.map((r) => ({ rightPointer: r.pointer })));
+
+            if (
+                testPointerCondition(change.leftPointer, condition) &&
+                testPointerCondition(change.rightPointer, condition)
+            ) {
+                selection.leftOnly.push(...change.leftOnly);
+                selection.rightOnly.push(...change.rightOnly);
+                selection.matched.push(...change.subChanges);
+            }
+        }
+    });
 }

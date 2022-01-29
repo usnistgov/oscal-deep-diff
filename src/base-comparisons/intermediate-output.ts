@@ -1,7 +1,6 @@
 import { TrackedElement } from '../utils/tracked';
 import { JSONValue } from '../utils/json';
-import { extractIdentifiers, flattenControlChanges, sortBaseLevelComparison } from './util';
-import { SelectionResults } from '..';
+import { extractIdentifiers, flattenControlChanges, Selection, sortBaseLevelComparison } from './util';
 
 export interface ChangeDetails {
     field: string;
@@ -27,7 +26,7 @@ export interface BaseLevelComparison {
 }
 
 export function performBaseLevelComparison(
-    comparison: SelectionResults,
+    comparison: Selection,
     leftDocument: TrackedElement,
     rightDocument: TrackedElement,
     identfiers = ['id', 'title'],
@@ -45,7 +44,7 @@ export function performBaseLevelComparison(
                 status: 'added',
             } as BaseLevelComparison;
         }),
-        ...comparison.subChanges.map((subElems) => {
+        ...comparison.matched.map((subElems) => {
             const leftControl = leftDocument.resolve(subElems.leftPointer);
             const rightControl = rightDocument.resolve(subElems.rightPointer);
 

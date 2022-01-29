@@ -189,10 +189,12 @@ export const hungarianMatcher: Matcher = (left, right, compareFunc) => {
             return compareFunc(l, r)[1] / (countSubElements(l.raw) + countSubElements(r.raw));
         });
     });
-    // const lUnmatchedCost = left.map((l) => countSubElements(l.raw));
+
     const lUnmatchedCost = left.map((_) => 1);
-    // const rUnmatchedCost = right.map((r) => countSubElements(r.raw));
     const rUnmatchedCost = right.map((_) => 1);
+
+    // const lUnmatchedCost = left.map((l) => countSubElements(l.raw));
+    // const rUnmatchedCost = right.map((r) => countSubElements(r.raw));
 
     const [matchedPairs, lUnmatched, rUnmatched] = computeWithUnmatchedElements(cost, lUnmatchedCost, rUnmatchedCost);
 

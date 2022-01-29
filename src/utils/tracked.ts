@@ -146,7 +146,7 @@ export function select(
  * @param paths The paths that should be included.
  * @param matched The array of tracked elements to build. This function will MODIFY the array of tracked elements as a side-effect.
  */
-function traverseMatchSelectionPaths(element: TrackedElement, paths: string[], matched: TrackedElement[]) {
+export function traverseMatchSelectionPaths(element: TrackedElement, paths: string[], matched: TrackedElement[]): void {
     for (const baseComparisonPath of paths) {
         if (element.testPointerCondition(baseComparisonPath)) {
             matched.push(element);
