@@ -137,14 +137,14 @@ function searchComparisonForSelection(changes: Change[], condition: string, sele
             const leftMatches: TrackedElement[] = [];
             change.leftOnly.forEach((leftOnly) => {
                 const elem = trackRawObject(leftOnly.leftPointer, leftOnly.leftElement);
-                traverseMatchSelectionPaths(elem, [condition], leftMatches);
+                traverseMatchSelectionPaths(elem, [condition + '/#'], leftMatches);
             });
             selection.leftOnly.push(...leftMatches.map((l) => ({ leftPointer: l.pointer })));
 
             const rightMatches: TrackedElement[] = [];
             change.rightOnly.forEach((rightOnly) => {
                 const elem = trackRawObject(rightOnly.rightPointer, rightOnly.rightElement);
-                traverseMatchSelectionPaths(elem, [condition], rightMatches);
+                traverseMatchSelectionPaths(elem, [condition + '/#'], rightMatches);
             });
             selection.rightOnly.push(...rightMatches.map((r) => ({ rightPointer: r.pointer })));
 
