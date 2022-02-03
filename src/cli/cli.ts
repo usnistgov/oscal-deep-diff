@@ -24,6 +24,10 @@ fs.writeFileSync(config.outputPath, JSON.stringify(comparison));
 console.log(`Saved comparison output to ${config.outputPath}`);
 
 config.outputConfigs.forEach((outputConfig) => {
+    console.log(
+        `Processing output config (selecting ${outputConfig.identifiers} and saving ${outputConfig.outputType} output)`,
+    );
+
     const selectionResults = buildSelection(comparison, 'controls');
     const intermediateOutput = performIntermediateComparison(
         selectionResults,
@@ -33,9 +37,8 @@ config.outputConfigs.forEach((outputConfig) => {
 
     if (outputConfig.outputType === 'raw') {
         fs.writeFileSync(outputConfig.outputPath, JSON.stringify(intermediateOutput, null, 2));
-        console.log(`Saved base level comparison output to ${outputConfig.outputPath}`);
     } else if (outputConfig.outputType === 'excel') {
         generateOutputSpreadsheet(intermediateOutput, outputConfig.outputPath, outputConfig.identifiers);
-        console.log(`Saved base level comparison spreadsheet to ${outputConfig.outputPath}`);
     }
+    console.log(`Saved ${outputConfig.outputType} output to ${outputConfig.outputPath}`);
 });
