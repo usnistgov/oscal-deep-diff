@@ -95,34 +95,7 @@ export class ArrayChanged {
     }
 }
 
-export class SelectionResults {
-    change = 'selection';
-    leftRoot: string;
-    rightRoot: string;
-
-    leftOnly: LeftArrayItem[];
-    rightOnly: RightArrayItem[];
-
-    subChanges: ArraySubElement[];
-
-    constructor(
-        leftRoot: string,
-        rightRoot: string,
-        leftOnly: LeftArrayItem[],
-        rightOnly: RightArrayItem[],
-        subChanges: ArraySubElement[],
-    ) {
-        this.leftRoot = leftRoot;
-        this.rightRoot = rightRoot;
-
-        this.leftOnly = leftOnly;
-        this.rightOnly = rightOnly;
-
-        this.subChanges = subChanges;
-    }
-}
-
-export type Change = PropertyRightOnly | PropertyLeftOnly | PropertyChanged | ArrayChanged | SelectionResults;
+export type Change = PropertyRightOnly | PropertyLeftOnly | PropertyChanged | ArrayChanged;
 
 export type ComparisonResult = [Change[], number];
 

@@ -7,10 +7,9 @@ import {
     PropertyChanged,
     PropertyLeftOnly,
     PropertyRightOnly,
-    SelectionResults,
 } from '../results';
 import { TrackedElement, trackRawObject, traverseMatchSelectionPaths } from '../utils/tracked';
-import { BaseLevelComparison, ChangeDetails } from './intermediate-output';
+import { IntermediateOutput, ChangeDetails } from './intermediate-output';
 
 function padNumericIdentifier(identifier: string, digits = 3) {
     return identifier
@@ -19,7 +18,7 @@ function padNumericIdentifier(identifier: string, digits = 3) {
         .join('-');
 }
 
-export function sortBaseLevelComparison(comparison: BaseLevelComparison[], primaryIdentifier = 'id'): void {
+export function sortBaseLevelComparison(comparison: IntermediateOutput[], primaryIdentifier = 'id'): void {
     comparison.sort((a, b) => {
         // extract id from control comparisons. First right identifiers, then left identifiers
         // (in the case of a withdrawn control)
@@ -47,7 +46,7 @@ export function flattenControlChanges(
     leftParent: TrackedElement,
     rightParent: TrackedElement,
 ): void {
-    if (change instanceof ArrayChanged || change instanceof SelectionResults) {
+    if (change instanceof ArrayChanged) {
         change.leftOnly.forEach((leftOnly) => {
             const field = leftOnly.leftPointer.slice(leftParent.pointer.length + 1);
             detailsList.push({

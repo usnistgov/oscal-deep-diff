@@ -119,27 +119,6 @@ export class TrackedObject extends TrackedElement {
 }
 
 /**
- * Flatten all elements in the right and left document that match some baseComparisonPaths condition
- * @param left A tracked element at the root of the document
- * @param right A tracked element at the root of the document
- * @param paths The paths that should be included in the flattening operation
- * @returns An array of left and right elements at some common path
- */
-export function select(
-    left: TrackedElement,
-    right: TrackedElement,
-    paths: string[],
-): [TrackedElement[], TrackedElement[]] {
-    const leftBaseObjects: TrackedElement[] = [];
-    const rightBaseObjects: TrackedElement[] = [];
-
-    traverseMatchSelectionPaths(left, paths, leftBaseObjects);
-    traverseMatchSelectionPaths(right, paths, rightBaseObjects);
-
-    return [leftBaseObjects, rightBaseObjects];
-}
-
-/**
  * A recursive function that traverses the children of a tracked element and appends all children
  * that match one of the baseComparisonPaths conditions.
  * @param element The element whose children to traverse. To traverse an entire document, pass the root element.

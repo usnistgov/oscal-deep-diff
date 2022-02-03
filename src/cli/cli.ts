@@ -2,10 +2,9 @@ import * as fs from 'fs';
 import { parseCliOptions } from './cli-utils';
 import Comparator from '../comparator';
 import { parseConfig } from '../configuration';
-import { performBaseLevelComparison } from '../base-comparisons/intermediate-output';
-// import { SelectionResults } from '../results';
+import { performIntermediateComparison } from '../base-comparisons/intermediate-output';
 import { trackRawObject } from '../utils/tracked';
-import { generateBlcSpreadsheet } from '../base-comparisons/excel-output';
+import { generateOutputSpreadsheet } from '../base-comparisons/excel-output';
 import YAML from 'yaml';
 import { buildSelection } from '../base-comparisons/util';
 
@@ -26,13 +25,17 @@ console.log(`Saved comparison output to ${config.outputPath}`);
 
 config.outputConfigs.forEach((outputConfig) => {
     const selectionResults = buildSelection(comparison, 'controls');
-    const blc = performBaseLevelComparison(selectionResults, trackRawObject('', leftDoc), trackRawObject('', rightDoc));
+    const intermediateOutput = performIntermediateComparison(
+        selectionResults,
+        trackRawObject('', leftDoc),
+        trackRawObject('', rightDoc),
+    );
 
     if (outputConfig.outputType === 'raw') {
-        fs.writeFileSync(outputConfig.outputPath, JSON.stringify(blc, null, 2));
+        fs.writeFileSync(outputConfig.outputPath, JSON.stringify(intermediateOutput, null, 2));
         console.log(`Saved base level comparison output to ${outputConfig.outputPath}`);
     } else if (outputConfig.outputType === 'excel') {
-        generateBlcSpreadsheet(blc, outputConfig.outputPath, outputConfig.identifiers);
+        generateOutputSpreadsheet(intermediateOutput, outputConfig.outputPath, outputConfig.identifiers);
         console.log(`Saved base level comparison spreadsheet to ${outputConfig.outputPath}`);
     }
 });

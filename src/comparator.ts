@@ -7,10 +7,9 @@ import {
     PropertyChanged,
     PropertyLeftOnly,
     PropertyRightOnly,
-    SelectionResults,
 } from './results';
 import { MatcherResults } from './matching';
-import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject, select } from './utils/tracked';
+import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject } from './utils/tracked';
 import {
     countSubElements,
     getPropertyUnion,
@@ -78,16 +77,7 @@ export default class Comparator {
             return NO_CHANGES;
         }
 
-        // check selection paths
-        if (settings.selectionPaths.length !== 0) {
-            const [leftSubElems, rightSubElems] = select(left, right, settings.selectionPaths);
-            const [leftOnly, rightOnly, subElements, changeCount] = this.compareElementArray(
-                leftSubElems,
-                rightSubElems,
-                settings,
-            );
-            return [[new SelectionResults(left.pointer, right.pointer, leftOnly, rightOnly, subElements)], changeCount];
-        } else if (left instanceof TrackedArray && right instanceof TrackedArray) {
+        if (left instanceof TrackedArray && right instanceof TrackedArray) {
             if (!shallow) {
                 return this.compareArrays(left, right, settings);
             }

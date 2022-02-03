@@ -1,6 +1,11 @@
 import { TrackedElement } from '../utils/tracked';
 import { JSONValue } from '../utils/json';
-import { extractIdentifiers, flattenControlChanges, Selection, sortBaseLevelComparison } from './util';
+import {
+    extractIdentifiers,
+    flattenControlChanges,
+    Selection,
+    sortBaseLevelComparison as sortIntermediateOutput,
+} from './util';
 
 export interface ChangeDetails {
     field: string;
@@ -14,7 +19,7 @@ export interface MoveDetails {
     rightParentIdentifiers?: { [key: string]: string };
 }
 
-export interface BaseLevelComparison {
+export interface IntermediateOutput {
     leftIdentifiers?: { [key: string]: string };
     rightIdentifiers?: { [key: string]: string };
 
@@ -25,24 +30,24 @@ export interface BaseLevelComparison {
     moveDetails?: MoveDetails;
 }
 
-export function performBaseLevelComparison(
+export function performIntermediateComparison(
     comparison: Selection,
     leftDocument: TrackedElement,
     rightDocument: TrackedElement,
     identfiers = ['id', 'title'],
-): BaseLevelComparison[] {
-    const blc: BaseLevelComparison[] = [
+): IntermediateOutput[] {
+    const res: IntermediateOutput[] = [
         ...comparison.leftOnly.map((leftOnly) => {
             return {
                 leftIdentifiers: extractIdentifiers(leftDocument.resolve(leftOnly.leftPointer), identfiers),
                 status: 'removed',
-            } as BaseLevelComparison;
+            } as IntermediateOutput;
         }),
         ...comparison.rightOnly.map((rightOnly) => {
             return {
                 rightIdentifiers: extractIdentifiers(rightDocument.resolve(rightOnly.rightPointer), identfiers),
                 status: 'added',
-            } as BaseLevelComparison;
+            } as IntermediateOutput;
         }),
         ...comparison.matched.map((subElems) => {
             const leftControl = leftDocument.resolve(subElems.leftPointer);
@@ -79,11 +84,11 @@ export function performBaseLevelComparison(
                 )
                     ? moveDetails
                     : undefined,
-            } as BaseLevelComparison;
+            } as IntermediateOutput;
         }),
     ];
 
-    sortBaseLevelComparison(blc);
+    sortIntermediateOutput(res);
 
-    return blc;
+    return res;
 }
