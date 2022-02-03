@@ -152,3 +152,8 @@ export function countSubElements(element: JSONValue, shallow = false): number {
     }
     return count;
 }
+
+export const RedFG = '\x1b[31m';
+export const GreenFG = '\x1b[32m';
+export const YellowFG = '\x1b[33m';
+export const ResetConsole = '\x1b[0m';
