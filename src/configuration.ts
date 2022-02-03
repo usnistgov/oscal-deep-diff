@@ -1,5 +1,5 @@
 import MatcherContainer, { OptimalMatcherContainer } from './matching';
-import { JSONObject } from './utils/json';
+import { JSONObject, JSONValue } from './utils/json';
 
 export type ComparatorStepConfig = {
     ignore: string[];
@@ -85,14 +85,17 @@ export function parsePartialComparatorStepConfig(dict: JSONObject): PartialCompa
     return partial;
 }
 
-export interface BaseComparisonConfig {
+export interface OutputConfig {
     identifiers: string[];
     outputType: 'raw' | 'excel';
     outputPath: string;
 }
 
-export function parseBaseComparisonConfig(dict: JSONObject): BaseComparisonConfig {
-    return dict as unknown as BaseComparisonConfig;
+export function parseOutputConfig(dict: JSONValue): OutputConfig {
+    if (!dict || typeof dict !== 'object' || Array.isArray(dict)) {
+        throw new Error('Base Comparison Config item must be an object type');
+    }
+    return dict as unknown as OutputConfig;
 }
 
 export interface Config {
@@ -100,7 +103,7 @@ export interface Config {
     rightPath: string;
     outputPath: string;
     comparatorConfig: ComparatorConfig;
-    baseComparison?: BaseComparisonConfig;
+    outputConfigs: OutputConfig[];
 }
 
 export function parseConfig(dict: JSONObject): Config {
@@ -126,12 +129,12 @@ export function parseConfig(dict: JSONObject): Config {
         rightPath: dict.rightPath,
         outputPath: dict.outputPath,
         comparatorConfig: parseComparatorConfig(dict.comparatorConfig),
-        baseComparison:
-            'baseComparison' in dict &&
-            dict.baseComparison &&
-            typeof dict.baseComparison === 'object' &&
-            !Array.isArray(dict.baseComparison)
-                ? parseBaseComparisonConfig(dict.baseComparison)
-                : undefined,
+        outputConfigs:
+            'outputConfigs' in dict &&
+            dict.outputConfigs &&
+            typeof dict.outputConfigs === 'object' &&
+            Array.isArray(dict.outputConfigs)
+                ? dict.outputConfigs.map((v) => parseOutputConfig(v))
+                : [],
     };
 }

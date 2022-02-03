@@ -24,15 +24,15 @@ console.timeEnd('comparison');
 fs.writeFileSync(config.outputPath, JSON.stringify(comparison));
 console.log(`Saved comparison output to ${config.outputPath}`);
 
-if (config.baseComparison) {
+config.outputConfigs.forEach((outputConfig) => {
     const selectionResults = buildSelection(comparison, 'controls');
     const blc = performBaseLevelComparison(selectionResults, trackRawObject('', leftDoc), trackRawObject('', rightDoc));
 
-    if (config.baseComparison.outputType === 'raw') {
-        fs.writeFileSync(config.baseComparison.outputPath, JSON.stringify(blc, null, 2));
-        console.log(`Saved base level comparison output to ${config.baseComparison.outputPath}`);
-    } else if (config.baseComparison.outputType === 'excel') {
-        generateBlcSpreadsheet(blc, config.baseComparison.outputPath, config.baseComparison.identifiers);
-        console.log(`Saved base level comparison spreadsheet to ${config.baseComparison.outputPath}`);
+    if (outputConfig.outputType === 'raw') {
+        fs.writeFileSync(outputConfig.outputPath, JSON.stringify(blc, null, 2));
+        console.log(`Saved base level comparison output to ${outputConfig.outputPath}`);
+    } else if (outputConfig.outputType === 'excel') {
+        generateBlcSpreadsheet(blc, outputConfig.outputPath, outputConfig.identifiers);
+        console.log(`Saved base level comparison spreadsheet to ${outputConfig.outputPath}`);
     }
-}
+});
