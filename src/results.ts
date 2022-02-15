@@ -55,6 +55,7 @@ export interface ArraySubElement {
     leftPointer: string;
     rightPointer: string;
     changes: Change[];
+    score: number;
 }
 
 export class ArrayChanged {

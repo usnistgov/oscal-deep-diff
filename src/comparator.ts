@@ -7,10 +7,12 @@ import {
     PropertyChanged,
     PropertyLeftOnly,
     PropertyRightOnly,
+    ArraySubElement,
 } from './results';
 import { MatcherResults } from './matching';
 import { TrackedArray, TrackedElement, TrackedObject, TrackedPrimitive, trackRawObject } from './utils/tracked';
 import {
+    convertPointerToCondition,
     countSubElements,
     getPropertyUnion,
     JSONValue,
@@ -163,9 +165,17 @@ export default class Comparator {
             settings,
         );
 
+        let outOfTreeMatches: ArraySubElement[] = [];
+        let outOfTreeScoreDelta = 0;
+
+        // out of tree
+        if (settings.outOfTreeEnabled) {
+            [outOfTreeMatches, outOfTreeScoreDelta] = this.compareOutOfTree(subElements);
+        }
+
         const result: ComparisonResult = [
-            [new ArrayChanged(left.pointer, right.pointer, rightOnly, leftOnly, subElements, [])],
-            changeCount,
+            [new ArrayChanged(left.pointer, right.pointer, rightOnly, leftOnly, subElements, outOfTreeMatches)],
+            changeCount + outOfTreeScoreDelta,
         ];
 
         // this.cache.set(left.pointer, right.pointer, result);
@@ -189,5 +199,108 @@ export default class Comparator {
                 },
                 [[], [], [], Infinity],
             );
+    }
+
+    /**
+     * NOTE: this function has a SIDE EFFECT of removing matched items from subChanges
+     * @returns The out of tree matches, and the delta of newly matched items
+     */
+    private compareOutOfTree(subChanges: ArraySubElement[]): [ArraySubElement[], number] {
+        const leftPotentialMatches = new Map<string, TrackedElement[]>();
+        const rightPotentialMatches = new Map<string, TrackedElement[]>();
+
+        // find all potential matches
+        for (const subChange of subChanges) {
+            for (const subChangeChange of subChange.changes) {
+                if (subChangeChange instanceof ArrayChanged) {
+                    for (const potentialLeftMatches of subChangeChange.leftOnly) {
+                        const condition = convertPointerToCondition(potentialLeftMatches.leftPointer);
+                        const potentialMatches = leftPotentialMatches.get(condition);
+
+                        const trackedPotentialMatches = trackRawObject(
+                            potentialLeftMatches.leftPointer,
+                            potentialLeftMatches.leftElement,
+                        );
+
+                        if (potentialMatches) {
+                            potentialMatches.push(trackedPotentialMatches);
+                        } else {
+                            leftPotentialMatches.set(condition, [trackedPotentialMatches]);
+                        }
+                    }
+
+                    for (const potentialRightMatches of subChangeChange.rightOnly) {
+                        const condition = convertPointerToCondition(potentialRightMatches.rightPointer);
+                        const potentialMatches = rightPotentialMatches.get(condition);
+
+                        const trackedPotentialMatches = trackRawObject(
+                            potentialRightMatches.rightPointer,
+                            potentialRightMatches.rightPointer,
+                        );
+
+                        if (potentialMatches) {
+                            potentialMatches.push(trackedPotentialMatches);
+                        } else {
+                            rightPotentialMatches.set(condition, [trackedPotentialMatches]);
+                        }
+                    }
+                }
+            }
+        }
+
+        const matches: ArraySubElement[] = [];
+        let scoreDelta = 0;
+
+        const leftToAblate = [];
+        const rightToAblate = [];
+
+        // compare all potential matches
+        for (const [condition, leftArrayItems] of leftPotentialMatches) {
+            const rightArrayItems = rightPotentialMatches.get(condition);
+            if (rightArrayItems) {
+                const [, , conditionMatches] = this.compareElementArray(
+                    leftArrayItems,
+                    rightArrayItems,
+                    this.settingsForPointer(condition),
+                );
+
+                for (const conditionMatch of conditionMatches) {
+                    scoreDelta += conditionMatch.score;
+                    leftToAblate.push(conditionMatch.leftPointer);
+                    rightToAblate.push(conditionMatch.rightPointer);
+                }
+
+                matches.push(...conditionMatches);
+            }
+        }
+
+        // ablate matched items from change history
+        for (const subChange of subChanges) {
+            for (const subChangeChange of subChange.changes) {
+                if (subChangeChange instanceof ArrayChanged) {
+                    for (let i = 0; i < subChangeChange.leftOnly.length; i++) {
+                        for (const leftAblation of leftToAblate) {
+                            if (subChangeChange.leftOnly[i].leftPointer == leftAblation) {
+                                scoreDelta -= countSubElements(subChangeChange.leftOnly[i].leftElement);
+                                subChangeChange.leftOnly.splice(i, 1);
+                                break;
+                            }
+                        }
+                    }
+
+                    for (let i = 0; i < subChangeChange.rightOnly.length; i++) {
+                        for (const rightAblation of leftToAblate) {
+                            if (subChangeChange.rightOnly[i].rightPointer == rightAblation) {
+                                scoreDelta -= countSubElements(subChangeChange.rightOnly[i].rightElement);
+                                subChangeChange.rightOnly.splice(i, 1);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return [matches, scoreDelta];
     }
 }

@@ -35,12 +35,12 @@ export function scoringMatcherFactory(
                     }
                 });
 
-                let changeCount = 0;
+                let totalScore = 0;
 
                 return [
                     unmatchedLeftIndices.map((leftIndex) => {
                         const item = left[leftIndex];
-                        changeCount += countSubElements(item.raw);
+                        totalScore += countSubElements(item.raw);
                         return {
                             leftPointer: item.pointer,
                             leftElement: item.raw,
@@ -48,7 +48,7 @@ export function scoringMatcherFactory(
                     }),
                     rightArrayIndices.map((rightIndex) => {
                         const item = right[rightIndex];
-                        changeCount += countSubElements(item.raw);
+                        totalScore += countSubElements(item.raw);
                         return {
                             rightPointer: item.pointer,
                             rightElement: item.raw,
@@ -58,16 +58,17 @@ export function scoringMatcherFactory(
                         const leftElement = left[leftIndex];
                         const rightElement = right[rightIndex];
 
-                        const [subChanges, subChangeCount] = compareFunc(leftElement, rightElement);
-                        changeCount += subChangeCount;
+                        const [changes, score] = compareFunc(leftElement, rightElement);
+                        totalScore += score;
 
                         return {
                             leftPointer: leftElement.pointer,
                             rightPointer: rightElement.pointer,
-                            changes: subChanges,
+                            changes,
+                            score,
                         };
                     }),
-                    changeCount,
+                    totalScore,
                 ];
             },
     );
@@ -223,13 +224,14 @@ export const hungarianMatcher: Matcher = (left, right, compareFunc) => {
             const leftElement = left[lIndex];
             const rightElement = right[rIndex];
 
-            const [changes, cost] = compareFunc(leftElement, rightElement);
-            totalCost += cost;
+            const [changes, score] = compareFunc(leftElement, rightElement);
+            totalCost += score;
 
             return {
                 leftPointer: leftElement.pointer,
                 rightPointer: rightElement.pointer,
                 changes,
+                score,
             };
         }),
         totalCost,

@@ -7,6 +7,7 @@ export type ComparatorStepConfig = {
     matcherGenerators: MatcherContainer[];
     selectionPaths: string[];
     stringComparisonMethod: 'jaro-wrinker' | 'cosine' | 'absolute';
+    outOfTreeEnabled: boolean;
     priority: number;
 };
 
@@ -16,6 +17,7 @@ export const BASE_SETTINGS: ComparatorStepConfig = {
     matcherGenerators: [new OptimalMatcherContainer()],
     selectionPaths: [],
     stringComparisonMethod: 'absolute',
+    outOfTreeEnabled: false,
     priority: 0,
 };
 
@@ -60,6 +62,10 @@ export function parsePartialComparatorStepConfig(dict: JSONObject): PartialCompa
 
     if ('ignoreCase' in dict && typeof dict.ignoreCase === 'boolean') {
         partial.ignoreCase = dict.ignoreCase;
+    }
+
+    if ('outOfTreeEnabled' in dict && typeof dict.outOfTreeEnabled === 'boolean') {
+        partial.outOfTreeEnabled = dict.outOfTreeEnabled;
     }
 
     if ('matcherGenerators' in dict && Array.isArray(dict.matcherGenerators)) {
