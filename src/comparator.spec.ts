@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 import Comparator from './comparator';
+import { BASE_SETTINGS, mergePartialComparatorStepConfigs } from './configuration';
 import { ArrayChanged, PropertyChanged } from './results';
-import { trackRawObject } from './utils/tracked';
+import { trackRawObject, TrackedArray } from './utils/tracked';
 
 /**
  * Comparator with default options to test "default" behavior
@@ -183,11 +184,13 @@ describe('Comparator ignore option', () => {
                     leftPointer: '/0',
                     rightPointer: '/0',
                     changes: [],
+                    score: 0,
                 },
                 {
                     leftPointer: '/1',
                     rightPointer: '/1',
                     changes: [],
+                    score: 0,
                 },
             ]);
         }
@@ -210,5 +213,87 @@ describe('Comparator ignore option', () => {
         ];
         const results = ignoreIdComparator.compare(...ignoredSubObjects);
         expect(results.changes).to.have.length(0);
+    });
+});
+
+describe('Comparator out of tree', () => {
+    const left = new TrackedArray('', [
+        {
+            id: 1,
+            subObjs: [
+                {
+                    obj: 1,
+                },
+            ],
+        },
+        {
+            id: 2,
+            subObjs: [
+                {
+                    obj: 2,
+                },
+            ],
+        },
+    ]);
+
+    const right = new TrackedArray('', [
+        {
+            id: 1,
+            subObjs: [
+                {
+                    obj: 2,
+                },
+            ],
+        },
+        {
+            id: 2,
+            subObjs: [
+                {
+                    obj: 1,
+                },
+            ],
+        },
+    ]);
+
+    it('Should not match out of tree when disabled', () => {
+        const [changes, count] = defaultComparator['compareArrays'](left, right, BASE_SETTINGS);
+
+        // greater arrays matched, but minor arrays are not
+        expect(count).to.equal(4);
+        expect(changes).to.have.length(1);
+        expect(changes[0]).instanceOf(ArrayChanged);
+        if (changes[0] instanceof ArrayChanged) {
+            expect(changes[0].leftOnly).to.have.length(0);
+            expect(changes[0].rightOnly).to.have.length(0);
+            expect(changes[0].subChanges).to.have.length(2);
+
+            expect(changes[0].subChanges[0].score).to.equal(2);
+            expect(changes[0].subChanges[1].score).to.equal(2);
+
+            expect(changes[0].outOfTreeChanges).to.have.length(0);
+        }
+    });
+
+    it('Should match out of tree when enabled', () => {
+        const [changes, count] = defaultComparator['compareArrays'](
+            left,
+            right,
+            mergePartialComparatorStepConfigs(BASE_SETTINGS, { priority: 1, outOfTreeEnabled: true }),
+        );
+
+        // greater arrays matched, minor arrays are matched out of tree
+        expect(count).to.equal(0);
+        expect(changes).to.have.length(1);
+        expect(changes[0]).instanceOf(ArrayChanged);
+        if (changes[0] instanceof ArrayChanged) {
+            expect(changes[0].leftOnly).to.have.length(0);
+            expect(changes[0].rightOnly).to.have.length(0);
+            expect(changes[0].subChanges).to.have.length(2);
+
+            expect(changes[0].subChanges[0].score).to.equal(0);
+            expect(changes[0].subChanges[1].score).to.equal(0);
+
+            expect(changes[0].outOfTreeChanges).to.have.length(2);
+        }
     });
 });

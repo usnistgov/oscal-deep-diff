@@ -235,7 +235,7 @@ export default class Comparator {
 
                         const trackedPotentialMatches = trackRawObject(
                             potentialRightMatches.rightPointer,
-                            potentialRightMatches.rightPointer,
+                            potentialRightMatches.rightElement,
                         );
 
                         if (potentialMatches) {
@@ -281,7 +281,9 @@ export default class Comparator {
                     for (let i = 0; i < subChangeChange.leftOnly.length; i++) {
                         for (const leftAblation of leftToAblate) {
                             if (subChangeChange.leftOnly[i].leftPointer == leftAblation) {
-                                scoreDelta -= countSubElements(subChangeChange.leftOnly[i].leftElement);
+                                const score = countSubElements(subChangeChange.leftOnly[i].leftElement);
+                                scoreDelta -= score;
+                                subChange.score -= score;
                                 subChangeChange.leftOnly.splice(i, 1);
                                 break;
                             }
@@ -291,7 +293,9 @@ export default class Comparator {
                     for (let i = 0; i < subChangeChange.rightOnly.length; i++) {
                         for (const rightAblation of leftToAblate) {
                             if (subChangeChange.rightOnly[i].rightPointer == rightAblation) {
-                                scoreDelta -= countSubElements(subChangeChange.rightOnly[i].rightElement);
+                                const score = countSubElements(subChangeChange.rightOnly[i].rightElement);
+                                scoreDelta -= score;
+                                subChange.score -= score;
                                 subChangeChange.rightOnly.splice(i, 1);
                                 break;
                             }

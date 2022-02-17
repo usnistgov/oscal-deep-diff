@@ -147,6 +147,10 @@ function searchComparisonForSelection(changes: Change[], condition: string, sele
             });
             selection.rightOnly.push(...rightMatches.map((r) => ({ rightPointer: r.pointer })));
 
+            change.outOfTreeChanges.forEach((ootChange) => {
+                searchComparisonForSelection(ootChange.changes, condition, selection);
+            });
+
             if (
                 testPointerCondition(change.leftPointer, condition) &&
                 testPointerCondition(change.rightPointer, condition)
