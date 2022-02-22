@@ -20,7 +20,7 @@ console.time('comparison');
 const comparison = comparator.compare(leftDoc, config.leftPath, rightDoc, config.rightPath);
 console.timeEnd('comparison');
 
-fs.writeFileSync(config.outputPath, JSON.stringify(comparison));
+fs.writeFileSync(config.outputPath, JSON.stringify(comparison, null, 2));
 console.log(`Saved comparison output to ${config.outputPath}`);
 
 config.outputConfigs.forEach((outputConfig) => {
@@ -28,7 +28,7 @@ config.outputConfigs.forEach((outputConfig) => {
         `Processing output config (selecting ${outputConfig.identifiers} and saving ${outputConfig.outputType} output)`,
     );
 
-    const selectionResults = buildSelection(comparison, 'controls');
+    const selectionResults = buildSelection(comparison, outputConfig.selection);
     const intermediateOutput = performIntermediateComparison(
         selectionResults,
         trackRawObject('', leftDoc),

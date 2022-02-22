@@ -95,6 +95,7 @@ export interface OutputConfig {
     identifiers: string[];
     outputType: 'raw' | 'excel';
     outputPath: string;
+    selection: string;
 }
 
 export function parseOutputConfig(dict: JSONValue): OutputConfig {
