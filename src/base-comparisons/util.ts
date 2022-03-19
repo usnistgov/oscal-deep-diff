@@ -155,8 +155,6 @@ function searchComparisonForSelection(changes: Change[], condition: string, sele
                 testPointerCondition(change.leftPointer, condition) &&
                 testPointerCondition(change.rightPointer, condition)
             ) {
-                selection.leftOnly.push(...change.leftOnly);
-                selection.rightOnly.push(...change.rightOnly);
                 selection.matched.push(...change.subChanges);
             }
         }

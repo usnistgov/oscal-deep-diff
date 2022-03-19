@@ -108,7 +108,7 @@ export class ObjectPropertyMatcherContainer implements MatcherContainer {
                     this.property in left.raw &&
                     this.property in right.raw
                 ) {
-                    return left.raw.matchProperty === right.raw.matchProperty ? 1 : 0;
+                    return left.raw[this.property] === right.raw[this.property] ? 1 : 0;
                 }
                 return 0;
             },
