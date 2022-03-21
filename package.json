@@ -1,13 +1,13 @@
 {
   "name": "@oscal/oscal-deep-diff",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "description": "A deep diff tool",
   "main": "./lib/index.js",
   "bin": {
     "oscal-deep-diff": "./bin/oscal-deep-diff"
   },
   "scripts": {
-    "start": "ts-node src/cli.ts",
+    "start": "ts-node src/cli/cli.ts",
     "build": "tsc -p .",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "refresh": "rm -rf ./node_modules ./package-lock.json && npm install",
@@ -26,7 +26,10 @@
   },
   "homepage": "https://github.com/usnistgov/oscal-deep-diff",
   "keywords": [
-    "oscal"
+    "oscal",
+    "nist",
+    "json",
+    "diff"
   ],
   "author": "Nikita Wootten",
   "license": "SEE LICENSE IN LICENSE.md",
