@@ -33,6 +33,7 @@ config.outputConfigs.forEach((outputConfig) => {
         selectionResults,
         trackRawObject('', leftDoc),
         trackRawObject('', rightDoc),
+        outputConfig.identifiers,
     );
 
     if (outputConfig.outputType === 'raw') {

@@ -1,11 +1,11 @@
 # OSCAL Deep Diff
 
-[![oscal](https://circleci.com/gh/usnistgov/oscal-deep-diff.svg?style=svg)](https://github.com/usnistgov/oscal-deep-diff/tree/master/.circleci)
-
 OSCAL Deep Diff is a CLI application and library that can produce schema-agnostic comparisons of JSON artifacts.
 This tool was developed to compare [OSCAL](https://pages.nist.gov/OSCAL/) artifacts.
 
 ## Usage
+
+For end-to-end examples of usage, refer to the [`examples/`](./examples/) directory.
 
 ### CLI Installation
 

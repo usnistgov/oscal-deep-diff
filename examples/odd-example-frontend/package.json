@@ -1,0 +1,32 @@
+{
+  "name": "odd-example-frontend",
+  "version": "1.0.0",
+  "description": "An example frontend using OSCAL-deep-diff",
+  "private": "true",
+  "scripts": {
+    "start": "webpack serve --static=dist --mode=development",
+    "build": "webpack --mode=production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usnistgov/oscal-deep-diff.git"
+  },
+  "bugs": {
+    "url": "https://github.com/usnistgov/oscal-deep-diff/issues"
+  },
+  "author": "Nikita Wootten",
+  "license": "SEE LICENSE IN ../../LICENSE.md",
+  "dependencies": {
+    "@oscal/oscal-deep-diff": "^0.0.2",
+    "bootstrap": "^5.1.3",
+    "yaml": "^1.10.0"
+  },
+  "devDependencies": {
+    "css-loader": "^6.5.1",
+    "html-webpack-plugin": "^5.5.0",
+    "style-loader": "^3.3.1",
+    "webpack": "^5.71.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.8.1"
+  }
+}
