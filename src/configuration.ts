@@ -5,7 +5,7 @@ export type ComparatorStepConfig = {
     ignore: string[];
     ignoreCase: boolean;
     matcherGenerators: MatcherContainer[];
-    stringComparisonMethod: 'jaro-wrinker' | 'cosine' | 'absolute';
+    stringComparisonMethod: 'jaro-wrinkler' | 'cosine' | 'absolute';
     outOfTreeEnabled: boolean;
     priority: number;
 };
@@ -74,7 +74,7 @@ export function parsePartialComparatorStepConfig(dict: JSONObject): PartialCompa
         if (
             dict.stringComparisonMethod === 'absolute' ||
             dict.stringComparisonMethod === 'cosine' ||
-            dict.stringComparisonMethod === 'jaro-wrinker'
+            dict.stringComparisonMethod === 'jaro-wrinkler'
         ) {
             partial.stringComparisonMethod = dict.stringComparisonMethod;
         } else {

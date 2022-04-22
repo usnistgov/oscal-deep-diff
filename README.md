@@ -88,7 +88,7 @@ This check happens for all JSON types, objects (such as `/catalog`), primitives 
 #### Primitive Configuration
 
 -   `ignoreCase: boolean`: Used for case-insensitive comparisons of string elements.
--   `stringComparisonMethod: 'jaro-wrinker' | 'cosine' | 'absolute'`: For string elements, this setting controls how string are weighted.
+-   `stringComparisonMethod: 'jaro-wrinkler' | 'cosine' | 'absolute'`: For string elements, this setting controls how string are weighted, using the [Jaro-Wrinkler](https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance), cosine, or absolute edit distance strategies.
     As an example, UUIDs should always be compared absolutely, but in some cases there is meaning in properties that are similar to each other.
 
 #### Array Configuration
