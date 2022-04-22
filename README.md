@@ -60,7 +60,7 @@ Below is an example of a comparator config that is tailored for an [OSCAL Catalo
 comparatorConfig:
     '*':
         ignoreCase: true
-    'contols/#':
+    'controls/#':
         ignore:
             - controls
     id:

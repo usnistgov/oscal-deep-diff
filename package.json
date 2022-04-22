@@ -36,7 +36,7 @@
     "diff"
   ],
   "author": "Nikita Wootten",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "NIST-PD-fallback",
   "dependencies": {
     "commander": "^5.1.0",
     "exceljs": "^4.2.1",

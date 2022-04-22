@@ -15,7 +15,7 @@
     "url": "https://github.com/usnistgov/oscal-deep-diff/issues"
   },
   "author": "Nikita Wootten",
-  "license": "SEE LICENSE IN ../../LICENSE.md",
+  "license": "NIST-PD-fallback",
   "dependencies": {
     "@oscal/oscal-deep-diff": "^0.0.2",
     "bootstrap": "^5.1.3",
