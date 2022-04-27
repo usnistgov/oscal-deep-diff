@@ -1,16 +1,12 @@
 import * as fs from 'fs';
 import { parseCliOptions } from './cli-utils';
 import Comparator from '../comparator';
-import { parseConfig } from '../configuration';
 import { performIntermediateComparison } from '../base-comparisons/intermediate-output';
 import { trackRawObject } from '../utils/tracked';
 import { generateOutputSpreadsheet } from '../base-comparisons/excel-output';
-import YAML from 'yaml';
 import { buildSelection } from '../base-comparisons/util';
 
-const cliOptions = parseCliOptions();
-const config = parseConfig(YAML.parse(fs.readFileSync(cliOptions.config).toString()));
-
+const config = parseCliOptions();
 const comparator = new Comparator(config.comparatorConfig);
 
 const leftDoc = JSON.parse(fs.readFileSync(config.leftPath).toString());
