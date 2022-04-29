@@ -1,7 +1,7 @@
 # OSCAL Deep Diff
 
 OSCAL Deep Diff is a CLI application and library that can produce schema-agnostic comparisons of JSON artifacts.
-This tool was developed to compare [OSCAL](https://pages.nist.gov/OSCAL/) artifacts.
+The purpose of this tool is to compare [OSCAL](https://pages.nist.gov/OSCAL/) artifacts.
 
 ## Usage
 
@@ -48,7 +48,7 @@ The deep diff tool can match arrays of objects even if they are out of order, bu
 For example, when comparing two revisions of an [OSCAL Catalog](https://pages.nist.gov/OSCAL/concepts/layer/control/catalog), the tool must correctly match controls between the two documents together.
 This matching behavior can be changed in many ways, such as matching controls directly by ID (`AC-1` always maps to `AC-1` and so on) or by selecting the pair of control objects that minimize the number of "sub-changes" that matching pair produces.
 
-The `comparatorConfig` field of the OSCAL Deep Diff configuration controls all of this behavior.
+The `comparatorConfig` field of the OSCAL Deep Diff configuration controls this behavior.
 
 #### Anatomy
 
@@ -73,12 +73,12 @@ comparatorConfig:
 
 In this example, the comparator will have the following behavior:
 
--   `*`: All fields will be compared in a case-insensitive manner (glob-like syntax is supported)
--   `controls/#`: Every control's sub-controls (enhancements) will be ignored
--   `id`: Any `id` field will be compared with case-sensitivity, overriding the `*` configuration
+-   `*`: All fields will be compared in a case-insensitive manner (glob-like syntax is supported).
+-   `controls/#`: Every control's sub-controls (enhancements) will be ignored.
+-   `id`: Any `id` field will be compared with case-sensitivity, overriding the `*` configuration.
 -   `/catalog`: When the `/catalog` is being compared, ignore the `back-matter` field.
 
-Notice, that each item of the configuration map tells the comparator **how to compare elements whose JSON pointers match the pattern**.
+Notice that each item of the configuration map tells the comparator **how to compare elements whose JSON pointers match the pattern**.
 This check happens for all JSON types, objects (such as `/catalog`), primitives (such as `id`), and arrays (such as `controls`).
 
 #### Object Configuration
@@ -88,8 +88,8 @@ This check happens for all JSON types, objects (such as `/catalog`), primitives 
 #### Primitive Configuration
 
 -   `ignoreCase: boolean`: Used for case-insensitive comparisons of string elements.
--   `stringComparisonMethod: 'jaro-wrinkler' | 'cosine' | 'absolute'`: For string elements, this setting controls how string are weighted, using the [Jaro-Wrinkler](https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance), cosine, or absolute edit distance strategies.
-    As an example, UUIDs should always be compared absolutely, but in some cases there is meaning in properties that are similar to each other.
+-   `stringComparisonMethod: 'jaro-winkler' | 'cosine' | 'absolute'`: For string elements, this setting controls how string are weighted using the [Jaro-Winkler](https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance), cosine, or absolute edit distance strategies.
+    As an example, UUIDs should always be compared absolutely, but in some cases, there is meaning in properties that are similar to each other.
 
 #### Array Configuration
 
@@ -165,9 +165,9 @@ The change types are:
 
 ### Alternative Outputs
 
-The `outputConfigs` property of the comparison is used to transform the raw output into a more easily digesteable document.
+The `outputConfigs` property of the comparison is used to transform the raw output into a more easily digestible document.
 
-For example, a comparison of two [OSCAL Catalogs](https://pages.nist.gov/OSCAL/concepts/layer/control/catalog/) is generally pretty unweildly as the number of controls increases.
+For example, a comparison of two [OSCAL Catalogs](https://pages.nist.gov/OSCAL/concepts/layer/control/catalog/) is generally pretty unweildy as the number of controls increases.
 The raw output can be transformed into an Excel document that collects all of the control-level changes.
 
 ```yaml

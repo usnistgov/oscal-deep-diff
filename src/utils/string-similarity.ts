@@ -1,6 +1,6 @@
 // Adopted from https://medium.com/@sumn2u/string-similarity-comparision-in-js-with-examples-4bae35f13968
 
-export function jaroWrinklerSimilarity(s1: string, s2: string): number {
+export function jaroWinklerSimilarity(s1: string, s2: string): number {
     let m = 0;
 
     // Exit early if either are empty.
@@ -111,8 +111,8 @@ export default function stringSimilarity(s1: string, s2: string, method: string,
     }
 
     switch (method) {
-        case 'jaro-wrinkler':
-            return jaroWrinklerSimilarity(s1, s2);
+        case 'jaro-winkler':
+            return jaroWinklerSimilarity(s1, s2);
         case 'cosine':
             return cosineSimilarity(s1, s2);
         case 'absolute':
