@@ -1,6 +1,6 @@
 {
   "name": "@oscal/oscal-deep-diff",
-  "version": "1.0.0",
+  "version": "0.0.3",
   "description": "A deep diff tool",
   "main": "./lib/index.js",
   "bin": {
