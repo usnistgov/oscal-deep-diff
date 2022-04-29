@@ -1,18 +1,22 @@
 {
   "name": "@oscal/oscal-deep-diff",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "description": "A deep diff tool",
   "main": "./lib/index.js",
   "bin": {
     "oscal-deep-diff": "./bin/oscal-deep-diff"
   },
+  "files": [
+    "/lib",
+    "/bin"
+  ],
   "scripts": {
-    "start": "nodemon src/index.ts",
+    "start": "ts-node src/cli/cli.ts",
     "build": "tsc -p .",
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "refresh": "rm -rf ./node_modules ./package-lock.json && npm install",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "tslint -p tsconfig.json",
+    "lint": "eslint .",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint"
@@ -26,30 +30,31 @@
   },
   "homepage": "https://github.com/usnistgov/oscal-deep-diff",
   "keywords": [
-    "oscal"
+    "oscal",
+    "nist",
+    "json",
+    "diff"
   ],
   "author": "Nikita Wootten",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "NIST-PD-fallback",
   "dependencies": {
-    "commander": "^5.1.0"
+    "commander": "^5.1.0",
+    "exceljs": "^4.2.1",
+    "yaml": "^1.10.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.9.1",
+    "@typescript-eslint/eslint-plugin": "^4.28.1",
+    "@typescript-eslint/parser": "^4.28.1",
     "chai": "^4.2.0",
-    "mocha": "^7.1.1",
-    "nodemon": "^2.0.2",
-    "prettier": "^2.0.5",
+    "eslint": "^7.29.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "mocha": "^9.2.0",
+    "prettier": "2.3.2",
     "ts-node": "^8.6.2",
-    "tslint": "^6.1.2",
-    "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.8.3"
-  },
-  "nodemonConfig": {
-    "watch": "src/**/*.ts",
-    "execMap": {
-      "ts": "ts-node"
-    }
   }
 }

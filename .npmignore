@@ -1,7 +1,0 @@
-src
-docs
-tsconfig.json
-tslint.json
-.prettierrc
-.github
-.circleci

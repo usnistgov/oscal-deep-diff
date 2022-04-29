@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { getPropertyUnion, getPropertyIntersection, getType, resolvePointer, testPointerCondition } from './utils';
+import { getPropertyUnion, getPropertyIntersection, getType, resolvePointer, testPointerCondition } from './json';
 
 /*
  * Tests for util.ts
@@ -63,7 +63,6 @@ describe('getType()', () => {
         expect(getType(123)).equals('number');
         expect(getType('hey there')).equals('string');
         expect(getType(null)).equals('null');
-        expect(getType(undefined)).equals('undefined');
     });
 
     it('object', () => {
@@ -89,7 +88,7 @@ describe('resolvePointer()', () => {
     });
 
     it('error cases', () => {
-        expect(() => resolvePointer({ a: true }, 'b')).to.throw(/does not exist in sub\-object/);
+        expect(() => resolvePointer({ a: true }, 'b')).to.throw(/does not exist in sub-object/);
         expect(() => resolvePointer([], '0')).to.throw(/is out of bounds/);
         expect(() => resolvePointer([], '0.5')).to.throw(/is not a valid index/);
         expect(() => resolvePointer(1, 'subprop')).to.throw(/of primitive/);
@@ -97,8 +96,27 @@ describe('resolvePointer()', () => {
 });
 
 describe('testPointerCondition()', () => {
-    it('simple cases', () => {
-        expect(testPointerCondition('/catalog/groups/0/id', '/catalog/groups/#/id')).to.be.true;
+    it('pointer conditions without a beginning / should match sub-elements', () => {
+        expect(testPointerCondition('/catalog/groups/0/controls/12', 'controls/#')).to.be.true;
+
         expect(testPointerCondition('/metadata/id', 'id')).to.be.true;
+    });
+
+    it('pointer conditions with # should substitute array indices', () => {
+        expect(testPointerCondition('/catalog/groups/0/id', '/catalog/groups/#/id')).to.be.true;
+
+        expect(testPointerCondition('/catalog/groups/4/controls/10', '/catalog/groups/#/controls/#')).to.be.true;
+    });
+
+    it('pointer conditions without a beginning / should test all possible sub-pointer starting candidates', () => {
+        // match to first instance
+        expect(testPointerCondition('/catalog/groups/0/controls/12/controls/5', 'controls/#/controls/#')).to.be.true;
+
+        // match to last instance
+        expect(testPointerCondition('/catalog/groups/0/controls/12/controls/5', 'controls/#')).to.be.true;
+
+        // match to instance in between
+        expect(testPointerCondition('/catalog/groups/0/controls/12/controls/5/controls/1', 'controls/#/controls/#')).to
+            .be.true;
     });
 });

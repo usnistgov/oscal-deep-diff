@@ -1,14 +1,21 @@
+// raw json types
+export type JSONPrimitive = string | number | boolean | null;
+export type JSONValue = JSONPrimitive | JSONObject | JSONArray;
+export type JSONObject = { [member: string]: JSONValue };
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface JSONArray extends Array<JSONValue> {}
+
 /**
  * Returns the union of properties for both documents
  */
-export function getPropertyUnion(leftDocument: object, rightDocument: object): string[] {
+export function getPropertyUnion(leftDocument: JSONObject, rightDocument: JSONObject): string[] {
     return [...new Set([...Object.getOwnPropertyNames(leftDocument), ...Object.getOwnPropertyNames(rightDocument)])];
 }
 
 /**
  * Returns the intersection of properties for both documents
  */
-export function getPropertyIntersection(leftDocument: any, rightDocument: any): string[] {
+export function getPropertyIntersection(leftDocument: JSONObject, rightDocument: JSONObject): string[] {
     const leftDocProps = Object.getOwnPropertyNames(leftDocument);
     const rightDocProps = Object.getOwnPropertyNames(rightDocument);
 
@@ -17,9 +24,8 @@ export function getPropertyIntersection(leftDocument: any, rightDocument: any): 
 
 /**
  * Will return if element is an object, array, null, or default to typeof
- * @param element
  */
-export function getType(element: any): string {
+export function getType(element: JSONValue): string {
     return typeof element === 'object'
         ? Array.isArray(element)
             ? 'array'
@@ -27,6 +33,18 @@ export function getType(element: any): string {
             ? 'null'
             : 'object'
         : typeof element;
+}
+
+export function convertPointerToCondition(pointer: string): string {
+    return pointer
+        .split('/')
+        .map((property) => {
+            if (Number.isInteger(Number(property)) && property !== '') {
+                return '#';
+            }
+            return property;
+        })
+        .join('/');
 }
 
 /**
@@ -38,15 +56,17 @@ export function getType(element: any): string {
  * @param obj
  * @param pointer
  */
-export function resolvePointer(obj: any, pointer: string) {
+export function resolvePointer(obj: JSONValue, pointer: string): JSONValue {
     for (const subProp of pointer.split('/')) {
         const type = getType(obj);
         if (type === 'object') {
+            obj = obj as JSONObject;
             if (!(subProp in obj)) {
                 throw new Error(`Cannot resolve ${pointer}, ${subProp} does not exist in sub-object`);
             }
             obj = obj[subProp];
         } else if (type === 'array') {
+            obj = obj as JSONArray;
             const index = Number(subProp);
             if (!Number.isInteger(index)) {
                 throw new Error(
@@ -66,70 +86,65 @@ export function resolvePointer(obj: any, pointer: string) {
     return obj;
 }
 
-export type Condition = string;
-export type Pointer = string;
-
 /**
  * Tests if a pointer matches a certain condition
  *
  * Notes:
  * * Starting with a / denotes that you want to search from the root
  * * # and * denote numbers and wildcard tokens
- * * The first non-/ token must not be a # or a *
  *
  * Examples:
  * * calling testPointerCondition('/catalog/groups/0/id', '/catalog/groups/#/id') returns true
  * @param pointer
  * @param condition
  */
-export function testPointerCondition(pointer: string, condition: Condition): boolean {
+export function testPointerCondition(pointer: string, condition: string): boolean {
     if (!pointer.startsWith('/') && pointer !== '') {
         throw new Error(`Invalid path '${pointer}', must start with a '/'`);
     }
 
-    let subConditions = condition.split('/');
-    if (subConditions[0] === '') {
-        // condition begins with a /
-        pointer = pointer.slice(1);
-    } else {
-        const index = pointer.indexOf(subConditions[0]);
-        if (index === -1) {
-            return false; // first token does not exist
-        }
-
-        // remove everything before found first element and the proceeding /
-        pointer = pointer.slice(index + subConditions[0].length + 1);
-    }
-    subConditions = subConditions.splice(1); // first condition has been handled
-    let subPointers = pointer.split('/');
-
-    for (const subCondition of subConditions) {
-        if (subPointers.length === 0) {
-            return false;
-        } else if (subCondition === '#') {
-            if (!Number.isInteger(Number(subPointers[0]))) {
-                return false;
-            }
-        } else if (subCondition !== '*' && subCondition !== subPointers[0]) {
-            return false;
-        }
-        subPointers = subPointers.slice(1);
+    if (pointer === '' && condition === '/') {
+        return true;
     }
 
-    return subPointers.length === 0 || subPointers[0] === ''; // only true if nothing is left
+    // if a condition starts with '/', constrain regex to match with beginning of string
+    const patternPrefix = condition.startsWith('/') ? '^' : '';
+
+    const patternRoot = condition
+        .replace(/\//g, '\\/') // escape '/'
+        .replace(/#/g, '\\d+') // '#' matches all groups of digits
+        .replace(/\*/g, '[^/]'); // '*' matches all non-'/' characters
+
+    // build regex match pattern
+    const pattern = new RegExp(`${patternPrefix}${patternRoot}$`);
+
+    return pattern.test(pointer);
 }
 
-export function countSubElements(element: any): number {
+export function testPointerConditions(pointer: string, ...conditions: string[]): boolean {
+    for (const condition of conditions) {
+        if (testPointerCondition(pointer, condition)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+export function countSubElements(element: JSONValue, shallow = false): number {
     let count = 0;
     switch (getType(element)) {
         case 'object':
+            element = element as JSONObject;
             for (const property of Object.getOwnPropertyNames(element)) {
-                count += countSubElements(element[property]);
+                count += countSubElements(element[property], shallow);
             }
             break;
         case 'array':
-            for (const subElement of element) {
-                count += countSubElements(subElement);
+            if (!shallow) {
+                element = element as JSONArray;
+                for (const subElement of element) {
+                    count += countSubElements(subElement);
+                }
             }
             break;
         default:
@@ -137,8 +152,3 @@ export function countSubElements(element: any): number {
     }
     return count;
 }
-
-export const RedFG = '\x1b[31m';
-export const GreenFG = '\x1b[32m';
-export const YellowFG = '\x1b[33m';
-export const ResetConsole = '\x1b[0m';

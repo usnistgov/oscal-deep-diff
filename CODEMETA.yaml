@@ -1,0 +1,57 @@
+# NIST Opensource Portal repositories categories and themes.
+# Source: https://www.nist.gov/topics
+# Choose one catgeory and at least one theme as you think
+# adequate for your opensource repository.
+# Uncomment the category and the research
+# themes that suit you best.
+# You are also able to provide further details on the choices.
+# For example you could do:
+# categories:
+#   - scientific-software:
+#     - quantum-computing
+#     - theory
+# Since scientific-software is most common it is left as default.
+# Feel free to comment it with a dash if not appropriate.
+# You are able to pick multiple categories and themes.
+# Unlike categories there is no default theme.
+# Note: Make sure to remove unwanted categories in the repository
+# topics. The final topics are produced from this file and the topics.
+#
+# The following NIST topics and categories are based on the NIST
+# Taxonomy. It can be found here: 
+# https://data.nist.gov/od/id/691DDF3315711C14E0532457068146BE1907
+
+categories:
+  - scientific-software
+  # - ai-ml
+  # - simulation
+  # - visualization
+  # - build-tools
+  # - hpc-workflow
+themes:
+  # - Advanced communications
+  # - Artificial intelligence
+  # - Bioscience
+  # - Buildings & Construction
+  # - Chemistry
+  - Cybersecurity
+  # - Electronics
+  # - Energy
+  # - Environment
+  # - Fire
+  # - Forensic Science
+  # - Health
+  - Information Technology
+  # - Infrastructure
+  # - Manufacturing
+  # - Materials
+  # - Mathematics & Statistics
+  # - Metrology
+  # - Nanotechnology
+  # - Neutron research
+  # - Performance excellence
+  # - Physics
+  # - Public safety
+  # - Resilience
+  - Standards
+  # - Transportation

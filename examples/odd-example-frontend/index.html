@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>O.D.D. Example</title>
+    </head>
+    <body>
+        <div class="container">
+            <h1>O.D.D. Example</h1>
+
+            <div class="row">
+                <div class="col-sm">
+                    <label for="left_finput" class="form-label">Left Document</label>
+                    <input class="form-control" type="file" id="left_finput" onchange="validate()">
+                </div>
+                <div class="col-sm">
+                    <label for="right_finput" class="form-label">Right Document</label>
+                    <input class="form-control" type="file" id="right_finput" onchange="validate()">
+                </div>
+            </div>
+
+            <label for="config_input" class="form-label">Comparator Configuration (YAML)</label>
+            <textarea class="form-control" id="config_input" rows="5" onblur="validate()"></textarea>
+
+            <label class="form-check-label" for="intoutput_checkbox">
+                Perform Intermediate Output (specific to OSCAL Catalogs)
+            </label>
+            <input class="form-check-input" type="checkbox" id="intoutput_checkbox" checked/>
+
+            <div id="status_space"></div>
+
+            <button type="button" class="btn btn-lg btn-secondary w-100" id="submit_btn" onclick="diff()" disabled>
+                Deep Diff!
+            </button>
+
+            <div id="output_space"></div>
+        </div>
+    </body>
+</html>
