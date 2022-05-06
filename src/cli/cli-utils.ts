@@ -16,7 +16,7 @@ const YAML_DISCLAIMER = '(this can also be defined via the YAML config)';
 
 export function parseCliOptions(): Config {
     const command = new Command()
-        .version(process.env.npm_package_version ?? 'unknown')
+        .version('v1.0.0-1')
         .description('Deep Differencing of OSCAL JSON artifacts')
         .usage('[options]')
         .option('-c --config <filename>', 'YAML config file to read from')
@@ -42,7 +42,7 @@ export function parseCliOptions(): Config {
     }
 
     if (options.config) {
-        if (Object.keys(rawConfig).length === 0) {
+        if (Object.keys(rawConfig).length !== 0) {
             throw new Error('Base configuration cannot be defined both as an argument and as a file');
         }
 

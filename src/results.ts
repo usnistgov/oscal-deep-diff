@@ -104,4 +104,5 @@ export interface DocumentComparison {
     leftDocument: string;
     rightDocument: string;
     changes: Change[];
+    score: number;
 }

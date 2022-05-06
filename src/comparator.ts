@@ -48,12 +48,13 @@ export default class Comparator {
         const leftRoot = trackRawObject('', left);
         const rightRoot = trackRawObject('', right);
 
-        const [changes] = this.compareElements(leftRoot, rightRoot);
+        const [changes, score] = this.compareElements(leftRoot, rightRoot);
 
         return {
             leftDocument: leftSource,
             rightDocument: rightSource,
             changes,
+            score,
         };
     }
 
