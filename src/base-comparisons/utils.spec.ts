@@ -7,6 +7,7 @@ describe('Build Selection Path', () => {
         const comparison: DocumentComparison = {
             leftDocument: '',
             rightDocument: '',
+            score: 0,
             changes: [
                 new ArrayChanged(
                     '/catalog/groups',
@@ -52,6 +53,7 @@ describe('Build Selection Path', () => {
         const comparison: DocumentComparison = {
             leftDocument: '',
             rightDocument: '',
+            score: 0,
             changes: [
                 new ArrayChanged(
                     '/catalog/groups',
