@@ -1,7 +1,7 @@
 {
   "name": "@oscal/oscal-deep-diff",
   "version": "1.0.0-1",
-  "description": "A deep diff tool",
+  "description": "Open Security Controls Assessment Language (OSCAL) Deep Differencing Tool",
   "main": "./lib/index.js",
   "bin": {
     "oscal-deep-diff": "./bin/oscal-deep-diff"
@@ -17,6 +17,7 @@
     "refresh": "rm -rf ./node_modules ./package-lock.json && npm install",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint .",
+    "lint-fix": "eslint --fix .",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint"
@@ -51,6 +52,7 @@
     "chai": "^4.2.0",
     "eslint": "^7.29.0",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-header": "^3.1.1",
     "eslint-plugin-prettier": "^3.4.0",
     "mocha": "^9.2.0",
     "prettier": "2.3.2",

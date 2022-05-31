@@ -3,6 +3,18 @@
 OSCAL Deep Diff is a CLI application and library that can produce schema-agnostic comparisons of JSON artifacts.
 The purpose of this tool is to compare [OSCAL](https://pages.nist.gov/OSCAL/) artifacts.
 
+This effort is part of the National Institute of Standards and Technology (NIST) [OSCAL](https://pages.nist.gov/OSCAL/) Program.
+
+## Contributing to this code base
+
+Thank you for interest in contributing to the `metaschema-node` framework.
+For complete instructions on how to contribute code, please read through our [CONTRIBUTING.md](./CONTRIBUTING.md) documentation.
+
+## Public domain
+
+This project is in the worldwide [public domain](./LICENSE.md).
+As stated in [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Usage
 
 For end-to-end examples of usage, refer to the [`examples/`](./examples/) directory.
