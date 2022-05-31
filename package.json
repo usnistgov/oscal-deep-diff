@@ -1,6 +1,6 @@
 {
   "name": "@oscal/oscal-deep-diff",
-  "version": "1.0.0-1",
+  "version": "1.0.0",
   "description": "Open Security Controls Assessment Language (OSCAL) Deep Differencing Tool",
   "main": "./lib/index.js",
   "bin": {
