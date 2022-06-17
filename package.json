@@ -19,9 +19,10 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint .",
     "lint-fix": "eslint --fix .",
+    "license-gen": "npx npm-license-generator --template ./meta/license_summary.md --out-path ./DEP_LICENSES.md",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
-    "preversion": "npm run lint"
+    "preversion": "npm run lint && npm run license-gen"
   },
   "repository": {
     "type": "git",

@@ -22,7 +22,7 @@
         ],
         "header/header": [
             "error",
-            "./license_header.txt"
+            "./meta/license_header.txt"
         ]
     }
 }
