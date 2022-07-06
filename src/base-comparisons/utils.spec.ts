@@ -25,7 +25,24 @@
  */
 import { expect } from 'chai';
 import { ArrayChanged, DocumentComparison } from '../results';
-import { buildSelection } from './util';
+import { trackRawObject } from '../utils/tracked';
+import { buildSelection, extractIdentifiers, padNumericIdentifier } from './util';
+
+describe('padNumericIdentifier()', () => {
+    it('should pad a numeric identifier', () => {
+        expect(padNumericIdentifier('ac-3', 2)).equals('ac-03');
+    });
+});
+
+describe('extractIdentifiers()', () => {
+    it('should extract identifiers from a tracked element', () => {
+        const elem = trackRawObject('/', { id: 'ac', title: 'Access Control', controls: [] });
+        expect(extractIdentifiers(elem, ['id', 'title'])).deep.equals({
+            id: 'ac',
+            title: 'Access Control',
+        });
+    });
+});
 
 describe('Build Selection Path', () => {
     it('Should select basic match', () => {

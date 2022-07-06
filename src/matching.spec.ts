@@ -24,41 +24,40 @@
  * OF THE RESULTS OF, OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
 import { expect } from 'chai';
-import stringSimilarity from './string-similarity';
+import MatcherContainer, { HungarianMatcherContainer, ObjectPropertyMatcherContainer } from './matching';
 
-/*
- * Tests for string-similarity.ts
- */
+describe('MatcherContainer.fromDict()', () => {
+    it('throws on invalid or missing type', () => {
+        expect(() => MatcherContainer.fromDict({})).to.throw();
+        expect(() => MatcherContainer.fromDict({ type: 'invalid' })).to.throw();
+    });
+});
 
-describe('String Similarity', () => {
-    it('Jaro-Winkler ', () => {
-        expect(stringSimilarity('hi there', 'hi there', 'jaro-winkler', false)).equals(1);
-        expect(stringSimilarity('a', 'b', 'jaro-winkler', false)).equals(0);
-        expect(stringSimilarity('a', '', 'jaro-winkler', false)).equals(0);
-        expect(stringSimilarity('dog', 'log', 'jaro-winkler', false)).equals(
-            stringSimilarity('bog', 'fog', 'jaro-winkler', false),
-        );
-        // with jaro-winkler similarity, the beginning of the string is weighted more heavily
-        expect(stringSimilarity('aaa', 'aab', 'jaro-winkler', false)).to.be.greaterThan(
-            stringSimilarity('aaa', 'aba', 'jaro-winkler', false),
-        );
+describe('ObjectPropertyMatcherContainer', () => {
+    it('throws on an invalid', () => {
+        expect(() => MatcherContainer.fromDict({ type: 'ObjectPropertyMatcherContainer' })).to.throw();
     });
 
-    it('cosine', () => {
-        expect(stringSimilarity('hi there', 'hi there', 'cosine', false)).equals(1);
-        expect(stringSimilarity('a', 'b', 'cosine', false)).equals(0);
-        expect(stringSimilarity('a', '', 'cosine', false)).equals(0);
-        // with cosine similarity, the order of letters does not matter
-        expect(stringSimilarity('aaa', 'aab', 'cosine', false)).equals(stringSimilarity('aaa', 'aba', 'cosine', false));
+    it('can parse ObjectPropertyMatcherContainer', () => {
+        expect(() =>
+            ObjectPropertyMatcherContainer.fromDict({ type: 'ObjectPropertyMatcherContainer', property: 'id' }),
+        ).to.not.throw();
+    });
+});
+
+describe('OptimalMatcherContainer', () => {
+    it('does not throw on valid', () => {
+        expect(() => MatcherContainer.fromDict({ type: 'OptimalMatcherContainer' })).to.not.throw();
+    });
+});
+
+describe('HungarianMatcherContainer', () => {
+    it('does not throw on valid', () => {
+        expect(() => MatcherContainer.fromDict({ type: 'HungarianMatcherContainer' })).to.not.throw();
     });
 
-    it('absolute', () => {
-        expect(stringSimilarity('hi there', 'Hi there', 'absolute', false)).equals(0);
-        expect(stringSimilarity('hi there', 'Hi there', 'absolute', true)).equals(1);
-        expect(stringSimilarity('a', 'b', 'absolute', true)).equals(0);
-    });
-
-    it('unknown', () => {
-        expect(() => stringSimilarity('a', 'b', 'unknown', true)).to.throw();
+    it('generates a hungarian matcher', () => {
+        const container = new HungarianMatcherContainer();
+        expect(container.generate([], [])).to.have.lengthOf(1);
     });
 });

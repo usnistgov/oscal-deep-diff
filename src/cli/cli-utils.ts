@@ -39,16 +39,16 @@ interface CLIOptions {
 
 const YAML_DISCLAIMER = '(this can also be defined via the YAML config)';
 
-export function parseCliOptions(): Config {
+export function parseCliOptions(argv: string[]): Config {
     const command = new Command()
-        .version('v1.0.0-1')
+        .version('v1.0.1')
         .description('Deep Differencing of OSCAL JSON artifacts')
         .usage('[options]')
         .option('-c --config <filename>', 'YAML config file to read from')
         .option('-l --leftPath <filename>', 'The path of the left document ' + YAML_DISCLAIMER)
         .option('-r --rightPath <filename>', 'The path of the right document ' + YAML_DISCLAIMER)
         .option('-o --outputPath <filename>', 'The output path to write to ' + YAML_DISCLAIMER)
-        .parse(process.argv);
+        .parse(argv);
     // specially cast rawOptions object to CLIOptions interface (force typing)
     const options = command.opts() as unknown as CLIOptions;
 

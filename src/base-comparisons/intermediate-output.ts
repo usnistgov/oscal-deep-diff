@@ -59,18 +59,18 @@ export function performIntermediateComparison(
     comparison: Selection,
     leftDocument: TrackedElement,
     rightDocument: TrackedElement,
-    identfiers = ['id', 'title'],
+    identifiers = ['id', 'title'],
 ): IntermediateOutput[] {
     const res: IntermediateOutput[] = [
         ...comparison.leftOnly.map((leftOnly) => {
             return {
-                leftIdentifiers: extractIdentifiers(leftDocument.resolve(leftOnly.leftPointer), identfiers),
+                leftIdentifiers: extractIdentifiers(leftDocument.resolve(leftOnly.leftPointer), identifiers),
                 status: 'removed',
             } as IntermediateOutput;
         }),
         ...comparison.rightOnly.map((rightOnly) => {
             return {
-                rightIdentifiers: extractIdentifiers(rightDocument.resolve(rightOnly.rightPointer), identfiers),
+                rightIdentifiers: extractIdentifiers(rightDocument.resolve(rightOnly.rightPointer), identifiers),
                 status: 'added',
             } as IntermediateOutput;
         }),
@@ -90,17 +90,17 @@ export function performIntermediateComparison(
             );
 
             const moveDetails: MoveDetails = {
-                leftParentIdentifiers: extractIdentifiers(leftParent, identfiers),
-                rightParentIdentifiers: extractIdentifiers(rightParent, identfiers),
+                leftParentIdentifiers: extractIdentifiers(leftParent, identifiers),
+                rightParentIdentifiers: extractIdentifiers(rightParent, identifiers),
             };
 
             return {
-                leftIdentifiers: extractIdentifiers(leftControl, identfiers),
-                rightIdentifiers: extractIdentifiers(rightControl, identfiers),
+                leftIdentifiers: extractIdentifiers(leftControl, identifiers),
+                rightIdentifiers: extractIdentifiers(rightControl, identifiers),
                 status: changes.length > 0 ? 'changed' : 'ok',
                 changes,
                 // include moveDetails if one of the identifiers has changed
-                moveDetails: identfiers.reduce(
+                moveDetails: identifiers.reduce(
                     (flag, identifier) =>
                         flag ||
                         moveDetails.leftParentIdentifiers?.[identifier] !==

@@ -156,6 +156,20 @@ describe('Comparator Comparison', () => {
             "cost should be no more than 3 accounting for Element 2's changed property",
         );
     });
+
+    it('Comparator.compare() on property exclusion', () => {
+        const result = defaultComparator.compare(
+            { onlyOnLeft: true },
+            'prop_excluded_l',
+            { onlyOnRight: true },
+            'prop_excluded_r',
+        );
+        expect(result.changes).to.have.lengthOf(2);
+    });
+
+    it('Comparator.compare() on invalid comparison types', () => {
+        expect(() => defaultComparator.compare([], 'invalid_l', {}, 'invalid_r')).to.throw();
+    });
 });
 
 describe('Comparator ignore option', () => {

@@ -24,41 +24,36 @@
  * OF THE RESULTS OF, OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
 import { expect } from 'chai';
-import stringSimilarity from './string-similarity';
+import Cache from './cache';
 
-/*
- * Tests for string-similarity.ts
+/**
+ * Tests for cache.ts
  */
 
-describe('String Similarity', () => {
-    it('Jaro-Winkler ', () => {
-        expect(stringSimilarity('hi there', 'hi there', 'jaro-winkler', false)).equals(1);
-        expect(stringSimilarity('a', 'b', 'jaro-winkler', false)).equals(0);
-        expect(stringSimilarity('a', '', 'jaro-winkler', false)).equals(0);
-        expect(stringSimilarity('dog', 'log', 'jaro-winkler', false)).equals(
-            stringSimilarity('bog', 'fog', 'jaro-winkler', false),
-        );
-        // with jaro-winkler similarity, the beginning of the string is weighted more heavily
-        expect(stringSimilarity('aaa', 'aab', 'jaro-winkler', false)).to.be.greaterThan(
-            stringSimilarity('aaa', 'aba', 'jaro-winkler', false),
-        );
+describe('Cache', () => {
+    let cache = new Cache();
+
+    afterEach(() => {
+        // reset cache after each test
+        cache = new Cache();
     });
 
-    it('cosine', () => {
-        expect(stringSimilarity('hi there', 'hi there', 'cosine', false)).equals(1);
-        expect(stringSimilarity('a', 'b', 'cosine', false)).equals(0);
-        expect(stringSimilarity('a', '', 'cosine', false)).equals(0);
-        // with cosine similarity, the order of letters does not matter
-        expect(stringSimilarity('aaa', 'aab', 'cosine', false)).equals(stringSimilarity('aaa', 'aba', 'cosine', false));
+    it('should return undefined on non-existent keys', () => {
+        expect(Object.keys(cache['cache'])).to.have.lengthOf(0);
+        expect(cache.get('test', 'test')).equals(undefined);
     });
 
-    it('absolute', () => {
-        expect(stringSimilarity('hi there', 'Hi there', 'absolute', false)).equals(0);
-        expect(stringSimilarity('hi there', 'Hi there', 'absolute', true)).equals(1);
-        expect(stringSimilarity('a', 'b', 'absolute', true)).equals(0);
+    it('should set and get normal keys', () => {
+        const item = 'beep';
+        cache.set('test', 'test', item);
+        expect(cache.get('test', 'test')).equals(item);
     });
 
-    it('unknown', () => {
-        expect(() => stringSimilarity('a', 'b', 'unknown', true)).to.throw();
+    it('should delete more specific pointer when a broader key is set', () => {
+        cache.set('test/sub', 'test/sub', 'specific item');
+        expect(cache.get('test/sub', 'test/sub')).equals('specific item');
+        cache.set('test', 'test', 'broader item');
+        expect(cache.get('test/sub', 'test/sub')).equals(undefined);
+        expect(cache.get('test', 'test')).equals('broader item');
     });
 });

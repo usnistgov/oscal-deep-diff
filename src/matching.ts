@@ -115,7 +115,7 @@ export default abstract class MatcherContainer {
                     throw new Error('Error deserializing matcher container: unknown type');
             }
         }
-        throw new Error('Error deserializing matcher container: type must be sepecified');
+        throw new Error('Error deserializing matcher container: type must be specified');
     }
 }
 
@@ -123,7 +123,6 @@ export class ObjectPropertyMatcherContainer implements MatcherContainer {
     private property: string;
     private method: string;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     generate(_: TrackedElement[], __: TrackedElement[]): Matcher[] {
         return scoringMatcherFactory([
             (left: TrackedElement, right: TrackedElement) => {
@@ -201,7 +200,6 @@ export class OptimalMatcherContainer implements MatcherContainer {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     static fromDict(_: JSONObject): MatcherContainer {
         return new OptimalMatcherContainer();
     }

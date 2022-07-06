@@ -23,6 +23,10 @@
  * PROPERTY OR OTHERWISE, AND WHETHER OR NOT LOSS WAS SUSTAINED FROM, OR AROSE OUT
  * OF THE RESULTS OF, OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
+
+// Ignore file since it cannot be tested directly
+/* istanbul ignore file */
+
 import * as fs from 'fs';
 import { parseCliOptions } from './cli-utils';
 import Comparator from '../comparator';
@@ -31,7 +35,7 @@ import { trackRawObject } from '../utils/tracked';
 import { generateOutputSpreadsheet } from '../base-comparisons/excel-output';
 import { buildSelection } from '../base-comparisons/util';
 
-const config = parseCliOptions();
+const config = parseCliOptions(process.argv);
 const comparator = new Comparator(config.comparatorConfig);
 
 const leftDoc = JSON.parse(fs.readFileSync(config.leftPath).toString());
