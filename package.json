@@ -14,7 +14,7 @@
   "scripts": {
     "start": "ts-node src/cli/cli.ts",
     "build": "tsc -p .",
-    "test": "mocha -r ts-node/register src/**/*.spec.ts",
+    "test": "mocha -r ts-node/register \"src/**/*.spec.ts\"",
     "coverage": "nyc npm run test",
     "refresh": "rm -rf ./node_modules ./package-lock.json && npm install",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -22,7 +22,7 @@
     "lint-fix": "eslint --fix .",
     "license-gen": "npx npm-license-generator --template ./meta/license_summary.md --out-path ./DEP_LICENSES.md",
     "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run lint",
+    "prepublishOnly": "npm coverage && npm run lint",
     "preversion": "npm run lint && npm run license-gen"
   },
   "repository": {
