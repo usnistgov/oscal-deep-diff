@@ -30,7 +30,14 @@ Tests must pass before a pull request can be merged.
 
 ### Testing and Evaluation
 
-**SA-11: Developer Security Testing And Evaluation** requires that this repository has checks that verify test pass and tests satisfy a required coverage score.
+**SA-11: Developer Security Testing And Evaluation**
+
+The NIST ITL CSD developers that maintain the `oscal-deep-diff` application system at all post-design stages of the system development life cycle:
+
+- Perform unit and integration testing/evaluation for every commit in a development branch submitted for code review in the form of a pull request sent to the development team before merging it to the main release branch at the development team's recommended level of depth and coverage as described in [the code coverage tool's configuration file](./.nyrc);
+- Produce evidence of the execution of the assessment plan and the results of the testing and evaluation;
+- Implement a verifiable flaw remediation process;
+- Correct flaws identified during testing and evaluation
 The required coverage is defined in this repository by the config file [`.nycrc`](./.nycrc).
 
 This check is performed by GitHub actions via the [Lint and Test workflow](./.github/workflows/test.yaml) for all pull requests.
