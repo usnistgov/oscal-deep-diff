@@ -30,32 +30,41 @@ Tests must pass before a pull request can be merged.
 
 ### Testing and Evaluation
 
-**SA-11: Developer Security Testing And Evaluation**
-
+**SA-11: Developer Security Testing And Evaluation**:
 The NIST ITL CSD developers that maintain the `oscal-deep-diff` application system at all post-design stages of the system development life cycle:
 
-- Perform unit and integration testing/evaluation for every commit in a development branch submitted for code review in the form of a pull request sent to the development team before merging it to the main release branch at the development team's recommended level of depth and coverage as described in [the code coverage tool's configuration file](./.nyrc);
-- Produce evidence of the execution of the assessment plan and the results of the testing and evaluation;
-- Implement a verifiable flaw remediation process;
-- Correct flaws identified during testing and evaluation
-The required coverage is defined in this repository by the config file [`.nycrc`](./.nycrc).
+-   Perform unit and integration testing/evaluation for every commit in a development branch submitted for code review in the form of a pull request sent to the development team before merging it to the main release branch at the development team's recommended level of depth and coverage as described in the code coverage tool's configuration file [`.nycrc`](./.nyrc);
+-   Produce evidence of the execution of the assessment plan and the results of the testing and evaluation;
+-   Implement a verifiable flaw remediation process;
+-   Correct flaws identified during testing and evaluation
+    The required coverage is defined in this repository by the config file [`.nycrc`](./.nycrc).
 
 This check is performed by GitHub actions via the [Lint and Test workflow](./.github/workflows/test.yaml) for all pull requests.
 
-### Static Code Analysis
+#### Static Code Analysis
 
-In accordance with **SA-11(1): Static Code Analysis**, this repository uses static code analysis to:
-
--   Check pull requests against common anti-patterns and potential flaws before they are allowed to be merged.
--   Periodically check the current state of the repository for flaws and vulnerabilities.
+**SA-11(02): Threat Modeling and Vulnerability Analysis**:
+The NIST ITL CSD developers that maintain `oscal-deep-diff` are required to employ static code analysis tools to identify common flaws and document the results of the analysis.
 
 This check is performed by GitHub Actions via the [CodeQL Analysis workflow](./.github/workflows/codeql-analysis.yaml) as well as the linting portion of the [Lint and Test workflow](./.github/workflows/test.yaml).
 
-### Vulnerability Analysis
+#### Vulnerability Analysis
 
-In accordance with **SA-11(2): Threat and Vulnerability Analyses**, this repository uses [Dependabot](https://github.com/dependabot) to monitor for vulnerabilities in dependencies.
+**SA-11(02): Threat and Vulnerability Analyses**:
+The NIST ITL CSD developers that maintain `oscal-deep-diff` are required to perform vulnerability analyses during development and the subsequent testing and evaluation of the system that:
 
-### Manual Code Reviews
+-   Uses the following contextual information:
+    -   The library dependencies as defined in this project's lock file [`package-lock.json`](./package-lock.json);
+-   Employs the following tools and methods:
+    -   [Dependabot](https://github.com/dependabot);
+-   Produces evidence that meets the following acceptance criteria:
+    -   All project dependencies on the main branch, as well as dependencies on incoming pull requests, have no known applicable reported vulnerabilities;
 
-In accordance with **SA-11(4): Manual Code Reviews**, this repository requires manual code reviews from members of the OSCAL team for a pull request to be merged.
-The protection rules can be verified by checking the [CODEOWNERS](./.github/CODEOWNERS) file.
+Vulnerability alerts are published to [this dashboard](https://github.com/usnistgov/oscal-deep-diff/security/dependabot) and via email.
+
+#### Manual Code Reviews
+
+**SA-11(04): Manual Code Reviews**:
+The NIST ITL CSD developers that maintain `oscal-deep-diff` are required to perform a manual code review of all incoming pull requests using the following processes, procedures, and/or techniques:
+
+-   Organization-defined members are required to provide a review before a pull request can be merged, as defined in the [`CODEOWNERS`](./.github/CODEOWNERS) file;
