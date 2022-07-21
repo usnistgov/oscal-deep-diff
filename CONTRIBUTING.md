@@ -9,8 +9,6 @@ The approach we’re taking with OSCAL is agile. We’re adopting the philosophy
 
 We track our current work items using GitHub [project cards](https://github.com/orgs/usnistgov/projects/25/views/2). Our active project is typically the lowest numbered open project within the previously referenced page.
 
-_Note that the main OSCAL repository's projects are still used to track oscal-deep-diff progress through tracker tickets._
-
 ## Contribution options
 
 The OSCAL project is producing several types of deliverables, including the following:
