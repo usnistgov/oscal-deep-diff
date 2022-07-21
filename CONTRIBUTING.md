@@ -7,7 +7,7 @@ It provides basic information on the OSCAL project, describes the main ways peop
 
 The approach we’re taking with OSCAL is agile. We’re adopting the philosophy of implementing the 20% of the functionality that solves 80% of the problem. We’re trying to focus on the core capabilities that are needed to provide the greatest amount of benefit. Because we’re working on a small set of capabilities, that allows us to make very fast progress. We’re building the features that we believe solve the biggest problems, so we’re providing the most value.
 
-We track our current work items using GitHub [project cards](https://github.com/usnistgov/OSCAL/projects). Our active project is typically the lowest numbered open project within the previously referenced page.
+We track our current work items using GitHub [project cards](https://github.com/orgs/usnistgov/projects/25/views/2). Our active project is typically the lowest numbered open project within the previously referenced page.
 
 _Note that the main OSCAL repository's projects are still used to track oscal-deep-diff progress through tracker tickets._
 
@@ -35,8 +35,8 @@ The core OSCAL project team regularly reviews the open issues, prioritizes their
 
 There are two mailing lists for the project:
 
--   *oscal-dev@nist.gov* for communication among parties interested in contributing to the development of OSCAL or exchanging ideas. Subscribe by sending an email to [oscal-dev-join@nist.gov](mailto:oscal-dev-join@nist.gov). To unsubscribe send an email to [oscal-dev-leave@nist.gov](mailto:oscal-dev-leave@nist.gov).
--   *oscal-updates@nist.gov* for low-frequency updates on the status of the OSCAL project. Subscribe by sending an email to [oscal-updates-join@nist.gov](mailto:oscal-updates-join@nist.gov). To unsubscribe send an email to [oscal-updates-leave@nist.gov](mailto:oscal-updates-leave@nist.gov).
+-   *oscal-dev@nist.gov* for communication among parties interested in contributing to the development of OSCAL or exchanging ideas. Subscribe by sending an email to [oscal-dev+subscribe@list.nist.gov](mailto:oscal-dev+subscribe@list.nist.gov). To unsubscribe send an email to [oscal-dev+unsubscribe@list.nist.gov@nist.gov](mailto:oscal-dev+unsubscribe@list.nist.gov).
+-   *oscal-updates@nist.gov* for low-frequency updates on the status of the OSCAL project. Subscribe by sending an email to [oscal-updates+subscribe@list.nist.gov](mailto:oscal-updates+subscribe@list.nist.gov). To unsubscribe send an email to [oscal-updates+unsubscribe@list.nist.gov](mailto:oscal-updates+unsubscribe@list.nist.gov).
 
 ## Contributing to the OSCAL-deep-diff repository
 
@@ -57,7 +57,7 @@ This repository consists of the following directories and files pertaining to th
 -   [.vscode/](.vscode): Contains editor-specific settings and run configurations.
 -   [bin/](bin): Contains node executable entry-points for oscal-deep-diff CLI.
 -   [examples/](examples): Contains example projects using this library.
--   [meta/](meta): Contains mic. files
+-   [meta/](meta): Contains miscellaneous files
 -   [src/](src): Houses the source code for this project.
 -   [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): This file contains a code of conduct for OSCAL project contributors.
 -   [CONTRIBUTING.md](CONTRIBUTING.md): This file is for potential contributors to the OSCAL project. It provides basic information on the OSCAL project, describes the main ways people can make contributions, explains how to report issues with OSCAL, and lists pointers to additional sources of information. It also has instructions on establishing a development environment for contributing to the OSCAL project and using GitHub project cards to track development sprints.

@@ -39,7 +39,7 @@ The NIST ITL CSD developers that maintain the `oscal-deep-diff` application syst
 -   Correct flaws identified during testing and evaluation
     The required coverage is defined in this repository by the config file [`.nycrc`](./.nycrc).
 
-This check is performed by GitHub actions via the [Lint and Test workflow](./.github/workflows/test.yaml) for all pull requests.
+This check is performed by GitHub Actions via the [Lint and Test workflow](./.github/workflows/test.yaml) for all pull requests.
 
 #### Static Code Analysis
 
