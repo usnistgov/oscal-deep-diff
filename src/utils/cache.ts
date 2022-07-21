@@ -32,7 +32,7 @@ export default class Cache<T> {
     /**
      * Returns null if no item was found
      */
-    public get(leftPointer: string, rightPointer: string): T | null {
+    public get(leftPointer: string, rightPointer: string): T | undefined {
         return this.cache[`${leftPointer}:${rightPointer}`];
     }
 

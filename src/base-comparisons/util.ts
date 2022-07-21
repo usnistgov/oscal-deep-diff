@@ -36,7 +36,7 @@ import {
 import { TrackedElement, trackRawObject, traverseMatchSelectionPaths } from '../utils/tracked';
 import { IntermediateOutput, ChangeDetails } from './intermediate-output';
 
-function padNumericIdentifier(identifier: string, digits = 3) {
+export function padNumericIdentifier(identifier: string, digits = 3): string {
     return identifier
         .split(/\W+/)
         .map((piece) => (isNaN(+piece) ? piece : piece.padStart(digits, '0')))

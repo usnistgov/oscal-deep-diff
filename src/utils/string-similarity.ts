@@ -25,17 +25,17 @@
  */
 
 export function jaroWinklerSimilarity(s1: string, s2: string): number {
-    let m = 0;
+    // Exit early if they're an exact match.
+    if (s1 === s2) {
+        return 1;
+    }
 
     // Exit early if either are empty.
     if (!s1 || !s2) {
         return 0;
     }
 
-    // Exit early if they're an exact match.
-    if (s1 === s2) {
-        return 1;
-    }
+    let m = 0;
 
     const range = Math.floor(Math.max(s1.length, s2.length) / 2) - 1;
     const s1Matches = new Array(s1.length);
@@ -117,6 +117,16 @@ function vecMagnitude(vec: number[]): number {
 }
 
 export function cosineSimilarity(s1: string, s2: string): number {
+    // Exit early if they're an exact match.
+    if (s1 === s2) {
+        return 1;
+    }
+
+    // Exit early if either are empty.
+    if (!s1 || !s2) {
+        return 0;
+    }
+
     const termFreqMap1 = termFreqMap(s1);
     const termFreqMap2 = termFreqMap(s2);
 

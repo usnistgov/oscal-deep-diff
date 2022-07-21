@@ -183,6 +183,16 @@ describe('Hungarian Algorithm', () => {
             expect(total_cost).to.equal(expected_cost);
         }
     });
+
+    it('failure conditions', () => {
+        // An entire row marked as disallowed
+        expect(() =>
+            compute([
+                ['DISALLOWED', 'DISALLOWED'],
+                [1, 1],
+            ]),
+        ).to.throw();
+    });
 });
 
 describe('Hungarian Algorithm With Unmatched Costs', () => {
