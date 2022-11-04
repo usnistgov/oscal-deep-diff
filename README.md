@@ -191,3 +191,7 @@ outputConfigs:
       outputType: excel
       outputPath: output.xlsx
 ```
+
+## Citing
+
+This project has an associated [DOI](https://www.doi.org/) entry: [`doi:10.18434/mds2-2727`](https://data.nist.gov/od/id/mds2-2727).
