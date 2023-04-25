@@ -44,7 +44,7 @@
   "dependencies": {
     "commander": "^5.1.0",
     "exceljs": "^4.2.1",
-    "yaml": "^1.10.0"
+    "yaml": "^2.2.2"
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",
