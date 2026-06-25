@@ -135,7 +135,7 @@ export function cosineSimilarity(s1: string, s2: string): number {
     const termFreqVec1 = termFreqMapToVec(termFreqMap1, termsSet);
     const termFreqVec2 = termFreqMapToVec(termFreqMap2, termsSet);
 
-    return vecDotProduct(termFreqVec1, termFreqVec2) / (vecMagnitude(termFreqVec2) * vecMagnitude(termFreqVec2));
+    return vecDotProduct(termFreqVec1, termFreqVec2) / (vecMagnitude(termFreqVec1) * vecMagnitude(termFreqVec2));
 }
 
 export default function stringSimilarity(s1: string, s2: string, method: string, ignoreCase: boolean): number {
